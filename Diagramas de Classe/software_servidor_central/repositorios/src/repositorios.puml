@@ -1,0 +1,127 @@
+@startuml servidor_central_parte4_repositorios
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classHeaderBackgroundColor #E1F5EE
+skinparam classBorderColor #0F6E56
+skinparam classBackgroundColor #FAFAFA
+skinparam arrowColor #0F6E56
+skinparam stereotypeCBackgroundColor #EEEDFE
+skinparam stereotypeABackgroundColor #FAC775
+skinparam stereotypeIBackgroundColor #D1ECF1
+skinparam packageBackgroundColor #F8F8F8
+skinparam packageBorderColor #B4B2A9
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 50
+
+title Servidor Central — Parte 4: Repositórios
+
+' ╔══════════════════════════════════════╗
+' ║         CAMADA DE REPOSITÓRIO        ║
+' ╚══════════════════════════════════════╝
+package "Repositório (Acesso a Dados Central)" #FFF8EE {
+
+  interface CEORepositorio {
+    + buscarPorCredenciais(nomeUtilizador : String, hashPalavraPasse : String) : CEO
+    + atualizar(ceo : CEO) : void
+  }
+
+  class CEORepositorioImpl {
+    - conexao : Connection
+    + buscarPorCredenciais(nomeUtilizador : String, hashPalavraPasse : String) : CEO
+    + atualizar(ceo : CEO) : void
+  }
+
+  interface LojaRepositorio {
+    + buscarPorId(idLoja : String) : Loja
+    + guardarSeNaoExistir(loja : Loja) : Loja
+    + listarTodas() : List~Loja~
+  }
+
+  class LojaRepositorioImpl {
+    - conexao : Connection
+    + buscarPorId(idLoja : String) : Loja
+    + guardarSeNaoExistir(loja : Loja) : Loja
+    + listarTodas() : List~Loja~
+  }
+
+  interface VendaCentralRepositorio {
+    + guardarSeNaoExistir(venda : VendaCentral) : void
+    + buscarPorLojaEPeriodo(idLoja : String, inicio : LocalDate, fim : LocalDate) : List~VendaCentral~
+    + totalVendasPorLoja(data : LocalDate) : Map~String, Double~
+  }
+
+  class VendaCentralRepositorioImpl {
+    - conexao : Connection
+    + guardarSeNaoExistir(venda : VendaCentral) : void
+    + buscarPorLojaEPeriodo(idLoja : String, inicio : LocalDate, fim : LocalDate) : List~VendaCentral~
+    + totalVendasPorLoja(data : LocalDate) : Map~String, Double~
+  }
+
+  interface DevolucaoCentralRepositorio {
+    + guardarSeNaoExistir(devolucao : DevolucaoCentral) : void
+    + buscarPorLojaEPeriodo(idLoja : String, inicio : LocalDate, fim : LocalDate) : List~DevolucaoCentral~
+  }
+
+  class DevolucaoCentralRepositorioImpl {
+    - conexao : Connection
+    + guardarSeNaoExistir(devolucao : DevolucaoCentral) : void
+    + buscarPorLojaEPeriodo(idLoja : String, inicio : LocalDate, fim : LocalDate) : List~DevolucaoCentral~
+  }
+
+  interface RemessaCentralRepositorio {
+    + guardarSeNaoExistir(remessa : RemessaCentral) : void
+    + buscarPorFiltro(filtro : FiltroRemessa) : List~RemessaCentral~
+  }
+
+  class RemessaCentralRepositorioImpl {
+    - conexao : Connection
+    + guardarSeNaoExistir(remessa : RemessaCentral) : void
+    + buscarPorFiltro(filtro : FiltroRemessa) : List~RemessaCentral~
+  }
+
+  interface PagamentoCentralRepositorio {
+    + guardarSeNaoExistir(pagamento : PagamentoCentral) : void
+  }
+
+  class PagamentoCentralRepositorioImpl {
+    - conexao : Connection
+    + guardarSeNaoExistir(pagamento : PagamentoCentral) : void
+  }
+
+  interface LogAuditoriaCentralRepositorio {
+    + guardarSeNaoExistir(log : LogAuditoriaCentral) : void
+    + buscarPorLojaEPeriodo(idLoja : String, inicio : LocalDate, fim : LocalDate) : List~LogAuditoriaCentral~
+  }
+
+  class LogAuditoriaCentralRepositorioImpl {
+    - conexao : Connection
+    + guardarSeNaoExistir(log : LogAuditoriaCentral) : void
+    + buscarPorLojaEPeriodo(idLoja : String, inicio : LocalDate, fim : LocalDate) : List~LogAuditoriaCentral~
+  }
+
+  interface FechoDiaCentralRepositorio {
+    + guardar(fecho : FechoDiaCentral) : void
+    + buscarPorData(data : LocalDate) : List~FechoDiaCentral~
+    + buscarLojasFaltantes(data : LocalDate) : List~Loja~
+  }
+
+  class FechoDiaCentralRepositorioImpl {
+    - conexao : Connection
+    + guardar(fecho : FechoDiaCentral) : void
+    + buscarPorData(data : LocalDate) : List~FechoDiaCentral~
+    + buscarLojasFaltantes(data : LocalDate) : List~Loja~
+  }
+}
+
+' Implementações realizam interfaces
+CEORepositorioImpl ..|> CEORepositorio
+LojaRepositorioImpl ..|> LojaRepositorio
+VendaCentralRepositorioImpl ..|> VendaCentralRepositorio
+DevolucaoCentralRepositorioImpl ..|> DevolucaoCentralRepositorio
+RemessaCentralRepositorioImpl ..|> RemessaCentralRepositorio
+PagamentoCentralRepositorioImpl ..|> PagamentoCentralRepositorio
+LogAuditoriaCentralRepositorioImpl ..|> LogAuditoriaCentralRepositorio
+FechoDiaCentralRepositorioImpl ..|> FechoDiaCentralRepositorio
+
+@enduml

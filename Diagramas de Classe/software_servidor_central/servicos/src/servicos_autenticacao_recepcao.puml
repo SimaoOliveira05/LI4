@@ -1,0 +1,64 @@
+@startuml servidor_central_parte2_servicos_autenticacao_recepcao
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classHeaderBackgroundColor #E1F5EE
+skinparam classBorderColor #0F6E56
+skinparam classBackgroundColor #FAFAFA
+skinparam arrowColor #0F6E56
+skinparam stereotypeCBackgroundColor #EEEDFE
+skinparam stereotypeABackgroundColor #FAC775
+skinparam stereotypeIBackgroundColor #D1ECF1
+skinparam packageBackgroundColor #F8F8F8
+skinparam packageBorderColor #B4B2A9
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 50
+
+title Servidor Central — Parte 2: Serviços (Autenticação e Receção)
+
+' ╔══════════════════════════════════════╗
+' ║          CAMADA DE SERVIÇO           ║
+' ║    (Autenticação e Receção)          ║
+' ╚══════════════════════════════════════╝
+package "Serviço (Autenticação e Receção)" #EEF9F4 {
+
+  class AutenticacaoCentralServico {
+    - ceoRepositorio : CEORepositorio
+    + autenticar(nomeUtilizador : String, palavraPasse : String) : CEO
+    + registarTentativaFalhada(nomeUtilizador : String) : void
+    + desbloquear(nomeUtilizador : String) : void
+    + estaBloqueada(nomeUtilizador : String) : boolean
+  }
+
+  class RecepcaoPacoteServico {
+    - lojaRepositorio : LojaRepositorio
+    - vendaRepositorio : VendaCentralRepositorio
+    - devolucaoRepositorio : DevolucaoCentralRepositorio
+    - remessaRepositorio : RemessaCentralRepositorio
+    - pagamentoRepositorio : PagamentoCentralRepositorio
+    - logRepositorio : LogAuditoriaCentralRepositorio
+    - fechoDiaCentralRepositorio : FechoDiaCentralRepositorio
+    + receberPacote(dto : PacoteFechoDTO) : void
+    + validarIntegridade(dto : PacoteFechoDTO) : boolean
+    + persistirEntidades(dto : PacoteFechoDTO, loja : Loja) : void
+    + enviarConfirmacao(idLoja : String, dataFecho : LocalDate) : void
+  }
+  note right of RecepcaoPacoteServico
+    Deduplicação por INSERT IGNORE
+    usando chave loja + idOriginalLoja
+    (ADR-05). Cria Loja automaticamente
+    se ainda não existir.
+  end note
+}
+
+' Serviços → Repositórios
+AutenticacaoCentralServico ..> CEORepositorio
+RecepcaoPacoteServico ..> LojaRepositorio
+RecepcaoPacoteServico ..> VendaCentralRepositorio
+RecepcaoPacoteServico ..> DevolucaoCentralRepositorio
+RecepcaoPacoteServico ..> RemessaCentralRepositorio
+RecepcaoPacoteServico ..> PagamentoCentralRepositorio
+RecepcaoPacoteServico ..> LogAuditoriaCentralRepositorio
+RecepcaoPacoteServico ..> FechoDiaCentralRepositorio
+
+@enduml

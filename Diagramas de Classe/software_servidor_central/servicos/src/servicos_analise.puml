@@ -1,0 +1,73 @@
+@startuml servidor_central_parte3_servicos_analise
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classHeaderBackgroundColor #E1F5EE
+skinparam classBorderColor #0F6E56
+skinparam classBackgroundColor #FAFAFA
+skinparam arrowColor #0F6E56
+skinparam stereotypeCBackgroundColor #EEEDFE
+skinparam stereotypeABackgroundColor #FAC775
+skinparam stereotypeIBackgroundColor #D1ECF1
+skinparam packageBackgroundColor #F8F8F8
+skinparam packageBorderColor #B4B2A9
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 50
+
+title Servidor Central — Parte 3: Serviços (Análise)
+
+' ╔══════════════════════════════════════╗
+' ║          CAMADA DE SERVIÇO           ║
+' ║        (Análise e Relatórios)        ║
+' ╚══════════════════════════════════════╝
+package "Serviço (Análise)" #EEF9F4 {
+
+  class DashboardServico {
+    - vendaRepositorio : VendaCentralRepositorio
+    - remessaRepositorio : RemessaCentralRepositorio
+    - lojaRepositorio : LojaRepositorio
+    + obterMetricasGlobais(data : LocalDate) : MetricasGlobais
+    + obterMetricasPorLoja(idLoja : String, data : LocalDate) : MetricasLoja
+    + obterAlertasStock() : List~AlertaStock~
+  }
+
+  class RelatorioServico {
+    - vendaRepositorio : VendaCentralRepositorio
+    - devolucaoRepositorio : DevolucaoCentralRepositorio
+    - remessaRepositorio : RemessaCentralRepositorio
+    + gerar(filtro : FiltroRelatorio) : Relatorio
+  }
+
+  class RemessaRedeServico {
+    - remessaRepositorio : RemessaCentralRepositorio
+    + listar(filtro : FiltroRemessa) : List~RemessaCentral~
+  }
+
+  class ConsolidacaoServico {
+    - fechoDiaCentralRepositorio : FechoDiaCentralRepositorio
+    - lojaRepositorio : LojaRepositorio
+    + verificarCompletude(data : LocalDate) : EstadoFecho
+    + obterLojasFaltantes(data : LocalDate) : List~Loja~
+  }
+}
+
+' Serviços → Repositórios
+DashboardServico ..> VendaCentralRepositorio
+DashboardServico ..> RemessaCentralRepositorio
+DashboardServico ..> LojaRepositorio
+RelatorioServico ..> VendaCentralRepositorio
+RelatorioServico ..> DevolucaoCentralRepositorio
+RelatorioServico ..> RemessaCentralRepositorio
+RemessaRedeServico ..> RemessaCentralRepositorio
+ConsolidacaoServico ..> FechoDiaCentralRepositorio
+ConsolidacaoServico ..> LojaRepositorio
+
+' Serviços produzem VOs de análise
+DashboardServico ..> MetricasGlobais : produz
+DashboardServico ..> MetricasLoja : produz
+DashboardServico ..> AlertaStock : produz
+RelatorioServico ..> Relatorio : produz
+RelatorioServico ..> FiltroRelatorio : consome
+RemessaRedeServico ..> FiltroRemessa : consome
+
+@enduml
