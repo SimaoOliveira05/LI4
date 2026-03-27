@@ -14,13 +14,13 @@ skinparam linetype ortho
 skinparam nodesep 40
 skinparam ranksep 50
 
-title Software de Loja — Serviços Core (Parte 1: Autenticação e Caixa)
+title Software de Loja — Serviços Core (Parte 1: Autenticação, Caixa e Autorização)
 
 ' ╔══════════════════════════════════════╗
 ' ║          CAMADA DE SERVIÇO           ║
-' ║    (Autenticação e Caixa)            ║
+' ║    (Autenticação, Caixa e Autorização) ║
 ' ╚══════════════════════════════════════╝
-package "Serviço (Autenticação e Caixa)" #EEF9F4 {
+package "Serviço (Autenticação, Caixa e Autorização)" #EEF9F4 {
 
   class AutenticacaoServico {
     - utilizadorRepositorio : UtilizadorRepositorio
@@ -32,15 +32,29 @@ package "Serviço (Autenticação e Caixa)" #EEF9F4 {
   class CaixaServico {
     - sessaoCaixaRepositorio : SessaoCaixaRepositorio
     - sangriaRepositorio : SangriaRepositorio
+    - autorizacaoServico : AutorizacaoServico
     + abrirSessao(utilizador : Utilizador, fundo : List~DetalheNumerario~, limiteMaximo : double) : SessaoCaixa
     + registarSangria(sessao : SessaoCaixa, utilizador : Utilizador, valor : List~DetalheNumerario~) : Sangria
     + fecharSessao(sessao : SessaoCaixa) : void
     + verificarLimite(sessao : SessaoCaixa) : boolean
   }
 
+  class AutorizacaoServico {
+    + exigirPerfil(utilizador : Utilizador, perfisPermitidos : PerfilUtilizador[]) : void
+    + temPerfil(utilizador : Utilizador, perfil : PerfilUtilizador) : boolean
+  }
+
   class AuditoriaServico {
     - logAuditoriaRepositorio : LogAuditoriaRepositorio
     + registar(utilizador : Utilizador, acao : TipoAcao, entidade : String, idEntidade : int) : void
+  }
+
+  class AcessoNegadoException {
+    - mensagem : String
+    - perfilActual : PerfilUtilizador
+    - perfisExigidos : PerfilUtilizador[]
+    + getPerfilActual() : PerfilUtilizador
+    + getPerfisExigidos() : PerfilUtilizador[]
   }
 }
 
@@ -49,5 +63,11 @@ AutenticacaoServico ..> UtilizadorRepositorio
 CaixaServico ..> SessaoCaixaRepositorio
 CaixaServico ..> SangriaRepositorio
 AuditoriaServico ..> LogAuditoriaRepositorio
+
+' Serviços usam AutorizacaoServico
+CaixaServico ..> AutorizacaoServico
+
+' Exceção lançada
+AutorizacaoServico ..> AcessoNegadoException : lança
 
 @enduml

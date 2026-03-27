@@ -27,6 +27,7 @@ package "Serviço (Vendas e Devoluções)" #EEF9F4 {
     - loteRepositorio : LoteRepositorio
     - caixaRepositorio : SessaoCaixaRepositorio
     - auditoriaServico : AuditoriaServico
+    - autorizacaoServico : AutorizacaoServico
     + iniciarVenda(utilizador : Utilizador) : Venda
     + adicionarLinha(venda : Venda, codigoBarras : String, quantidade : int) : LinhaVenda
     + finalizarVenda(venda : Venda, metodo : MetodoPagamento, valorEntregue : double) : Fatura
@@ -39,6 +40,7 @@ package "Serviço (Vendas e Devoluções)" #EEF9F4 {
     - faturaRepositorio : FaturaRepositorio
     - loteRepositorio : LoteRepositorio
     - auditoriaServico : AuditoriaServico
+    - autorizacaoServico : AutorizacaoServico
     + processar(numeroFatura : String, codigoBarras : String, dataValidadeEmbalagem : LocalDate, quantidade : int) : Devolucao
     + validar(fatura : Fatura, lote : Lote, quantidade : int) : boolean
   }
@@ -48,6 +50,8 @@ package "Serviço (Vendas e Devoluções)" #EEF9F4 {
 VendaServico ..> VendaRepositorio
 VendaServico ..> LoteRepositorio
 VendaServico ..> SessaoCaixaRepositorio
+VendaServico ..> AutorizacaoServico
+DevolucaoServico ..> AutorizacaoServico
 DevolucaoServico ..> DevolucaoRepositorio
 DevolucaoServico ..> FaturaRepositorio
 DevolucaoServico ..> LoteRepositorio

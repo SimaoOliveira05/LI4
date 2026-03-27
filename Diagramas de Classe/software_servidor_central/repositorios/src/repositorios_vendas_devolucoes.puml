@@ -1,0 +1,53 @@
+@startuml servidor_central_parte4b_repositorios_vendas_devolucoes
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classHeaderBackgroundColor #E1F5EE
+skinparam classBorderColor #0F6E56
+skinparam classBackgroundColor #FAFAFA
+skinparam arrowColor #0F6E56
+skinparam stereotypeCBackgroundColor #EEEDFE
+skinparam stereotypeABackgroundColor #FAC775
+skinparam stereotypeIBackgroundColor #D1ECF1
+skinparam packageBackgroundColor #F8F8F8
+skinparam packageBorderColor #B4B2A9
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 50
+
+title Servidor Central — Parte 4B: Repositórios (Vendas e Devoluções)
+
+' ╔══════════════════════════════════════╗
+' ║    REPOSITÓRIO - VENDAS E DEVOLUÇÕES ║
+' ╚══════════════════════════════════════╝
+package "Repositório (Vendas e Devoluções)" #FFF8EE {
+
+  interface VendaCentralRepositorio {
+    + guardarSeNaoExistir(venda : VendaCentral) : void
+    + buscarPorLojaEPeriodo(idLoja : String, inicio : LocalDate, fim : LocalDate) : List~VendaCentral~
+    + totalVendasPorLoja(data : LocalDate) : Map~String, Double~
+  }
+
+  class VendaCentralRepositorioImpl {
+    - conexao : Connection
+    + guardarSeNaoExistir(venda : VendaCentral) : void
+    + buscarPorLojaEPeriodo(idLoja : String, inicio : LocalDate, fim : LocalDate) : List~VendaCentral~
+    + totalVendasPorLoja(data : LocalDate) : Map~String, Double~
+  }
+
+  interface DevolucaoCentralRepositorio {
+    + guardarSeNaoExistir(devolucao : DevolucaoCentral) : void
+    + buscarPorLojaEPeriodo(idLoja : String, inicio : LocalDate, fim : LocalDate) : List~DevolucaoCentral~
+  }
+
+  class DevolucaoCentralRepositorioImpl {
+    - conexao : Connection
+    + guardarSeNaoExistir(devolucao : DevolucaoCentral) : void
+    + buscarPorLojaEPeriodo(idLoja : String, inicio : LocalDate, fim : LocalDate) : List~DevolucaoCentral~
+  }
+}
+
+' Implementações realizam interfaces
+VendaCentralRepositorioImpl ..|> VendaCentralRepositorio
+DevolucaoCentralRepositorioImpl ..|> DevolucaoCentralRepositorio
+
+@enduml

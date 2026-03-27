@@ -28,6 +28,7 @@ package "Serviço (Serviços de Gestão)" #EEF9F4 {
     - loteRepositorio : LoteRepositorio
     - pagamentoRepositorio : PagamentoRepositorio
     - auditoriaServico : AuditoriaServico
+    - autorizacaoServico : AutorizacaoServico
     + registarRemessa(utilizador : Utilizador, fornecedor : Fornecedor, linhas : List~LinhaRemessa~, valorTotalGuia : double) : Remessa
     + associarPedidoPendente(remessa : Remessa) : void
     + criarPedidoRemessa(utilizador : Utilizador, fornecedor : Fornecedor, linhas : List~LinhaPedidoRemessa~) : PedidoRemessa
@@ -37,6 +38,7 @@ package "Serviço (Serviços de Gestão)" #EEF9F4 {
   class PagamentoServico {
     - pagamentoRepositorio : PagamentoRepositorio
     - auditoriaServico : AuditoriaServico
+    - autorizacaoServico : AutorizacaoServico
     + listarPendentes() : List~Pagamento~
     + liquidar(idPagamento : int, utilizador : Utilizador) : void
   }
@@ -48,6 +50,7 @@ package "Serviço (Serviços de Gestão)" #EEF9F4 {
     - pagamentoRepositorio : PagamentoRepositorio
     - auditoriaRepositorio : LogAuditoriaRepositorio
     - fechoDiaRepositorio : FechoDiaRepositorio
+    - autorizacaoServico : AutorizacaoServico
     + executarFecho(utilizador : Utilizador, configuracao : ConfiguracaoTerminal) : FechoDia
     + reenviar(idFecho : int) : boolean
     + reverterEmTransito() : void
@@ -56,6 +59,7 @@ package "Serviço (Serviços de Gestão)" #EEF9F4 {
   class UtilizadorServico {
     - utilizadorRepositorio : UtilizadorRepositorio
     - auditoriaServico : AuditoriaServico
+    - autorizacaoServico : AutorizacaoServico
     + criar(gestor : Utilizador, dados : UtilizadorDTO) : Utilizador
     + desativar(gestor : Utilizador, idAlvo : int) : void
     + editar(gestor : Utilizador, idAlvo : int, dados : UtilizadorDTO) : void
@@ -68,14 +72,18 @@ RemessaServico ..> RemessaRepositorio
 RemessaServico ..> PedidoRemessaRepositorio
 RemessaServico ..> LoteRepositorio
 RemessaServico ..> PagamentoRepositorio
+RemessaServico ..> AutorizacaoServico
 PagamentoServico ..> PagamentoRepositorio
+PagamentoServico ..> AutorizacaoServico
 FechoDiaServico ..> VendaRepositorio
 FechoDiaServico ..> DevolucaoRepositorio
 FechoDiaServico ..> RemessaRepositorio
 FechoDiaServico ..> PagamentoRepositorio
 FechoDiaServico ..> LogAuditoriaRepositorio
 FechoDiaServico ..> FechoDiaRepositorio
+FechoDiaServico ..> AutorizacaoServico
 UtilizadorServico ..> UtilizadorRepositorio
+UtilizadorServico ..> AutorizacaoServico
 
 ' Serviços transversais
 RemessaServico ..> AuditoriaServico

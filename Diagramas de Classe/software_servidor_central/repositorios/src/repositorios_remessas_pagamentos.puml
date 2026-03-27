@@ -1,0 +1,62 @@
+@startuml servidor_central_parte4c_repositorios_remessas_pagamentos
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classHeaderBackgroundColor #E1F5EE
+skinparam classBorderColor #0F6E56
+skinparam classBackgroundColor #FAFAFA
+skinparam arrowColor #0F6E56
+skinparam stereotypeCBackgroundColor #EEEDFE
+skinparam stereotypeABackgroundColor #FAC775
+skinparam stereotypeIBackgroundColor #D1ECF1
+skinparam packageBackgroundColor #F8F8F8
+skinparam packageBorderColor #B4B2A9
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 50
+
+title Servidor Central — Parte 4C: Repositórios (Remessas, Pagamentos e Auditoria)
+
+' ╔══════════════════════════════════════╗
+' ║  REPOSITÓRIO - REMESSAS, PAGAMENTOS  ║
+' ║            E AUDITORIA               ║
+' ╚══════════════════════════════════════╝
+package "Repositório (Remessas, Pagamentos e Auditoria)" #FFF8EE {
+
+  interface RemessaCentralRepositorio {
+    + guardarSeNaoExistir(remessa : RemessaCentral) : void
+    + buscarPorFiltro(filtro : FiltroRemessa) : List~RemessaCentral~
+  }
+
+  class RemessaCentralRepositorioImpl {
+    - conexao : Connection
+    + guardarSeNaoExistir(remessa : RemessaCentral) : void
+    + buscarPorFiltro(filtro : FiltroRemessa) : List~RemessaCentral~
+  }
+
+  interface PagamentoCentralRepositorio {
+    + guardarSeNaoExistir(pagamento : PagamentoCentral) : void
+  }
+
+  class PagamentoCentralRepositorioImpl {
+    - conexao : Connection
+    + guardarSeNaoExistir(pagamento : PagamentoCentral) : void
+  }
+
+  interface LogAuditoriaCentralRepositorio {
+    + guardarSeNaoExistir(log : LogAuditoriaCentral) : void
+    + buscarPorLojaEPeriodo(idLoja : String, inicio : LocalDate, fim : LocalDate) : List~LogAuditoriaCentral~
+  }
+
+  class LogAuditoriaCentralRepositorioImpl {
+    - conexao : Connection
+    + guardarSeNaoExistir(log : LogAuditoriaCentral) : void
+    + buscarPorLojaEPeriodo(idLoja : String, inicio : LocalDate, fim : LocalDate) : List~LogAuditoriaCentral~
+  }
+}
+
+' Implementações realizam interfaces
+RemessaCentralRepositorioImpl ..|> RemessaCentralRepositorio
+PagamentoCentralRepositorioImpl ..|> PagamentoCentralRepositorio
+LogAuditoriaCentralRepositorioImpl ..|> LogAuditoriaCentralRepositorio
+
+@enduml
