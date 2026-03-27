@@ -1,0 +1,12 @@
+@startuml
+left to right direction
+
+actor CEO as C
+
+rectangle "Sofware do Servidor Central — Supervisão Estratégica" {
+  C -- (Iniciar Sessão no Servidor Central)
+  C -- (Consultar Estado de Consolidação de Rede)
+  C -- (Consultar Remessas da Rede)
+  C -- (Consultar Dashboards e Relatórios Analíticos)
+}
+@enduml

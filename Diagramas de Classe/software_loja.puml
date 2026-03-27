@@ -1,0 +1,533 @@
+@startuml Software_de_Loja
+skinparam classAttributeIconSize 0
+skinparam classFontSize 13
+skinparam classHeaderBackgroundColor #EEEDFE
+skinparam classBorderColor #534AB7
+skinparam classBackgroundColor #FAFAFA
+skinparam arrowColor #534AB7
+skinparam stereotypeCBackgroundColor #E1F5EE
+skinparam stereotypeABackgroundColor #FAC775
+skinparam stereotypeIBackgroundColor #E1F5EE
+skinparam packageBackgroundColor #F8F8F8
+skinparam packageBorderColor #B4B2A9
+skinparam linetype ortho
+
+title Software de Loja — Diagrama de Classes
+
+' ========================
+' CAMADA DE DOMÍNIO
+' ========================
+
+package "Domínio" {
+
+  ' --- Configuração ---
+  class ConfiguracaoTerminal {
+    - idLoja : String
+    - nomeLoja : String
+    + getIdLoja() : String
+    + getNomeLoja() : String
+  }
+  note right of ConfiguracaoTerminal
+    Lida do ficheiro de configuração
+    local no arranque (ADR-02, RF2).
+    Não persistida na base de dados.
+    Não alterável pela interface.
+  end note
+
+  ' --- Sincronização ---
+  abstract class RegistoSincronizavel {
+    # estadoSincronizacao : EstadoSincronizacao
+    # idLoja : String
+    + getEstadoSincronizacao() : EstadoSincronizacao
+    + marcarEmTransito() : void
+    + marcarConfirmado() : void
+    + reverterParaPendente() : void
+  }
+  note right of RegistoSincronizavel
+    idLoja lido de ConfiguracaoTerminal
+    no momento da criação (ADR-05).
+    CONFIRMADO apenas após ACK do
+    servidor central (ADR-04).
+    EM_TRANSITO revertido para
+    PENDENTE em caso de reinício.
+  end note
+
+  enum EstadoSincronizacao {
+    PENDENTE
+    EM_TRANSITO
+    CONFIRMADO
+  }
+
+  ' --- Hierarquia de Utilizadores ---
+  class Funcionario {
+    - id : int
+    - nomeUtilizador : String
+    - hashPalavraPasse : String
+    - ativo : boolean
+    + autenticar(palavraPasse : String) : boolean
+    + registarVenda(linhas : List<LinhaVenda>, metodo : MetodoPagamento) : Venda
+    + registarDevolucao(fatura : Fatura, quantidade : int, dataValidadeEmbalagem : LocalDate) : Devolucao
+    + pesquisarProduto(query : String) : List<Produto>
+    + consultarStock(produto : Produto) : int
+  }
+
+  class Manager {
+    + registarRemessa(fornecedor : Fornecedor, linhas : List<LinhaRemessa>, valorTotalGuia : double) : Remessa
+    + criarPedidoRemessa(fornecedor : Fornecedor, linhas : List<LinhaPedidoRemessa>) : PedidoRemessa
+    + liquidarPagamento(pagamento : Pagamento) : void
+    + aplicarDesconto(lote : Lote, percentagem : double) : void
+    + definirStockMinimo(produto : Produto, minimo : int) : void
+    + gerarAlertasValidade(diasLimite : int) : List<Lote>
+    + realizarFechoDia() : FechoDia
+    + gerirCatalogo(produto : Produto) : void
+    + gerirFuncionario(funcionario : Funcionario) : void
+  }
+
+  class CEO {
+    + gerirManager(manager : Manager) : void
+  }
+
+  ' --- Produto e Lote ---
+  class Produto {
+    - id : int
+    - codigoBarras : String
+    - nome : String
+    - categoria : String
+    - precoBase : double
+    - stockMinimo : int
+    - ativo : boolean
+    + getCodigoBarras() : String
+    + getStockMinimo() : int
+    + isAtivo() : boolean
+  }
+
+  class Lote {
+    - id : int
+    - quantidade : int
+    - dataValidade : LocalDate
+    - precoVenda : double
+    + getProduto() : Produto
+    + getDataValidade() : LocalDate
+    + getPrecoFinal() : double
+    + deduzirUnidade() : void
+    + incrementarUnidade() : void
+    + temDesconto() : boolean
+  }
+
+  class Desconto {
+    - percentagem : double
+    - dataAplicacao : LocalDate
+    - aplicadoPor : Manager
+    + getPercentagem() : double
+    + getAplicadoPor() : Manager
+  }
+
+  ' --- Venda ---
+  class Venda {
+    - id : int
+    - dataHora : LocalDateTime
+    - metodoPagamento : MetodoPagamento
+    - totalFaturado : double
+    - estado : EstadoVenda
+    + calcularTotal() : double
+    + finalizar() : Fatura
+    + anular() : void
+    + getFuncionario() : Funcionario
+  }
+
+  class LinhaVenda {
+    - quantidade : int
+    - precoUnitario : double
+    + calcularSubtotal() : double
+    + getLote() : Lote
+  }
+
+  class Fatura {
+    - numeroFatura : String
+    - dataEmissao : LocalDateTime
+    - nifCliente : String
+    + getNumeroFatura() : String
+    + getNifCliente() : String
+  }
+  note right of Fatura
+    numeroFatura: identificador único
+    (RF5). nifCliente: campo facultativo.
+  end note
+
+  enum MetodoPagamento {
+    NUMERARIO
+    MULTIBANCO
+  }
+
+  enum EstadoVenda {
+    EM_CURSO
+    FINALIZADA
+    ANULADA
+  }
+
+  ' --- Devolução ---
+  class Devolucao {
+    - id : int
+    - quantidade : int
+    - dataValidadeEmbalagem : LocalDate
+    - dataHora : LocalDateTime
+    + validar() : boolean
+    + processar() : void
+    + getFatura() : Fatura
+  }
+
+  ' --- Fornecedor ---
+  class Fornecedor {
+    - id : int
+    - nome : String
+    - nif : String
+    - morada : String
+    - telefone : String
+    - email : String
+    - iban : String
+    + getNome() : String
+    + getIban() : String
+  }
+
+  ' --- Remessa ---
+  class Remessa {
+    - id : int
+    - dataRecepcao : LocalDate
+    - valorTotalGuia : double
+    + getFornecedor() : Fornecedor
+    + getLinhas() : List<LinhaRemessa>
+    + gerarPagamento() : Pagamento
+  }
+
+  class LinhaRemessa {
+    - quantidade : int
+    - dataValidade : LocalDate
+    + getProduto() : Produto
+    + getLoteGerado() : Lote
+  }
+
+  class PedidoRemessa {
+    - id : int
+    - dataCriacao : LocalDate
+    - estado : EstadoPedido
+    + getFornecedor() : Fornecedor
+    + concluir() : void
+    + estaPendente() : boolean
+    + getLinhas() : List<LinhaPedidoRemessa>
+  }
+
+  class LinhaPedidoRemessa {
+    - quantidadePretendida : int
+    + getProduto() : Produto
+  }
+
+  enum EstadoPedido {
+    PENDENTE
+    CONCLUIDO
+  }
+
+  ' --- Pagamento ---
+  class Pagamento {
+    - id : int
+    - valor : double
+    - dataPagamento : LocalDate
+    - tipoPagamento : TipoPagamento
+    + liquidar() : void
+    + estaPendente() : boolean
+    + getFornecedor() : Fornecedor
+    + getRemessa() : Remessa
+  }
+
+  enum TipoPagamento {
+    TRANSFERENCIA
+    NUMERARIO
+    CHEQUE
+  }
+
+  ' --- Caixa ---
+  class SessaoCaixa {
+    - id : int
+    - fundoInicial : List<DetalheNumerario>
+    - saldoAtual : double
+    - limiteMaximo : double
+    - dataAbertura : LocalDateTime
+    - dataEncerramento : LocalDateTime
+    + getSaldoAtual() : double
+    + excedeLimite() : boolean
+    + registarSangria(sangria : Sangria) : void
+    + encerrar() : void
+  }
+
+  class Sangria {
+    - id : int
+    - data : LocalDateTime
+    - valor : List<DetalheNumerario>
+    + getSessaoCaixa() : SessaoCaixa
+    + getTotal() : double
+  }
+
+  class DetalheNumerario {
+    - denominacao : Denominacao
+    - quantidade : int
+    - subtotal : double
+    + calcularSubtotal() : double
+  }
+
+  enum Denominacao {
+    CENTO_EUROS
+    CINQUENTA_EUROS
+    VINTE_EUROS
+    DEZ_EUROS
+    CINCO_EUROS
+    DOIS_EUROS
+    UM_EURO
+    CINQUENTA_CENTIMOS
+    VINTE_CENTIMOS
+    DEZ_CENTIMOS
+    CINCO_CENTIMOS
+    DOIS_CENTIMOS
+    UM_CENTIMO
+  }
+
+  ' --- Fecho de Dia ---
+  class FechoDia {
+    - id : int
+    - dataFecho : LocalDate
+    - estadoEnvio : EstadoSincronizacao
+    - configuracaoTerminal : ConfiguracaoTerminal
+    + compilarPacote() : List<RegistoSincronizavel>
+    + enviar() : boolean
+    + confirmarRecepcao() : void
+    + reverterEmTransito() : void
+  }
+  note right of FechoDia
+    compilarPacote() filtra registos
+    com estado PENDENTE cobrindo
+    Venda, Devolucao, Remessa,
+    Pagamento e LogAuditoria (RF16).
+    idLoja obtido via ConfiguracaoTerminal.
+  end note
+
+  ' --- Auditoria ---
+  class LogAuditoria {
+    - id : int
+    - acao : TipoAcao
+    - dataHora : LocalDateTime
+    - utilizador : Funcionario
+    + getAcao() : TipoAcao
+    + getUtilizador() : Funcionario
+  }
+
+  enum TipoAcao {
+    VENDA
+    DEVOLUCAO
+    ALTERACAO_PRECO
+    APLICACAO_DESCONTO
+    GESTAO_UTILIZADOR
+    ALTERACAO_CATALOGO
+  }
+
+}
+
+' ========================
+' CAMADA DE REPOSITÓRIO
+' ========================
+
+package "Repositório" {
+  interface ProdutoRepositorio {
+    + buscarPorCodigoBarras(codigo : String) : Produto
+    + buscarPorNomeOuCategoria(query : String) : List<Produto>
+    + guardar(produto : Produto) : void
+    + atualizar(produto : Produto) : void
+    + desativar(id : int) : void
+  }
+
+  interface LoteRepositorio {
+    + buscarLotesFEFO(produto : Produto) : List<Lote>
+    + buscarLotesComDesconto(produto : Produto) : List<Lote>
+    + guardar(lote : Lote) : void
+    + atualizar(lote : Lote) : void
+    + buscarPorValidade(diasLimite : int) : List<Lote>
+  }
+
+  interface VendaRepositorio {
+    + guardar(venda : Venda) : void
+    + buscarPendentes() : List<Venda>
+    + marcarConfirmadas(ids : List<Integer>) : void
+  }
+
+  interface DevolucaoRepositorio {
+    + guardar(devolucao : Devolucao) : void
+    + buscarPorFatura(numeroFatura : String) : List<Devolucao>
+    + buscarPendentes() : List<Devolucao>
+  }
+
+  interface RemessaRepositorio {
+    + guardar(remessa : Remessa) : void
+    + buscarPorFornecedor(fornecedor : Fornecedor) : List<Remessa>
+    + buscarPendentes() : List<Remessa>
+  }
+
+  interface PagamentoRepositorio {
+    + guardar(pagamento : Pagamento) : void
+    + buscarPendentes() : List<Pagamento>
+    + atualizar(pagamento : Pagamento) : void
+  }
+
+  interface FuncionarioRepositorio {
+    + buscarPorCredenciais(nomeUtilizador : String, hashPalavraPasse : String) : Funcionario
+    + guardar(funcionario : Funcionario) : void
+    + desativar(id : int) : void
+    + verificarSessaoAtiva(id : int) : boolean
+  }
+
+  interface LogAuditoriaRepositorio {
+    + guardar(log : LogAuditoria) : void
+    + buscarPendentes() : List<LogAuditoria>
+  }
+}
+
+' ========================
+' CAMADA DE SERVIÇO
+' ========================
+
+package "Serviço" {
+  class VendaServico {
+    + iniciarVenda(funcionario : Funcionario) : Venda
+    + adicionarLinha(venda : Venda, codigoBarras : String, quantidade : int) : LinhaVenda
+    + finalizarVenda(venda : Venda, metodo : MetodoPagamento, valorEntregue : double) : Fatura
+    + anularVenda(venda : Venda) : void
+    + calcularTroco(venda : Venda, valorEntregue : double) : double
+  }
+
+  class DevolucaoServico {
+    + processarDevolucao(numeroFatura : String, codigoBarras : String, dataValidadeEmbalagem : LocalDate, quantidade : int) : Devolucao
+    + validarDevolucao(fatura : Fatura, lote : Lote, quantidade : int) : boolean
+  }
+
+  class RemessaServico {
+    + registarRemessa(fornecedor : Fornecedor, linhas : List<LinhaRemessa>, valorTotalGuia : double) : Remessa
+    + associarPedido(remessa : Remessa) : void
+    + criarPedidoRemessa(fornecedor : Fornecedor, linhas : List<LinhaPedidoRemessa>) : PedidoRemessa
+  }
+
+  class PagamentoServico {
+    + listarPendentes() : List<Pagamento>
+    + liquidar(pagamento : Pagamento) : void
+  }
+
+  class CaixaServico {
+    + abrirSessao(fundoInicial : List<DetalheNumerario>, limiteMaximo : double) : SessaoCaixa
+    + registarSangria(sessao : SessaoCaixa, valor : List<DetalheNumerario>) : Sangria
+    + fecharSessao(sessao : SessaoCaixa) : void
+    + verificarLimite(sessao : SessaoCaixa) : boolean
+  }
+
+  class FechoDiaServico {
+    + executarFecho(configuracao : ConfiguracaoTerminal, funcionario : Manager) : FechoDia
+    + reenviar(fechoDia : FechoDia) : boolean
+    + reverterEmTransito() : void
+  }
+
+  class AutenticacaoServico {
+    + autenticar(nomeUtilizador : String, palavraPasse : String) : Funcionario
+    + encerrarSessao(funcionario : Funcionario) : void
+    + verificarSessaoDuplicada(funcionario : Funcionario) : boolean
+  }
+
+  class CatalogoServico {
+    + criarProduto(produto : Produto) : void
+    + editarProduto(produto : Produto) : void
+    + desativarProduto(id : int) : void
+    + aplicarDesconto(lote : Lote, percentagem : double, manager : Manager) : Desconto
+    + gerarAlertasStockMinimo() : List<Produto>
+    + gerarAlertasValidade(diasLimite : int) : List<Lote>
+  }
+}
+
+' ========================
+' RELAÇÕES — DOMÍNIO
+' ========================
+
+' Herança utilizadores
+Funcionario <|-- Manager
+Manager <|-- CEO
+
+' Herança sincronizável
+RegistoSincronizavel <|-- Venda
+RegistoSincronizavel <|-- Devolucao
+RegistoSincronizavel <|-- Remessa
+RegistoSincronizavel <|-- Pagamento
+RegistoSincronizavel <|-- LogAuditoria
+
+' Enumerações
+RegistoSincronizavel --> EstadoSincronizacao
+Venda --> MetodoPagamento
+Venda --> EstadoVenda
+Pagamento --> TipoPagamento
+LogAuditoria --> TipoAcao
+PedidoRemessa --> EstadoPedido
+Denominacao -- DetalheNumerario
+
+' Produto / Lote
+Lote --> Produto : produto
+Lote "0..1" --> "0..1" Desconto : desconto
+Desconto --> Manager : aplicadoPor
+
+' Venda
+Venda "1" *-- "1..*" LinhaVenda : linhas
+Venda --> Funcionario : realizadaPor
+Venda "1" --> "1" Fatura : origina
+LinhaVenda --> Lote : lote
+
+' Devolução
+Devolucao --> Fatura : fatura
+
+' Remessa
+Remessa --> Fornecedor : fornecedor
+Remessa "1" *-- "1..*" LinhaRemessa : linhas
+LinhaRemessa --> Produto : produto
+LinhaRemessa --> Lote : loteGerado
+
+' Pedido Remessa
+PedidoRemessa --> Fornecedor : fornecedor
+PedidoRemessa "1" *-- "1..*" LinhaPedidoRemessa : linhas
+LinhaPedidoRemessa --> Produto : produto
+
+' Pagamento
+Pagamento --> Fornecedor : fornecedor
+Pagamento --> Remessa : remessa
+
+' Caixa
+SessaoCaixa "1" *-- "1..*" DetalheNumerario : fundoInicial
+SessaoCaixa "1" *-- "0..*" Sangria : sangrias
+Sangria "1" *-- "1..*" DetalheNumerario : valor
+
+' Fecho de Dia
+FechoDia --> ConfiguracaoTerminal : configuracaoTerminal
+FechoDia --> EstadoSincronizacao : estadoEnvio
+FechoDia ..> RegistoSincronizavel : agrega (PENDENTE)
+
+' Auditoria
+LogAuditoria --> Funcionario : utilizador
+
+' Configuração
+RegistoSincronizavel ..> ConfiguracaoTerminal : lê idLoja na criação
+
+' ========================
+' RELAÇÕES — REPOSITÓRIO
+' ========================
+VendaServico ..> VendaRepositorio
+DevolucaoServico ..> DevolucaoRepositorio
+RemessaServico ..> RemessaRepositorio
+PagamentoServico ..> PagamentoRepositorio
+CatalogoServico ..> ProdutoRepositorio
+CatalogoServico ..> LoteRepositorio
+FechoDiaServico ..> VendaRepositorio
+FechoDiaServico ..> DevolucaoRepositorio
+FechoDiaServico ..> RemessaRepositorio
+FechoDiaServico ..> PagamentoRepositorio
+FechoDiaServico ..> LogAuditoriaRepositorio
+AutenticacaoServico ..> FuncionarioRepositorio
+
+@enduml

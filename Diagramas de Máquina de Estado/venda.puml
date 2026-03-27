@@ -1,0 +1,30 @@
+@startuml
+
+[*] --> EmCurso : Funcionário inicia nova transação
+
+EmCurso --> EmCurso : Artigo lido por código de barras
+EmCurso --> EmCurso : Desconto de validade acionado
+
+EmCurso --> Anulada : Funcionário cancela antes do pagamento
+EmCurso --> AguardaPagamento : Funcionário confirma o total
+
+AguardaPagamento --> EmCurso : Funcionário volta atrás
+AguardaPagamento --> Confirmada : Pagamento recebido e transação persistida
+
+Confirmada --> Faturada : Fatura digital gerada automaticamente
+
+state "Avaliação de Devolução" as AvaliacaoDeDevolucao
+
+Faturada --> AvaliacaoDeDevolucao : Funcionário inicia processo de devolução
+Faturada --> [*]
+
+AvaliacaoDeDevolucao --> DevolucaoRecusada : Funcionário recusa a devolução
+AvaliacaoDeDevolucao --> DevolucaoAceitaComStock : Funcionário aceita,\nproduto dentro da validade
+AvaliacaoDeDevolucao --> DevolucaoAceitaSemStock : Funcionário aceita,\nproduto fora da validade
+
+Anulada --> [*]
+DevolucaoRecusada --> [*]
+DevolucaoAceitaComStock --> [*]
+DevolucaoAceitaSemStock --> [*]
+
+@enduml
