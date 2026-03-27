@@ -1,0 +1,53 @@
+@startuml servicos_core_parte1_autenticacao_caixa
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classHeaderBackgroundColor #EEEDFE
+skinparam classBorderColor #534AB7
+skinparam classBackgroundColor #FAFAFA
+skinparam arrowColor #534AB7
+skinparam stereotypeCBackgroundColor #E1F5EE
+skinparam stereotypeABackgroundColor #FAC775
+skinparam stereotypeIBackgroundColor #D1ECF1
+skinparam packageBackgroundColor #F8F8F8
+skinparam packageBorderColor #B4B2A9
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 50
+
+title Software de Loja — Serviços Core (Parte 1: Autenticação e Caixa)
+
+' ╔══════════════════════════════════════╗
+' ║          CAMADA DE SERVIÇO           ║
+' ║    (Autenticação e Caixa)            ║
+' ╚══════════════════════════════════════╝
+package "Serviço (Autenticação e Caixa)" #EEF9F4 {
+
+  class AutenticacaoServico {
+    - utilizadorRepositorio : UtilizadorRepositorio
+    + autenticar(nomeUtilizador : String, palavraPasse : String) : Utilizador
+    + encerrarSessao(utilizador : Utilizador) : void
+    + verificarSessaoDuplicada(utilizador : Utilizador) : boolean
+  }
+
+  class CaixaServico {
+    - sessaoCaixaRepositorio : SessaoCaixaRepositorio
+    - sangriaRepositorio : SangriaRepositorio
+    + abrirSessao(utilizador : Utilizador, fundo : List~DetalheNumerario~, limiteMaximo : double) : SessaoCaixa
+    + registarSangria(sessao : SessaoCaixa, utilizador : Utilizador, valor : List~DetalheNumerario~) : Sangria
+    + fecharSessao(sessao : SessaoCaixa) : void
+    + verificarLimite(sessao : SessaoCaixa) : boolean
+  }
+
+  class AuditoriaServico {
+    - logAuditoriaRepositorio : LogAuditoriaRepositorio
+    + registar(utilizador : Utilizador, acao : TipoAcao, entidade : String, idEntidade : int) : void
+  }
+}
+
+' Relações com Repositórios
+AutenticacaoServico ..> UtilizadorRepositorio
+CaixaServico ..> SessaoCaixaRepositorio
+CaixaServico ..> SangriaRepositorio
+AuditoriaServico ..> LogAuditoriaRepositorio
+
+@enduml

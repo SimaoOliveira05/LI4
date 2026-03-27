@@ -1,0 +1,68 @@
+@startuml Software_de_Loja_Parte2B3_Repositorios_Remessas_Caixa
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classHeaderBackgroundColor #EEEDFE
+skinparam classBorderColor #534AB7
+skinparam classBackgroundColor #FAFAFA
+skinparam arrowColor #534AB7
+skinparam stereotypeCBackgroundColor #E1F5EE
+skinparam stereotypeABackgroundColor #FAC775
+skinparam stereotypeIBackgroundColor #D1ECF1
+skinparam packageBackgroundColor #F8F8F8
+skinparam packageBorderColor #B4B2A9
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 50
+
+title Software de Loja — Parte 2B3: Repositório (Remessas, Pagamentos e Caixa)
+
+' ╔══════════════════════════════════════╗
+' ║         CAMADA DE REPOSITÓRIO        ║
+' ║ Implementações (Remessas e Caixa)    ║
+' ╚══════════════════════════════════════╝
+package "Repositório (Implementações - Remessas e Caixa)" #FFF8EE {
+
+  class RemessaRepositorioImpl {
+    - conexao : Connection
+    + guardar(remessa : Remessa) : void
+    + buscarPorFornecedor(idFornecedor : int) : List~Remessa~
+    + buscarPendentes() : List~Remessa~
+  }
+
+  class PedidoRemessaRepositorioImpl {
+    - conexao : Connection
+    + guardar(pedido : PedidoRemessa) : void
+    + buscarPendentesPorFornecedor(idFornecedor : int) : List~PedidoRemessa~
+    + atualizar(pedido : PedidoRemessa) : void
+    + listar(estado : EstadoPedido) : List~PedidoRemessa~
+  }
+
+  class PagamentoRepositorioImpl {
+    - conexao : Connection
+    + guardar(pagamento : Pagamento) : void
+    + buscarPendentes() : List~Pagamento~
+    + atualizar(pagamento : Pagamento) : void
+  }
+
+  class SessaoCaixaRepositorioImpl {
+    - conexao : Connection
+    + guardar(sessao : SessaoCaixa) : void
+    + atualizar(sessao : SessaoCaixa) : void
+    + buscarSessaoAtiva(idUtilizador : int) : SessaoCaixa
+  }
+
+  class SangriaRepositorioImpl {
+    - conexao : Connection
+    + guardar(sangria : Sangria) : void
+    + buscarPorSessao(idSessao : int) : List~Sangria~
+  }
+}
+
+' Implementações realizam interfaces
+RemessaRepositorioImpl ..|> RemessaRepositorio
+PedidoRemessaRepositorioImpl ..|> PedidoRemessaRepositorio
+PagamentoRepositorioImpl ..|> PagamentoRepositorio
+SessaoCaixaRepositorioImpl ..|> SessaoCaixaRepositorio
+SangriaRepositorioImpl ..|> SangriaRepositorio
+
+@enduml

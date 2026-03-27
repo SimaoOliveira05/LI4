@@ -1,0 +1,110 @@
+@startuml Software_de_Loja_Parte2A_Repositorios_Interfaces
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classHeaderBackgroundColor #EEEDFE
+skinparam classBorderColor #534AB7
+skinparam classBackgroundColor #FAFAFA
+skinparam arrowColor #534AB7
+skinparam stereotypeCBackgroundColor #E1F5EE
+skinparam stereotypeABackgroundColor #FAC775
+skinparam stereotypeIBackgroundColor #D1ECF1
+skinparam packageBackgroundColor #F8F8F8
+skinparam packageBorderColor #B4B2A9
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 50
+
+title Software de Loja — Parte 2A: Repositório (Interfaces)
+
+' ╔══════════════════════════════════════╗
+' ║         CAMADA DE REPOSITÓRIO        ║
+' ║            (Interfaces)              ║
+' ╚══════════════════════════════════════╝
+package "Repositório (Interfaces)" #FFF8EE {
+
+  interface UtilizadorRepositorio {
+    + buscarPorCredenciais(nomeUtilizador : String, hashPalavraPasse : String) : Utilizador
+    + buscarPorId(id : int) : Utilizador
+    + guardar(utilizador : Utilizador) : void
+    + atualizar(utilizador : Utilizador) : void
+    + desativar(id : int) : void
+    + verificarSessaoAtiva(id : int) : boolean
+  }
+
+  interface ProdutoRepositorio {
+    + buscarPorCodigoBarras(codigo : String) : Produto
+    + buscarPorNomeOuCategoria(query : String) : List~Produto~
+    + guardar(produto : Produto) : void
+    + atualizar(produto : Produto) : void
+    + desativar(id : int) : void
+    + buscarAbaixoStockMinimo() : List~Produto~
+  }
+
+  interface LoteRepositorio {
+    + buscarLotesFEFO(idProduto : int) : List~Lote~
+    + buscarPorValidade(diasLimite : int) : List~Lote~
+    + guardar(lote : Lote) : void
+    + atualizar(lote : Lote) : void
+  }
+
+  interface VendaRepositorio {
+    + guardar(venda : Venda) : void
+    + buscarPorId(id : int) : Venda
+    + buscarPendentes() : List~Venda~
+    + marcarConfirmadas(ids : List~Integer~) : void
+  }
+
+  interface FaturaRepositorio {
+    + buscarPorNumero(numeroFatura : String) : Fatura
+    + guardar(fatura : Fatura) : void
+  }
+
+  interface DevolucaoRepositorio {
+    + guardar(devolucao : Devolucao) : void
+    + buscarPorFatura(numeroFatura : String) : List~Devolucao~
+    + buscarPendentes() : List~Devolucao~
+  }
+
+  interface RemessaRepositorio {
+    + guardar(remessa : Remessa) : void
+    + buscarPorFornecedor(idFornecedor : int) : List~Remessa~
+    + buscarPendentes() : List~Remessa~
+  }
+
+  interface PedidoRemessaRepositorio {
+    + guardar(pedido : PedidoRemessa) : void
+    + buscarPendentesPorFornecedor(idFornecedor : int) : List~PedidoRemessa~
+    + atualizar(pedido : PedidoRemessa) : void
+    + listar(estado : EstadoPedido) : List~PedidoRemessa~
+  }
+
+  interface PagamentoRepositorio {
+    + guardar(pagamento : Pagamento) : void
+    + buscarPendentes() : List~Pagamento~
+    + atualizar(pagamento : Pagamento) : void
+  }
+
+  interface SessaoCaixaRepositorio {
+    + guardar(sessao : SessaoCaixa) : void
+    + atualizar(sessao : SessaoCaixa) : void
+    + buscarSessaoAtiva(idUtilizador : int) : SessaoCaixa
+  }
+
+  interface SangriaRepositorio {
+    + guardar(sangria : Sangria) : void
+    + buscarPorSessao(idSessao : int) : List~Sangria~
+  }
+
+  interface LogAuditoriaRepositorio {
+    + guardar(log : LogAuditoria) : void
+    + buscarPendentes() : List~LogAuditoria~
+  }
+
+  interface FechoDiaRepositorio {
+    + guardar(fecho : FechoDia) : void
+    + atualizar(fecho : FechoDia) : void
+    + buscarUltimoConfirmado() : FechoDia
+  }
+}
+
+@enduml

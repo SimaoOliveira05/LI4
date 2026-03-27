@@ -1,0 +1,58 @@
+@startuml Software_de_Loja_Parte1B_Controllers_Gestao
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classHeaderBackgroundColor #EEEDFE
+skinparam classBorderColor #534AB7
+skinparam classBackgroundColor #FAFAFA
+skinparam arrowColor #534AB7
+skinparam stereotypeCBackgroundColor #E1F5EE
+skinparam stereotypeABackgroundColor #FAC775
+skinparam stereotypeIBackgroundColor #D1ECF1
+skinparam packageBackgroundColor #F8F8F8
+skinparam packageBorderColor #B4B2A9
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 50
+
+title Software de Loja — Parte 1B: Apresentação (Controllers de Gestão)
+
+' ╔══════════════════════════════════════╗
+' ║        CAMADA DE APRESENTAÇÃO        ║
+' ║      (Controllers de Gestão)         ║
+' ╚══════════════════════════════════════╝
+package "Apresentação (Controllers de Gestão)" #EEF4FF {
+
+  class RemessaController {
+    - remessaServico : RemessaServico
+    + onRegistarRemessa(dados : RemessaDTO) : void
+    + onCriarPedidoRemessa(dados : PedidoRemessaDTO) : void
+    + onConsultarPedidos(estado : EstadoPedido) : void
+  }
+
+  class PagamentoController {
+    - pagamentoServico : PagamentoServico
+    + onListarPendentes() : void
+    + onLiquidar(idPagamento : int) : void
+  }
+
+  class FechoDiaController {
+    - fechoDiaServico : FechoDiaServico
+    + onIniciarFecho() : void
+    + onReenviar() : void
+  }
+
+  class UtilizadorController {
+    - utilizadorServico : UtilizadorServico
+    + onCriarUtilizador(dados : UtilizadorDTO) : void
+    + onDesativarUtilizador(id : int) : void
+    + onEditarUtilizador(id : int, dados : UtilizadorDTO) : void
+  }
+}
+
+' Relações com Serviços
+RemessaController ..> RemessaServico
+PagamentoController ..> PagamentoServico
+FechoDiaController ..> FechoDiaServico
+UtilizadorController ..> UtilizadorServico
+
+@enduml

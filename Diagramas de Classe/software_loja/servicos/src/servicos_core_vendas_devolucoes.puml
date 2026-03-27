@@ -1,0 +1,59 @@
+@startuml servicos_core_parte2_vendas_devolucoes
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classHeaderBackgroundColor #EEEDFE
+skinparam classBorderColor #534AB7
+skinparam classBackgroundColor #FAFAFA
+skinparam arrowColor #534AB7
+skinparam stereotypeCBackgroundColor #E1F5EE
+skinparam stereotypeABackgroundColor #FAC775
+skinparam stereotypeIBackgroundColor #D1ECF1
+skinparam packageBackgroundColor #F8F8F8
+skinparam packageBorderColor #B4B2A9
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 50
+
+title Software de Loja — Serviços Core (Parte 2: Vendas e Devoluções)
+
+' ╔══════════════════════════════════════╗
+' ║          CAMADA DE SERVIÇO           ║
+' ║      (Vendas e Devoluções)           ║
+' ╚══════════════════════════════════════╝
+package "Serviço (Vendas e Devoluções)" #EEF9F4 {
+
+  class VendaServico {
+    - vendaRepositorio : VendaRepositorio
+    - loteRepositorio : LoteRepositorio
+    - caixaRepositorio : SessaoCaixaRepositorio
+    - auditoriaServico : AuditoriaServico
+    + iniciarVenda(utilizador : Utilizador) : Venda
+    + adicionarLinha(venda : Venda, codigoBarras : String, quantidade : int) : LinhaVenda
+    + finalizarVenda(venda : Venda, metodo : MetodoPagamento, valorEntregue : double) : Fatura
+    + anularVenda(venda : Venda) : void
+    + calcularTroco(total : double, valorEntregue : double) : double
+  }
+
+  class DevolucaoServico {
+    - devolucaoRepositorio : DevolucaoRepositorio
+    - faturaRepositorio : FaturaRepositorio
+    - loteRepositorio : LoteRepositorio
+    - auditoriaServico : AuditoriaServico
+    + processar(numeroFatura : String, codigoBarras : String, dataValidadeEmbalagem : LocalDate, quantidade : int) : Devolucao
+    + validar(fatura : Fatura, lote : Lote, quantidade : int) : boolean
+  }
+}
+
+' Relações com Repositórios
+VendaServico ..> VendaRepositorio
+VendaServico ..> LoteRepositorio
+VendaServico ..> SessaoCaixaRepositorio
+DevolucaoServico ..> DevolucaoRepositorio
+DevolucaoServico ..> FaturaRepositorio
+DevolucaoServico ..> LoteRepositorio
+
+' Serviços transversais
+VendaServico ..> AuditoriaServico
+DevolucaoServico ..> AuditoriaServico
+
+@enduml
