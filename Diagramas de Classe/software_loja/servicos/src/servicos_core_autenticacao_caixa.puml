@@ -50,12 +50,30 @@ package "Serviço (Autenticação, Caixa e Autorização)" #EEF9F4 {
   }
 
   class AcessoNegadoException {
-    - mensagem : String
     - perfilActual : PerfilUtilizador
-    - perfisExigidos : PerfilUtilizador[]
+    - perfisExigidos : List~PerfilUtilizador~
+    + AcessoNegadoException(perfilActual : PerfilUtilizador, perfisExigidos : List~PerfilUtilizador~)
     + getPerfilActual() : PerfilUtilizador
-    + getPerfisExigidos() : PerfilUtilizador[]
+    + getPerfisExigidos() : List~PerfilUtilizador~
   }
+  note right of AcessoNegadoException
+    Lançada por AutorizacaoServico
+    quando o perfil do utilizador
+    autenticado não satisfaz os perfis
+    exigidos pela operação (RF2, RF22).
+  end note
+
+  class SessaoDuplicadaException {
+    - nomeUtilizador : String
+    + SessaoDuplicadaException(nomeUtilizador : String)
+    + getNomeUtilizador() : String
+  }
+  note right of SessaoDuplicadaException
+    Lançada por AutenticacaoServico
+    quando um utilizador já se
+    encontra em sessão ativa.
+    Garante unicidade de sessão (RF2).
+  end note
 }
 
 ' Relações com Repositórios
@@ -68,6 +86,7 @@ AuditoriaServico ..> LogAuditoriaRepositorio
 CaixaServico ..> AutorizacaoServico
 
 ' Exceção lançada
-AutorizacaoServico ..> AcessoNegadoException : lança
+AutorizacaoServico ..> AcessoNegadoException : <<lança>>
+AutenticacaoServico ..> SessaoDuplicadaException : <<lança>>
 
 @enduml
