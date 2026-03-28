@@ -1,0 +1,80 @@
+@startuml Software_de_Loja_Parte4c_Dominio_Caixa_Numerario
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classHeaderBackgroundColor #EEEDFE
+skinparam classBorderColor #534AB7
+skinparam classBackgroundColor #FAFAFA
+skinparam arrowColor #534AB7
+skinparam stereotypeCBackgroundColor #E1F5EE
+skinparam stereotypeABackgroundColor #FAC775
+skinparam stereotypeIBackgroundColor #D1ECF1
+skinparam packageBackgroundColor #F8F8F8
+skinparam packageBorderColor #B4B2A9
+skinparam linetype ortho
+skinparam nodesep 60
+skinparam ranksep 50
+
+title Software de Loja — Domínio (Caixa e Numerário)
+
+package "Caixa e Numerário" #FEFEFE {
+
+  enum Denominacao {
+    CENTO_EUROS
+    CINQUENTA_EUROS
+    VINTE_EUROS
+    DEZ_EUROS
+    CINCO_EUROS
+    DOIS_EUROS
+    UM_EURO
+    CINQUENTA_CENTIMOS
+    VINTE_CENTIMOS
+    DEZ_CENTIMOS
+    CINCO_CENTIMOS
+    DOIS_CENTIMOS
+    UM_CENTIMO
+  }
+
+  class DetalheNumerario {
+    - denominacao : Denominacao
+    - quantidade : int
+    - subtotal : double
+    + calcularSubtotal() : double
+  }
+
+  class SessaoCaixa {
+    - id : int
+    - idUtilizador : int
+    - fundoInicial : List~DetalheNumerario~
+    - saldoAtual : double
+    - limiteMaximo : double
+    - dataAbertura : LocalDateTime
+    - dataEncerramento : LocalDateTime
+    + getSaldoAtual() : double
+    + excedeLimite() : boolean
+    + getIdUtilizador() : int
+  }
+  note bottom of SessaoCaixa
+    idUtilizador garante rastreabilidade
+    ao utilizador autenticado (RF1, RF9).
+  end note
+
+  class Sangria {
+    - id : int
+    - idSessaoCaixa : int
+    - dataHora : LocalDateTime
+    - valor : List~DetalheNumerario~
+    + getIdSessaoCaixa() : int
+    + getTotal() : double
+  }
+}
+
+' Relações
+SessaoCaixa "1" *-- "0..*" Sangria : sangrias
+SessaoCaixa "1" *-- "1..*" DetalheNumerario : fundoInicial
+Sangria "1" *-- "1..*" DetalheNumerario : valor
+Denominacao -- DetalheNumerario
+
+' Relação com Utilizador (referência)
+SessaoCaixa --> Utilizador : idUtilizador
+
+@enduml
