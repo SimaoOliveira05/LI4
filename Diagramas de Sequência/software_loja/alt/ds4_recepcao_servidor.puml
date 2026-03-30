@@ -1,0 +1,163 @@
+@startuml DS4_Recepcao_Servidor
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam maxMessageSize 220
+skinparam sequenceArrowThickness 1.2
+skinparam roundcorner 6
+skinparam sequenceParticipantBorderColor #0F6E56
+skinparam sequenceParticipantBackgroundColor #E1F5EE
+skinparam sequenceActorBorderColor #0F6E56
+skinparam sequenceActorBackgroundColor #E1F5EE
+skinparam sequenceLifeLineBorderColor #5DCAA5
+skinparam sequenceGroupBackgroundColor #F4FBF8
+skinparam sequenceGroupBorderColor #5DCAA5
+skinparam noteBorderColor #EF9F27
+skinparam noteBackgroundColor #FAEEDA
+
+title DS4 — Recepção do Pacote no Servidor Central (RF15, RF16, ADR-05, ADR-08)
+
+participant "Software\nde Loja\n(HTTP Client)" as SL <<Externo>>
+participant "RecepcaoPacoteHandler\n(Javalin)" as RPH <<Apresentação>>
+participant "RecepcaoPacoteServico" as RPS <<Serviço>>
+participant "ConsolidacaoServico" as CS <<Serviço>>
+participant "LojaRepositorio" as LR <<Repositório>>
+participant "VendaCentral\nRepositorio" as VCR <<Repositório>>
+participant "DevolucaoCentral\nRepositorio" as DCR <<Repositório>>
+participant "RemessaCentral\nRepositorio" as RCR <<Repositório>>
+participant "PagamentoCentral\nRepositorio" as PCR <<Repositório>>
+participant "LogAuditoria\nCentralRepositorio" as LACR <<Repositório>>
+participant "FechoDiaCentral\nRepositorio" as FDCR <<Repositório>>
+
+== Recepção e validação do pacote ==
+
+SL -> RPH : POST /fecho\n(PacoteFechoDTO — JSON)
+activate RPH
+
+RPH -> RPS : receberPacote(pacoteFechoDTO)
+activate RPS
+
+RPS -> RPS : validarIntegridade(pacoteFechoDTO)
+note right of RPS
+  Verifica hash de integridade
+  do pacote recebido (ADR-05).
+end note
+
+alt hash inválido ou JSON malformado
+  RPS --> RPH : <<lança>> PacoteInvalidoException
+  RPH --> SL : 400 Bad Request\n(mensagem de erro)
+else pacote íntegro
+
+  == Resolução ou criação da Loja (ADR-05) ==
+
+  RPS -> LR : buscarPorId(pacoteFechoDTO.idLoja)
+  activate LR
+  LR --> RPS : loja : Loja
+  deactivate LR
+
+  alt loja não encontrada
+    note over RPS
+      Primeira recepção de pacote desta loja.
+      A Loja é criada automaticamente no servidor
+      central — não requer configuração prévia.
+    end note
+    RPS -> LR : guardarSeNaoExistir(novaLoja)
+    activate LR
+    LR --> RPS : loja : Loja
+    deactivate LR
+  end
+
+  == Persistência com deduplicação (ADR-05) ==
+
+  note over RPS, LACR
+    Cada entidade é persistida com INSERT IGNORE
+    usando a chave composta (idLoja + idOriginalLoja).
+    Garante idempotência: reenvio do mesmo pacote
+    não duplica registos na base de dados central.
+  end note
+
+  loop para cada Venda no pacote
+    RPS -> VCR : guardarSeNaoExistir(vendaCentral)
+    activate VCR
+    VCR --> RPS : ok (inserido ou ignorado)
+    deactivate VCR
+  end
+
+  loop para cada Devolucao no pacote
+    RPS -> DCR : guardarSeNaoExistir(devolucaoCentral)
+    activate DCR
+    DCR --> RPS : ok (inserido ou ignorado)
+    deactivate DCR
+  end
+
+  loop para cada Remessa no pacote
+    RPS -> RCR : guardarSeNaoExistir(remessaCentral)
+    activate RCR
+    RCR --> RPS : ok (inserido ou ignorado)
+    deactivate RCR
+  end
+
+  loop para cada Pagamento no pacote
+    RPS -> PCR : guardarSeNaoExistir(pagamentoCentral)
+    activate PCR
+    PCR --> RPS : ok (inserido ou ignorado)
+    deactivate PCR
+  end
+
+  loop para cada LogAuditoria no pacote
+    RPS -> LACR : guardarSeNaoExistir(logCentral)
+    activate LACR
+    LACR --> RPS : ok (inserido ou ignorado)
+    deactivate LACR
+  end
+
+  == Registo do FechoDiaCentral e verificação de completude (RF15) ==
+
+  RPS -> FDCR : guardar(fechoDiaCentral)
+  activate FDCR
+  FDCR --> RPS : ok
+  deactivate FDCR
+
+  RPS -> CS : verificarCompletude(pacoteFechoDTO.dataFecho)
+  activate CS
+
+  CS -> FDCR : buscarLojasFaltantes(dataFecho)
+  activate FDCR
+  FDCR --> CS : lojasFaltantes : List<Loja>
+  deactivate FDCR
+
+  alt lojasFaltantes.isEmpty()
+    CS --> RPS : EstadoFecho.COMPLETO
+  else existem lojas sem fecho para a data
+    CS --> RPS : EstadoFecho.PARCIAL (lojasFaltantes)
+    note right of CS
+      RF15 — a CEO pode consultar
+      quais as lojas ainda em falta
+      para a data corrente.
+    end note
+  end
+
+  deactivate CS
+
+  == Envio do ACK de confirmação (ADR-08) ==
+
+  RPS --> RPH : ok — persistência concluída
+  deactivate RPS
+
+  alt falha ao enviar ACK
+    RPH --> SL : <<erro de rede>>
+    note right of SL
+      A loja mantém os registos em
+      estado EM_TRANSITO e reenvia
+      o pacote no próximo fecho.
+      O INSERT IGNORE garante que a
+      re-persistência é idempotente (ADR-05).
+    end note
+  else ACK enviado com sucesso
+    RPH --> SL : 200 OK\n(ACK — idLoja, dataFecho)
+  end
+
+end
+
+deactivate RPH
+
+@enduml

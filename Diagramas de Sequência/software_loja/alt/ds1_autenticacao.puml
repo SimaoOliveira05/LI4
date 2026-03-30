@@ -1,0 +1,104 @@
+@startuml DS1_Autenticacao
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam maxMessageSize 200
+skinparam sequenceArrowThickness 1.2
+skinparam roundcorner 6
+skinparam sequenceParticipantBorderColor #534AB7
+skinparam sequenceParticipantBackgroundColor #EEEDFE
+skinparam sequenceActorBorderColor #534AB7
+skinparam sequenceActorBackgroundColor #EEEDFE
+skinparam sequenceLifeLineBorderColor #AFA9EC
+skinparam sequenceGroupBackgroundColor #F8F8FF
+skinparam sequenceGroupBorderColor #AFA9EC
+skinparam noteBorderColor #EF9F27
+skinparam noteBackgroundColor #FAEEDA
+
+title DS1 — Autenticação e Controlo de Sessão (RF1, RF2)
+
+actor "Utilizador" as U
+participant "AutenticacaoController" as AC <<Apresentação>>
+participant "AutenticacaoServico" as AS <<Serviço>>
+participant "AutorizacaoServico" as AZ <<Serviço>>
+participant "UtilizadorRepositorio" as UR <<Repositório>>
+participant "ConfiguracaoTerminal" as CT <<Configuração>>
+
+== Arranque da aplicação ==
+
+AC -> CT : getIdLoja()
+activate CT
+CT --> AC : idLoja
+deactivate CT
+note right of CT
+  Lida do ficheiro de configuração
+  local no arranque (ADR-02, RF2).
+  Não alterável pela interface.
+end note
+
+== Submissão de credenciais ==
+
+U -> AC : onLoginSubmit(nomeUtilizador, palavraPasse)
+activate AC
+
+AC -> AS : autenticar(nomeUtilizador, palavraPasse)
+activate AS
+
+AS -> UR : buscarPorCredenciais(nomeUtilizador, hashPalavraPasse)
+activate UR
+UR --> AS : utilizador : Utilizador
+deactivate UR
+
+== Validação da sessão duplicada (RF1) ==
+
+AS -> UR : verificarSessaoAtiva(utilizador.getId())
+activate UR
+UR --> AS : emSessao : boolean
+deactivate UR
+
+alt emSessao = true
+  AS --> AC : <<lança>> SessaoDuplicadaException
+  AC --> U : alerta — "Utilizador já autenticado\nnoutro terminal"
+else emSessao = false
+
+  AS -> UR : marcarEmSessao(utilizador.getId())
+  activate UR
+  UR --> AS : ok
+  deactivate UR
+
+  AS --> AC : utilizador : Utilizador
+  deactivate AS
+
+  == Verificação de perfil para a operação (RF2) ==
+
+  AC -> AZ : exigirPerfil(utilizador, FUNCIONARIO, GESTOR, CEO)
+  activate AZ
+
+  alt perfil não reconhecido
+    AZ --> AC : <<lança>> AcessoNegadoException
+    AC --> U : alerta — "Perfil insuficiente"
+  else perfil válido
+    AZ --> AC : ok
+    deactivate AZ
+    AC --> U : navegar para ecrã principal\n(funcionalidades conforme perfil)
+  end
+
+end
+
+deactivate AC
+
+== Encerramento de sessão ==
+
+U -> AC : onLogout()
+activate AC
+AC -> AS : encerrarSessao(utilizador)
+activate AS
+AS -> UR : marcarForaDeSessao(utilizador.getId())
+activate UR
+UR --> AS : ok
+deactivate UR
+AS --> AC : ok
+deactivate AS
+AC --> U : ecrã de login
+deactivate AC
+
+@enduml

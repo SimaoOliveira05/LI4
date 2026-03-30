@@ -1,0 +1,147 @@
+@startuml DS2_Venda_FEFO
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam maxMessageSize 220
+skinparam sequenceArrowThickness 1.2
+skinparam roundcorner 6
+skinparam sequenceParticipantBorderColor #0F6E56
+skinparam sequenceParticipantBackgroundColor #E1F5EE
+skinparam sequenceActorBorderColor #0F6E56
+skinparam sequenceActorBackgroundColor #E1F5EE
+skinparam sequenceLifeLineBorderColor #5DCAA5
+skinparam sequenceGroupBackgroundColor #F4FBF8
+skinparam sequenceGroupBorderColor #5DCAA5
+skinparam noteBorderColor #EF9F27
+skinparam noteBackgroundColor #FAEEDA
+
+title DS2 — Registo de Venda com Lógica FEFO (RF3, RF11, RF12)
+
+actor "Funcionario" as F
+participant "VendaController" as VC <<Apresentação>>
+participant "AutorizacaoServico" as AZ <<Serviço>>
+participant "VendaServico" as VS <<Serviço>>
+participant "CatalogoServico" as CS <<Serviço>>
+participant "CaixaServico" as CX <<Serviço>>
+participant "AuditoriaServico" as AU <<Serviço>>
+participant "LoteRepositorio" as LR <<Repositório>>
+participant "VendaRepositorio" as VR <<Repositório>>
+participant "SessaoCaixaRepositorio" as SCR <<Repositório>>
+
+== Autorização prévia ==
+
+F -> VC : onIniciarVenda()
+activate VC
+VC -> AZ : exigirPerfil(utilizador, FUNCIONARIO, GESTOR, CEO)
+activate AZ
+AZ --> VC : ok
+deactivate AZ
+
+VC -> VS : iniciarVenda(utilizador)
+activate VS
+VS --> VC : venda : Venda
+deactivate VS
+
+== Ciclo de leitura de artigos (repetido por artigo) ==
+
+loop para cada artigo lido na caixa
+
+  F -> VC : onLerCodigoBarras(codigoBarras, quantidade)
+  activate VC
+
+  VC -> VS : adicionarLinha(venda, codigoBarras, quantidade)
+  activate VS
+
+  VS -> CS : pesquisarProduto(codigoBarras)
+  activate CS
+  CS --> VS : produto : Produto
+  deactivate CS
+
+  alt produto não encontrado
+    VS --> VC : <<lança>> ProdutoNaoEncontradoException
+    VC --> F : alerta — "Produto desconhecido"
+  else produto inativo
+    VS --> VC : <<lança>> ProdutoInativoException
+    VC --> F : alerta — "Produto não disponível"
+  else produto válido
+
+    note over VS, LR
+      Lógica FEFO: selecciona o lote com
+      data de validade mais próxima a expirar.
+      Se o funcionário activou "Desconto Validade",
+      o sistema usa o lote com desconto configurado
+      pelo gestor, ignorando a ordem FEFO (RF3).
+    end note
+
+    VS -> LR : buscarLotesFEFO(produto.getId())
+    activate LR
+    LR --> VS : lotes : List<Lote>
+    deactivate LR
+
+    alt stock total insuficiente
+      VS --> VC : <<lança>> StockInsuficienteException(stockDisponivel)
+      VC --> F : alerta — "Stock insuficiente\n(disponível: N unidades)"
+    else stock disponível
+
+      VS -> LR : deduzirUnidade(lote)
+      activate LR
+      LR --> VS : ok
+      deactivate LR
+
+      VS --> VC : linhaVenda : LinhaVenda
+      VC --> F : actualiza total parcial no ecrã
+
+    end
+  end
+  deactivate VS
+  deactivate VC
+end
+
+== Finalização da venda ==
+
+F -> VC : onFinalizarVenda(metodoPagamento, valorEntregue)
+activate VC
+
+alt metodoPagamento = NUMERARIO
+  VC -> VS : calcularTroco(venda, valorEntregue)
+  activate VS
+
+  alt valorEntregue < totalAPagar
+    VS --> VC : <<lança>> ValorEntregueInsuficienteException
+    VC --> F : alerta — "Valor insuficiente"
+  else valor suficiente
+    VS --> VC : troco : double
+    deactivate VS
+    VC --> F : apresenta troco no ecrã
+  end
+end
+
+VC -> VS : finalizarVenda(venda, metodoPagamento, valorEntregue)
+activate VS
+
+VS -> VR : guardar(venda)
+activate VR
+VR --> VS : ok
+deactivate VR
+
+VS -> SCR : actualizarSaldo(sessaoCaixa, venda.getTotalFaturado(), metodoPagamento)
+activate SCR
+SCR --> VS : ok
+deactivate SCR
+
+alt saldo em caixa excede limiteMaximo (RF9)
+  VS --> VC : alertaSangria
+  VC --> F : alerta — "Limite de caixa excedido.\nProceder a sangria."
+end
+
+VS -> AU : registar(utilizador, VENDA, "Venda", venda.getId())
+activate AU
+AU --> VS : ok
+deactivate AU
+
+VS --> VC : fatura : Fatura
+deactivate VS
+
+VC --> F : apresenta fatura (numeroFatura, total, troco)
+deactivate VC
+
+@enduml
