@@ -1,6 +1,6 @@
 @startuml Software_de_Loja_v2
 skinparam classAttributeIconSize 0
-skinparam classFontSize 12
+skinparam classFontSize 11
 skinparam classHeaderBackgroundColor #EEEDFE
 skinparam classBorderColor #534AB7
 skinparam classBackgroundColor #FAFAFA
@@ -13,6 +13,10 @@ skinparam packageBorderColor #B4B2A9
 skinparam linetype ortho
 skinparam nodesep 40
 skinparam ranksep 50
+
+left to right direction
+
+scale 0.6
 
 title Software de Loja — Diagrama de Classes (Layered Architecture + MVC)
 

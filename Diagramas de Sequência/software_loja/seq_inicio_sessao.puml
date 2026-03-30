@@ -1,0 +1,147 @@
+@startuml seq_inicio_sessao
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam maxMessageSize 160
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceParticipantBorderColor #534AB7
+skinparam sequenceParticipantBackgroundColor #EEEDFE
+skinparam sequenceActorBorderColor #534AB7
+skinparam sequenceActorBackgroundColor #EEEDFE
+skinparam sequenceLifeLineBorderColor #534AB7
+skinparam sequenceGroupBorderColor #888888
+skinparam sequenceGroupBackgroundColor #F5F5F5
+skinparam noteBorderColor #534AB7
+skinparam noteBackgroundColor #FFFDE7
+skinparam sequenceDividerBorderColor #534AB7
+skinparam sequenceDividerBackgroundColor #EEF4FF
+
+title Diagrama de Sequência — Início de Sessão (Software de Loja)
+
+actor "Funcionário /\nGestor / CEO" as Actor
+
+participant "AutenticacaoController" as Controller   #EEF4FF
+participant "AutenticacaoServico"    as Servico      #EEF9F4
+participant "AutorizacaoServico"     as AutorizServico #EEF9F4
+participant "UtilizadorRepositorio"  as Repo         #FFF8EE
+participant "Utilizador"             as Utilizador   #FEFEFE
+participant "SessaoCaixaRepositorio" as SessaoRepo   #FFF8EE
+
+== Submissão de Credenciais ==
+
+Actor -> Controller : onLoginSubmit(evento)
+activate Controller
+
+Controller -> Servico : autenticar(nomeUtilizador, palavraPasse)
+activate Servico
+
+Servico -> Repo : buscarPorCredenciais(nomeUtilizador, hashPalavraPasse)
+activate Repo
+Repo --> Servico : utilizador : Utilizador | null
+deactivate Repo
+
+== Validação da Conta ==
+
+alt utilizador == null
+    Servico --> Controller : throw CredenciaisInvalidasException
+    Controller --> Actor : apresentar mensagem "Credenciais inválidas"
+
+else utilizador encontrado
+
+    Servico -> Utilizador : isAtivo()
+    activate Utilizador
+    Utilizador --> Servico : boolean
+    deactivate Utilizador
+
+    alt utilizador inativo
+        Servico --> Controller : throw ContaInativaException
+        Controller --> Actor : apresentar mensagem "Conta desativada"
+
+    else utilizador ativo
+
+        == Verificação de Sessão Duplicada ==
+
+        Servico -> Servico : verificarSessaoDuplicada(utilizador)
+        activate Servico
+
+        Servico -> Repo : verificarSessaoAtiva(utilizador.getId())
+        activate Repo
+        Repo --> Servico : boolean
+        deactivate Repo
+
+        alt sessão já activa
+            Servico --> Servico : throw SessaoDuplicadaException
+            deactivate Servico
+            Servico --> Controller : throw SessaoDuplicadaException
+            Controller --> Actor : apresentar mensagem "Utilizador já tem sessão activa"
+
+        else sem sessão activa
+            deactivate Servico
+
+            == Activação de Sessão ==
+
+            Servico -> Utilizador : emSessao = true
+            activate Utilizador
+            deactivate Utilizador
+
+            Servico -> Repo : atualizar(utilizador)
+            activate Repo
+            Repo --> Servico : void
+            deactivate Repo
+
+            Servico --> Controller : utilizador : Utilizador
+            deactivate Servico
+
+            == Verificação de Perfil e Redireccionamento ==
+
+            Controller -> AutorizServico : temPerfil(utilizador, FUNCIONARIO)
+            activate AutorizServico
+            AutorizServico --> Controller : boolean
+            deactivate AutorizServico
+
+            alt perfil == FUNCIONARIO
+                Controller --> Actor : redirecionar para ecrã de Venda
+
+            else perfil == GESTOR ou CEO
+
+                Controller -> SessaoRepo : buscarSessaoAtiva(utilizador.getId())
+                activate SessaoRepo
+                SessaoRepo --> Controller : sessao : SessaoCaixa | null
+                deactivate SessaoRepo
+
+                opt sessaoCaixa == null
+                    Controller --> Actor : alertar "Caixa não aberta — abrir sessão de caixa"
+                end
+
+                Controller --> Actor : redirecionar para ecrã principal de Gestão
+            end
+
+        end
+    end
+end
+
+deactivate Controller
+
+== Encerramento de Sessão ==
+
+Actor -> Controller : onLogout(evento)
+activate Controller
+
+Controller -> Servico : encerrarSessao(utilizador)
+activate Servico
+
+Servico -> Utilizador : emSessao = false
+activate Utilizador
+deactivate Utilizador
+
+Servico -> Repo : atualizar(utilizador)
+activate Repo
+Repo --> Servico : void
+deactivate Repo
+
+Servico --> Controller : void
+deactivate Servico
+
+Controller --> Actor : redirecionar para ecrã de Login
+deactivate Controller
+
+@enduml
