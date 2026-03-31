@@ -24,10 +24,10 @@ package "Serviço (Vendas e Devoluções)" #EEF9F4 {
 
   class VendaServico {
     - vendaRepositorio : VendaRepositorio
-    - loteRepositorio : LoteRepositorio
-    - caixaRepositorio : SessaoCaixaRepositorio
+    - caixaServico : CaixaServico
     - auditoriaServico : AuditoriaServico
     - autorizacaoServico : AutorizacaoServico
+    - catalogoServico : CatalogoServico
     + iniciarVenda(utilizador : Utilizador) : Venda
     + adicionarLinha(venda : Venda, codigoBarras : String, quantidade : int) : LinhaVenda
     + finalizarVenda(venda : Venda, metodo : MetodoPagamento, valorEntregue : double) : Fatura
@@ -38,9 +38,9 @@ package "Serviço (Vendas e Devoluções)" #EEF9F4 {
   class DevolucaoServico {
     - devolucaoRepositorio : DevolucaoRepositorio
     - faturaRepositorio : FaturaRepositorio
-    - loteRepositorio : LoteRepositorio
     - auditoriaServico : AuditoriaServico
     - autorizacaoServico : AutorizacaoServico
+    - catalogoServico : CatalogoServico
     + processar(numeroFatura : String, codigoBarras : String, dataValidadeEmbalagem : LocalDate, quantidade : int) : Devolucao
     + validar(fatura : Fatura, lote : Lote, quantidade : int) : boolean
   }
@@ -65,15 +65,17 @@ package "Serviço (Vendas e Devoluções)" #EEF9F4 {
 
 ' Relações com Repositórios
 VendaServico ..> VendaRepositorio
-VendaServico ..> LoteRepositorio
-VendaServico ..> SessaoCaixaRepositorio
-VendaServico ..> AutorizacaoServico
-DevolucaoServico ..> AutorizacaoServico
 DevolucaoServico ..> DevolucaoRepositorio
 DevolucaoServico ..> FaturaRepositorio
-DevolucaoServico ..> LoteRepositorio
 
-' Serviços transversais
+' Comunicação Lateral (Outros Serviços)
+VendaServico ..> CatalogoServico : " valida stock"
+VendaServico ..> CaixaServico : " valida sessão de caixa"
+DevolucaoServico ..> CatalogoServico : " valida produto"
+
+' Serviços transversais e Segurança
+VendaServico ..> AutorizacaoServico
+DevolucaoServico ..> AutorizacaoServico
 VendaServico ..> AuditoriaServico
 DevolucaoServico ..> AuditoriaServico
 
