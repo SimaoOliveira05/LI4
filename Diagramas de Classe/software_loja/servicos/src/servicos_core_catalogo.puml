@@ -26,6 +26,7 @@ package "Serviço (Catálogo)" #EEF9F4 {
     - produtoRepositorio : ProdutoRepositorio
     - loteRepositorio : LoteRepositorio
     - auditoriaServico : AuditoriaServico
+    - autorizacaoServico : AutorizacaoServico
     + criarProduto(utilizador : Utilizador, dados : ProdutoDTO) : Produto
     + editarProduto(utilizador : Utilizador, id : int, dados : ProdutoDTO) : void
     + desativarProduto(utilizador : Utilizador, id : int) : void
@@ -40,7 +41,8 @@ package "Serviço (Catálogo)" #EEF9F4 {
 CatalogoServico ..> ProdutoRepositorio
 CatalogoServico ..> LoteRepositorio
 
-' Serviços transversais
+' Serviços transversais e Segurança
 CatalogoServico ..> AuditoriaServico
+CatalogoServico ..> AutorizacaoServico
 
 @enduml
