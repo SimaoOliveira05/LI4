@@ -1,0 +1,104 @@
+@startuml
+!theme plain
+skinparam componentStyle rectangle
+skinparam linetype ortho
+
+' --- CONTROLOS DE ESPAÇAMENTO ---
+skinparam nodesep 90
+skinparam ranksep 140
+skinparam padding 15
+skinparam component {
+    marginBottom 20
+    marginTop 20
+}
+
+title Diagrama de Componentes - Servidor Central TrasmUM
+
+' --- ATORES E SISTEMAS EXTERNOS ---
+cloud "Rede TrasmUM\n(Softwares de Loja)" as Lojas #E8F5E9
+
+package "Objetos de Transferência" #FFFFFF {
+    component "DTOs de Sincronização\n[FechoDiaDTO, VendaDTO]" as DTOsSync
+    component "DTOs de Análise\n[MetricasDTO, DashboardDTO]" as DTOsAnalise
+    
+    DTOsSync -[hidden]down-> DTOsAnalise
+}
+
+package "1. Camada de Apresentação (API / Handlers)" #EEF4FF {
+    component "Handlers de Receção\n[FechoDiaHandler]" as HandRecepcao
+    component "Handlers de Análise\n[AnaliseHandler]" as HandAnalise
+    component "Handlers de Segurança\n[AutenticacaoHandler]" as HandAuth
+
+    HandRecepcao -[hidden]right-> HandAnalise
+    HandAnalise -[hidden]right-> HandAuth
+}
+
+package "2. Camada de Serviço (Aplicação)" #EEF9F4 {
+    component "Serviços de Receção\n[RecepcaoServico]" as ServRecepcao
+    component "Serviços de Análise\n[AnaliseVendasServico, AnaliseLojaServico]" as ServAnalise
+    component "Serviços de Segurança\n[AutenticacaoServico]" as ServAuth
+
+    ServRecepcao -[hidden]right-> ServAnalise
+    ServAnalise -[hidden]right-> ServAuth
+}
+
+package "3. Camada de Dados (Repositórios)" #FFF8EE {
+    component "Repositórios Transacionais\n[Vendas, Remessas, Pagamentos]" as RepoTransacional
+    component "Repositórios de Core/Segurança\n[Utilizadores]" as RepoCore
+
+    RepoTransacional -[hidden]right-> RepoCore
+}
+
+package "4. Camada de Domínio (Core)" #FEFEFE {
+    component "Domínio Transacional\n[Venda, Fatura, Remessa]" as DomTransacional
+    component "Domínio de Análise\n[Modelos de Leitura/Métricas]" as DomAnalise
+    component "Domínio Core\n[Utilizador, Permissoes]" as DomCore
+
+    DomTransacional -[hidden]right-> DomAnalise
+    DomAnalise -[hidden]right-> DomCore
+}
+
+database "Base de Dados Central\n(MySQL / PostgreSQL)" as BDCentral
+
+' --- FORÇAR POSICIONAMENTO DOS DTOS À ESQUERDA ---
+DTOsSync -[hidden]right-> HandRecepcao
+DTOsSync -[hidden]right-> ServRecepcao
+
+' --- ENTRADAS EXTERNAS ---
+Lojas -down-> HandRecepcao : " Envia FechoDiaDTO\n(via HTTP/REST)"
+
+' --- Ligações da Apresentação (Handlers -> Serviços) ---
+HandRecepcao --> ServRecepcao
+HandAnalise --> ServAnalise
+HandAuth --> ServAuth
+
+' Handlers usam DTOs (setas para a esquerda)
+HandRecepcao .left.> DTOsSync
+HandAnalise .left.> DTOsAnalise
+
+' --- Ligações dos Serviços -> Repositórios ---
+ServRecepcao ---> RepoTransacional
+ServAnalise ---> RepoTransacional : " lê dados consolidados"
+ServAuth ---> RepoCore
+
+' Comunicação Lateral nos Serviços
+ServRecepcao -right-> ServAuth : " valida token loja"
+ServAnalise -right-> ServAuth : " valida permissão CEO"
+
+' Serviços usam DTOs
+ServRecepcao .left.> DTOsSync
+ServAnalise .left.> DTOsAnalise
+
+' --- Ligações ao Domínio ---
+ServRecepcao ---> DomTransacional
+ServAnalise ---> DomAnalise
+ServAuth ---> DomCore
+
+RepoTransacional ---> DomTransacional
+RepoCore ---> DomCore
+
+' --- Ligações à Base de Dados ---
+RepoTransacional ---> BDCentral
+RepoCore ---> BDCentral
+
+@enduml
