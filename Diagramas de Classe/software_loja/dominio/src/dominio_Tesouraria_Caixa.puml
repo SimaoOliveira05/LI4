@@ -1,0 +1,75 @@
+@startuml Software_de_Loja_Dominio_Tesouraria_Caixa
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classHeaderBackgroundColor #EEEDFE
+skinparam classBorderColor #534AB7
+skinparam classBackgroundColor #FAFAFA
+skinparam arrowColor #534AB7
+skinparam stereotypeCBackgroundColor #E1F5EE
+skinparam stereotypeABackgroundColor #FAC775
+skinparam stereotypeIBackgroundColor #D1ECF1
+skinparam packageBackgroundColor #F8F8F8
+skinparam packageBorderColor #B4B2A9
+skinparam linetype ortho
+skinparam nodesep 60
+skinparam ranksep 50
+
+title Software de Loja — Domínio (Módulo: Tesouraria e Caixa)
+
+package "Tesouraria e Caixa" #FEFEFE {
+
+  enum Denominacao {
+    CENTO_EUROS, CINQUENTA_EUROS, VINTE_EUROS, DEZ_EUROS,
+    CINCO_EUROS, DOIS_EUROS, UM_EURO, CINQUENTA_CENTIMOS,
+    VINTE_CENTIMOS, DEZ_CENTIMOS, CINCO_CENTIMOS,
+    DOIS_CENTIMOS, UM_CENTIMO
+  }
+
+  class DetalheNumerario {
+    - denominacao : Denominacao
+    - quantidade : int
+    - subtotal : double
+    + calcularSubtotal() : double
+  }
+
+  class SessaoCaixa {
+    - id : int
+    - idUtilizador : int
+    - fundoInicial : List<DetalheNumerario>
+    - sangrias : List<Sangria>
+    - saldoAtual : double
+    - dataAbertura : LocalDateTime
+    - dataEncerramento : LocalDateTime
+    + registarSangria(sangria : Sangria) : void
+    + getSaldoAtual() : double
+    + excedeLimite(limiteMaximo : double) : boolean
+    + getIdUtilizador() : int
+  }
+
+  class Sangria {
+    - id : int
+    - idSessaoCaixa : int
+    - dataHora : LocalDateTime
+    - valor : List<DetalheNumerario>
+    + getIdSessaoCaixa() : int
+    + getTotal() : double
+  }
+
+  class FechoDia {
+    - dataFecho : LocalDate
+    - idUtilizador : int
+    + getDataFecho() : LocalDate
+  }
+}
+
+' Relações
+SessaoCaixa "1" *-- "0..*" Sangria : realiza >
+SessaoCaixa "1" *-- "1..*" DetalheNumerario : fundoInicial >
+Sangria "1" *-- "1..*" DetalheNumerario : valor >
+Denominacao -- DetalheNumerario
+
+' Herança sincronizável (CORRIGIDO: SessaoCaixa adicionado)
+RegistoSincronizavel <|-- FechoDia
+RegistoSincronizavel <|-- SessaoCaixa
+
+@enduml

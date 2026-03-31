@@ -1,0 +1,54 @@
+@startuml Software_de_Loja_Controllers_Gestao
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classHeaderBackgroundColor #EEEDFE
+skinparam classBorderColor #534AB7
+skinparam classBackgroundColor #FAFAFA
+skinparam arrowColor #534AB7
+skinparam stereotypeCBackgroundColor #E1F5EE
+skinparam stereotypeABackgroundColor #FAC775
+skinparam stereotypeIBackgroundColor #D1ECF1
+skinparam packageBackgroundColor #F8F8F8
+skinparam packageBorderColor #B4B2A9
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 50
+
+title Software de Loja — Apresentação (Controllers de Gestão)
+
+package "Apresentação (Controllers de Gestão)" #EEF4FF {
+
+  class RemessaController {
+    - remessaServico : IRemessaServico
+    + onRegistarRemessa(dados : RemessaDTO) : void
+    + onCriarPedidoRemessa(dados : PedidoRemessaDTO) : void
+    + onConsultarPedidos(estado : EstadoPedido) : void
+  }
+
+  class PagamentoController {
+    - pagamentoServico : IPagamentoServico
+    + onListarPendentes() : void
+    + onLiquidar(idPagamento : int) : void
+  }
+
+  class FechoDiaController {
+    - fechoDiaServico : IFechoDiaServico
+    + onIniciarFecho() : void
+    + onReenviar() : void
+  }
+
+  class UtilizadorController {
+    - utilizadorServico : IUtilizadorServico
+    + onCriarUtilizador(dados : UtilizadorDTO) : void
+    + onDesativarUtilizador(id : int) : void
+    + onEditarUtilizador(id : int, dados : UtilizadorDTO) : void
+  }
+}
+
+' Relações com Interfaces de Serviço
+RemessaController ..> IRemessaServico
+PagamentoController ..> IPagamentoServico
+FechoDiaController ..> IFechoDiaServico
+UtilizadorController ..> IUtilizadorServico
+
+@enduml

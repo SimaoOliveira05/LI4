@@ -1,0 +1,96 @@
+@startuml Software_de_Loja_Repositorios_Inventario
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classHeaderBackgroundColor #EEEDFE
+skinparam classBorderColor #534AB7
+skinparam classBackgroundColor #FAFAFA
+skinparam arrowColor #534AB7
+skinparam stereotypeCBackgroundColor #E1F5EE
+skinparam stereotypeABackgroundColor #FAC775
+skinparam stereotypeIBackgroundColor #D1ECF1
+skinparam packageBackgroundColor #F8F8F8
+skinparam packageBorderColor #B4B2A9
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 50
+
+title Software de Loja — Repositório (Módulo: Catálogo, Inventário e Fornecedores)
+
+package "Repositório (Interfaces - Inventário e Fornecedores)" #FFF0E0 {
+  interface ProdutoRepositorio {
+    + guardar(produto : Produto) : void
+    + atualizar(produto : Produto) : void
+    + buscarPorCodigoBarras(codigo : String) : Produto
+    + buscarAbaixoStockMinimo() : List<Produto>
+  }
+
+  interface LoteRepositorio {
+    + guardar(lote : Lote) : void
+    + atualizar(lote : Lote) : void
+    + buscarLotesFEFO(idProduto : int) : List<Lote>
+  }
+
+  interface RemessaRepositorio {
+    + guardar(remessa : Remessa) : void
+    + buscarPendentes() : List<Remessa>
+  }
+
+  interface PedidoRemessaRepositorio {
+    + guardar(pedido : PedidoRemessa) : void
+    + atualizar(pedido : PedidoRemessa) : void
+  }
+
+  interface PagamentoRepositorio {
+    + guardar(pagamento : Pagamento) : void
+    + buscarPendentes() : List<Pagamento>
+    + atualizar(pagamento : Pagamento) : void
+  }
+}
+
+package "Repositório (Implementações - Inventário e Fornecedores)" #FFF8EE {
+
+  class ProdutoRepositorioImpl {
+    - conexao : Connection
+    + guardar(produto : Produto) : void
+    + atualizar(produto : Produto) : void
+    + buscarPorCodigoBarras(codigo : String) : Produto
+    + buscarAbaixoStockMinimo() : List<Produto>
+  }
+
+  class LoteRepositorioImpl {
+    - conexao : Connection
+    + guardar(lote : Lote) : void
+    + atualizar(lote : Lote) : void
+    + buscarLotesFEFO(idProduto : int) : List<Lote>
+    - guardarDesconto(desconto : Desconto, idLote : int) : void
+  }
+
+  class RemessaRepositorioImpl {
+    - conexao : Connection
+    + guardar(remessa : Remessa) : void
+    + buscarPendentes() : List<Remessa>
+    - guardarLinhaRemessa(linha : LinhaRemessa, idRemessa : int) : void
+  }
+
+  class PedidoRemessaRepositorioImpl {
+    - conexao : Connection
+    + guardar(pedido : PedidoRemessa) : void
+    + atualizar(pedido : PedidoRemessa) : void
+    - guardarLinhaPedido(linha : LinhaPedidoRemessa, idPedido : int) : void
+  }
+
+  class PagamentoRepositorioImpl {
+    - conexao : Connection
+    + guardar(pagamento : Pagamento) : void
+    + buscarPendentes() : List<Pagamento>
+    + atualizar(pagamento : Pagamento) : void
+  }
+}
+
+ProdutoRepositorioImpl ..|> ProdutoRepositorio
+LoteRepositorioImpl ..|> LoteRepositorio
+RemessaRepositorioImpl ..|> RemessaRepositorio
+PedidoRemessaRepositorioImpl ..|> PedidoRemessaRepositorio
+PagamentoRepositorioImpl ..|> PagamentoRepositorio
+
+@enduml

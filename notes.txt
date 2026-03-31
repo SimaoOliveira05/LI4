@@ -1,7 +1,0 @@
-Diagrama de Classes
-    Software Loja
-        Dominio
-            transacional.puml 
-                Nota: 
-                    No diagrama esta relação está confusa, o idRemessa dá a entender que é da SessaoCaixa para o Utilizador, quando na verdade é do Pagamento para a Remessa
-                    No diagrama esta relação fica um bocado confusa, o fundoInicial parece que está na seta da Fatura -> Venda, mas na verdade é para o DetalheNumerario 
