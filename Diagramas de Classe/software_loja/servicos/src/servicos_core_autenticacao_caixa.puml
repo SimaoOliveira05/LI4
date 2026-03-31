@@ -24,6 +24,7 @@ package "Serviço (Autenticação, Caixa e Autorização)" #EEF9F4 {
 
   class AutenticacaoServico {
     - utilizadorRepositorio : UtilizadorRepositorio
+    - auditoriaServico : AuditoriaServico
     + autenticar(nomeUtilizador : String, palavraPasse : String) : Utilizador
     + encerrarSessao(utilizador : Utilizador) : void
     + verificarSessaoDuplicada(utilizador : Utilizador) : boolean
@@ -33,6 +34,7 @@ package "Serviço (Autenticação, Caixa e Autorização)" #EEF9F4 {
     - sessaoCaixaRepositorio : SessaoCaixaRepositorio
     - sangriaRepositorio : SangriaRepositorio
     - autorizacaoServico : AutorizacaoServico
+    - auditoriaServico : AuditoriaServico
     + abrirSessao(utilizador : Utilizador, fundo : List~DetalheNumerario~, limiteMaximo : double) : SessaoCaixa
     + registarSangria(sessao : SessaoCaixa, utilizador : Utilizador, valor : List~DetalheNumerario~) : Sangria
     + fecharSessao(sessao : SessaoCaixa) : void
@@ -82,8 +84,10 @@ CaixaServico ..> SessaoCaixaRepositorio
 CaixaServico ..> SangriaRepositorio
 AuditoriaServico ..> LogAuditoriaRepositorio
 
-' Serviços usam AutorizacaoServico
+' Serviços usam AutorizacaoServico e AuditoriaServico
 CaixaServico ..> AutorizacaoServico
+AutenticacaoServico ..> AuditoriaServico : " regista logins"
+CaixaServico ..> AuditoriaServico : " regista sangrias/sessões"
 
 ' Exceção lançada
 AutorizacaoServico ..> AcessoNegadoException : <<lança>>
