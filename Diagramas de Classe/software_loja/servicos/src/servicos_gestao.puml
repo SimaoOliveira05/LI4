@@ -25,8 +25,8 @@ package "Serviço (Serviços de Gestão)" #EEF9F4 {
   class RemessaServico {
     - remessaRepositorio : RemessaRepositorio
     - pedidoRemessaRepositorio : PedidoRemessaRepositorio
-    - loteRepositorio : LoteRepositorio
-    - pagamentoRepositorio : PagamentoRepositorio
+    - catalogoServico : CatalogoServico
+    - pagamentoServico : PagamentoServico
     - auditoriaServico : AuditoriaServico
     - autorizacaoServico : AutorizacaoServico
     + registarRemessa(utilizador : Utilizador, fornecedor : Fornecedor, linhas : List~LinhaRemessa~, valorTotalGuia : double) : Remessa
@@ -43,19 +43,6 @@ package "Serviço (Serviços de Gestão)" #EEF9F4 {
     + liquidar(idPagamento : int, utilizador : Utilizador) : void
   }
 
-  class FechoDiaServico {
-    - vendaRepositorio : VendaRepositorio
-    - devolucaoRepositorio : DevolucaoRepositorio
-    - remessaRepositorio : RemessaRepositorio
-    - pagamentoRepositorio : PagamentoRepositorio
-    - auditoriaRepositorio : LogAuditoriaRepositorio
-    - fechoDiaRepositorio : FechoDiaRepositorio
-    - autorizacaoServico : AutorizacaoServico
-    + executarFecho(utilizador : Utilizador, configuracao : ConfiguracaoTerminal) : FechoDia
-    + reenviar(idFecho : int) : boolean
-    + reverterEmTransito() : void
-  }
-
   class UtilizadorServico {
     - utilizadorRepositorio : UtilizadorRepositorio
     - auditoriaServico : AuditoriaServico
@@ -70,22 +57,18 @@ package "Serviço (Serviços de Gestão)" #EEF9F4 {
 ' Relações com Repositórios
 RemessaServico ..> RemessaRepositorio
 RemessaServico ..> PedidoRemessaRepositorio
-RemessaServico ..> LoteRepositorio
-RemessaServico ..> PagamentoRepositorio
-RemessaServico ..> AutorizacaoServico
 PagamentoServico ..> PagamentoRepositorio
-PagamentoServico ..> AutorizacaoServico
-FechoDiaServico ..> VendaRepositorio
-FechoDiaServico ..> DevolucaoRepositorio
-FechoDiaServico ..> RemessaRepositorio
-FechoDiaServico ..> PagamentoRepositorio
-FechoDiaServico ..> LogAuditoriaRepositorio
-FechoDiaServico ..> FechoDiaRepositorio
-FechoDiaServico ..> AutorizacaoServico
 UtilizadorServico ..> UtilizadorRepositorio
+
+' Comunicação Lateral
+RemessaServico ..> CatalogoServico : " atualiza stock"
+RemessaServico ..> PagamentoServico : " agenda pagamento"
+
+' Serviços transversais e Segurança
+RemessaServico ..> AutorizacaoServico
+PagamentoServico ..> AutorizacaoServico
 UtilizadorServico ..> AutorizacaoServico
 
-' Serviços transversais
 RemessaServico ..> AuditoriaServico
 PagamentoServico ..> AuditoriaServico
 UtilizadorServico ..> AuditoriaServico
