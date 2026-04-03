@@ -1,0 +1,62 @@
+@startuml servidor_central_apresentacao_handlers
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classHeaderBackgroundColor #E1F5EE
+skinparam classBorderColor #0F6E56
+skinparam classBackgroundColor #FAFAFA
+skinparam arrowColor #0F6E56
+skinparam stereotypeCBackgroundColor #EEEDFE
+skinparam stereotypeABackgroundColor #FAC775
+skinparam stereotypeIBackgroundColor #D1ECF1
+skinparam packageBackgroundColor #F8F8F8
+skinparam packageBorderColor #B4B2A9
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 50
+
+title Servidor Central — Apresentação (Handlers HTTP)
+
+package "Apresentação (Handlers Javalin)" #EEF4FF {
+
+  class AutenticacaoCentralHandler {
+    - autenticacaoServico : IAutenticacaoCentralServico
+    + post_login(ctx : Context) : void
+    + post_logout(ctx : Context) : void
+  }
+
+  class RecepcaoPacoteHandler {
+    - recepcaoPacoteServico : IRecepcaoPacoteServico
+    + post_pacoteFecho(ctx : Context) : void
+  }
+
+  class DashboardHandler {
+    - dashboardServico : IDashboardServico
+    + get_metricasGlobais(ctx : Context) : void
+    + get_metricasPorLoja(ctx : Context) : void
+  }
+
+  class RelatorioHandler {
+    - relatorioServico : IRelatorioServico
+    + get_relatorio(ctx : Context) : void
+  }
+
+  class RemessaRedeHandler {
+    - remessaRedeServico : IRemessaRedeServico
+    + get_remessas(ctx : Context) : void
+  }
+
+  class ConsolidacaoHandler {
+    - consolidacaoServico : IConsolidacaoServico
+    + get_estadoConsolidacao(ctx : Context) : void
+  }
+}
+
+' Handlers → Interfaces de Serviço
+AutenticacaoCentralHandler ..> IAutenticacaoCentralServico
+RecepcaoPacoteHandler ..> IRecepcaoPacoteServico
+DashboardHandler ..> IDashboardServico
+RelatorioHandler ..> IRelatorioServico
+RemessaRedeHandler ..> IRemessaRedeServico
+ConsolidacaoHandler ..> IConsolidacaoServico
+
+@enduml

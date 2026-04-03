@@ -1,0 +1,96 @@
+@startuml servidor_central_dominio_dtos
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classHeaderBackgroundColor #E1F5EE
+skinparam classBorderColor #0F6E56
+skinparam classBackgroundColor #FAFAFA
+skinparam arrowColor #0F6E56
+skinparam stereotypeCBackgroundColor #EEEDFE
+skinparam stereotypeABackgroundColor #FAC775
+skinparam stereotypeIBackgroundColor #D1ECF1
+skinparam packageBackgroundColor #F8F8F8
+skinparam packageBorderColor #B4B2A9
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 50
+
+title Servidor Central — Domínio (DTOs de Transferência)
+
+package "Domínio (DTOs de Transferência)" #FEFEFE {
+
+  class PacoteFechoDTO {
+    + idLoja : String
+    + nomeLoja : String
+    + dataFecho : LocalDate
+    + vendas : List~VendaDTO~
+    + devolucoes : List~DevolucaoDTO~
+    + remessas : List~RemessaDTO~
+    + pagamentos : List~PagamentoDTO~
+    + sessoesCaixa : List~SessaoCaixaDTO~
+    + logs : List~LogAuditoriaDTO~
+  }
+
+  class VendaDTO {
+    + idOriginalLoja : int
+    + dataHora : LocalDateTime
+    + totalFaturado : double
+    + metodoPagamento : String
+    + linhas : List~LinhaVendaDTO~
+  }
+
+  class LinhaVendaDTO {
+    + idOriginalLoja : int
+    + nomeProduto : String
+    + categoria : String
+    + quantidade : int
+    + precoUnitario : double
+  }
+
+  class DevolucaoDTO {
+    + idOriginalLoja : int
+    + dataHora : LocalDateTime
+    + quantidade : int
+    + valorRestituido : double
+  }
+
+  class RemessaDTO {
+    + idOriginalLoja : int
+    + nomeFornecedor : String
+    + dataRecepcao : LocalDate
+    + valorTotalGuia : double
+    + estadoPagamento : String
+  }
+
+  class PagamentoDTO {
+    + idOriginalLoja : int
+    + valor : double
+    + dataPagamento : LocalDate
+    + tipoPagamento : String
+  }
+
+  class SessaoCaixaDTO {
+    + idOriginalLoja : int
+    + idUtilizador : int
+    + saldoFinal : double
+    + dataAbertura : LocalDateTime
+    + dataEncerramento : LocalDateTime
+  }
+
+  class LogAuditoriaDTO {
+    + idOriginalLoja : int
+    + acao : String
+    + dataHora : LocalDateTime
+    + nomeUtilizador : String
+  }
+}
+
+' Composições dos DTOs
+PacoteFechoDTO "1" *-- "0..*" VendaDTO
+PacoteFechoDTO "1" *-- "0..*" DevolucaoDTO
+PacoteFechoDTO "1" *-- "0..*" RemessaDTO
+PacoteFechoDTO "1" *-- "0..*" PagamentoDTO
+PacoteFechoDTO "1" *-- "0..*" SessaoCaixaDTO
+PacoteFechoDTO "1" *-- "0..*" LogAuditoriaDTO
+VendaDTO "1" *-- "0..*" LinhaVendaDTO
+
+@enduml
