@@ -33,6 +33,7 @@ package "Apresentação (Handlers Javalin)" #EEF4FF {
     - dashboardServico : IDashboardServico
     + get_metricasGlobais(ctx : Context) : void
     + get_metricasPorLoja(ctx : Context) : void
+    + get_logsAuditoria(ctx : Context) : void
   }
 
   class RelatorioHandler {

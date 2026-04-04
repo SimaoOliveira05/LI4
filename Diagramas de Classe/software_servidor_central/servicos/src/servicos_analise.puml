@@ -21,6 +21,7 @@ package "Serviço (Interfaces - Análise)" #E0F0E0 {
   interface IDashboardServico {
     + obterMetricasGlobais(data : LocalDate) : MetricasGlobais
     + obterMetricasPorLoja(idLoja : String, data : LocalDate) : MetricasLoja
+    + obterLogsPorLojaEPeriodo(idLoja : String, inicio : LocalDate, fim : LocalDate) : List<LogAuditoriaCentral>
   }
 
   interface IRelatorioServico {
@@ -43,6 +44,8 @@ package "Serviço (Implementações - Análise)" #EEF9F4 {
     - vendaRepositorio : VendaCentralRepositorio
     - devolucaoRepositorio : DevolucaoCentralRepositorio
     - lojaRepositorio : LojaRepositorio
+    - logRepositorio : LogAuditoriaCentralRepositorio
+    + obterLogsPorLojaEPeriodo(idLoja : String, inicio : LocalDate, fim : LocalDate) : List<LogAuditoriaCentral>
     + obterMetricasGlobais(data : LocalDate) : MetricasGlobais
     + obterMetricasPorLoja(idLoja : String, data : LocalDate) : MetricasLoja
   }
@@ -77,6 +80,7 @@ ConsolidacaoServico .up.|> IConsolidacaoServico
 DashboardServico ..> VendaCentralRepositorio
 DashboardServico ..> DevolucaoCentralRepositorio
 DashboardServico ..> LojaRepositorio
+DashboardServico ..> LogAuditoriaCentralRepositorio
 RelatorioServico ..> VendaCentralRepositorio
 RelatorioServico ..> DevolucaoCentralRepositorio
 RelatorioServico ..> RemessaCentralRepositorio
