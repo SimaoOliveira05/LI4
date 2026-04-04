@@ -14,11 +14,8 @@ skinparam linetype ortho
 skinparam nodesep 40
 skinparam ranksep 50
 
-title Servidor Central — Parte 5B: Domínio (Entidades Transacionais)
+title Servidor Central — Domínio (Entidades Transacionais)
 
-' ╔══════════════════════════════════════╗
-' ║    DOMÍNIO - ENTIDADES TRANSACIONAIS ║
-' ╚══════════════════════════════════════╝
 package "Domínio (Entidades Transacionais)" #FEFEFE {
 
   class VendaCentral {
@@ -33,7 +30,7 @@ package "Domínio (Entidades Transacionais)" #FEFEFE {
     + getTotalFaturado() : double
   }
   note bottom of VendaCentral
-    Chave idempotência: idLoja +
+    Chave de idempotência: idLoja +
     idOriginalLoja (ADR-05).
     Versão de leitura — sem
     mecanismo de sincronização.
@@ -55,13 +52,21 @@ package "Domínio (Entidades Transacionais)" #FEFEFE {
   class DevolucaoCentral {
     - id : int
     - idOriginalLoja : int
+    - idOriginalVenda : int
     - idLoja : String
     - dataHora : LocalDateTime
     - quantidade : int
     - valorRestituido : double
     + getIdOriginalLoja() : int
+    + getIdOriginalVenda() : int
     + getIdLoja() : String
   }
+  note bottom of DevolucaoCentral
+    idOriginalVenda permite rastrear
+    a venda de origem da devolução,
+    espelhando a relação Devolucao →
+    Fatura → Venda do Software de Loja.
+  end note
 
   class RemessaCentral {
     - id : int
@@ -72,19 +77,28 @@ package "Domínio (Entidades Transacionais)" #FEFEFE {
     - valorTotalGuia : double
     - estadoPagamento : EstadoPagamento
     + getIdOriginalLoja() : int
+    + getIdLoja() : String
     + getEstadoPagamento() : EstadoPagamento
   }
 
   class PagamentoCentral {
     - id : int
     - idOriginalLoja : int
+    - idOriginalRemessa : int
     - idLoja : String
     - valor : double
     - dataPagamento : LocalDate
     - tipoPagamento : TipoPagamentoCentral
     + getIdOriginalLoja() : int
+    + getIdOriginalRemessa() : int
     + getIdLoja() : String
   }
+  note bottom of PagamentoCentral
+    idOriginalRemessa permite rastrear
+    a remessa que originou o pagamento,
+    espelhando a relação Pagamento →
+    Remessa do Software de Loja.
+  end note
 
   class LogAuditoriaCentral {
     - id : int
@@ -94,10 +108,10 @@ package "Domínio (Entidades Transacionais)" #FEFEFE {
     - dataHora : LocalDateTime
     - nomeUtilizador : String
     + getIdOriginalLoja() : int
+    + getIdLoja() : String
     + getAcao() : TipoAcaoCentral
   }
 
-  ' --- Enumerações Transacionais ---
   enum MetodoPagamentoCentral {
     NUMERARIO
     MULTIBANCO
@@ -107,6 +121,7 @@ package "Domínio (Entidades Transacionais)" #FEFEFE {
     PENDENTE_PAGAMENTO
     PAGA
   }
+
 
   enum TipoPagamentoCentral {
     TRANSFERENCIA
@@ -121,15 +136,33 @@ package "Domínio (Entidades Transacionais)" #FEFEFE {
     APLICACAO_DESCONTO
     GESTAO_UTILIZADOR
     ALTERACAO_CATALOGO
+    FECHO_DIA
   }
+  note bottom of TipoAcaoCentral
+    Espelha TipoAcao do Software de Loja.
+    FECHO_DIA adicionado para cobertura
+    completa dos logs de auditoria (ADR-07).
+  end note
 }
 
-' Relações
+' Relações de associação por ID (acoplamento fraco — ADR-05)
 VendaCentral --> Loja : idLoja
 DevolucaoCentral --> Loja : idLoja
 RemessaCentral --> Loja : idLoja
 PagamentoCentral --> Loja : idLoja
 LogAuditoriaCentral --> Loja : idLoja
+
+' Rastreabilidade entre entidades
+DevolucaoCentral ..> VendaCentral : idOriginalVenda
+PagamentoCentral ..> RemessaCentral : idOriginalRemessa
+
+' Enumerações
+VendaCentral --> MetodoPagamentoCentral
+RemessaCentral --> EstadoPagamento
+PagamentoCentral --> TipoPagamentoCentral
+LogAuditoriaCentral --> TipoAcaoCentral
+
+' Composição
 VendaCentral "1" *-- "1..*" LinhaVendaCentral : linhas
 
 @enduml

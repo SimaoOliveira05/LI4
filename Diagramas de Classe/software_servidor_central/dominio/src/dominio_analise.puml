@@ -1,4 +1,4 @@
-@startuml servidor_central_parte5c_dominio_analise
+@startuml servidor_central_dominio_analise
 skinparam classAttributeIconSize 0
 skinparam classFontSize 12
 skinparam classHeaderBackgroundColor #E1F5EE
@@ -14,11 +14,8 @@ skinparam linetype ortho
 skinparam nodesep 40
 skinparam ranksep 50
 
-title Servidor Central — Parte 5C: Domínio (VOs de Análise)
+title Servidor Central — Domínio (VOs de Análise)
 
-' ╔══════════════════════════════════════╗
-' ║        DOMÍNIO - VOS DE ANÁLISE      ║
-' ╚══════════════════════════════════════╝
 package "Domínio (VOs de Análise)" #FEFEFE {
 
   class MetricasGlobais {
@@ -41,20 +38,6 @@ package "Domínio (VOs de Análise)" #FEFEFE {
     - totalMultibanco : double
     - dataReferencia : LocalDate
     + getTotalVendas() : double
-  }
-
-  class AlertaStock {
-    - idLoja : String
-    - nomeLoja : String
-    - nomeProduto : String
-    - quantidadeActual : int
-    - tipoAlerta : TipoAlerta
-    + getTipoAlerta() : TipoAlerta
-  }
-
-  enum TipoAlerta {
-    RUTURA_IMINENTE
-    EXCESSO_STOCK
   }
 
   class Relatorio {

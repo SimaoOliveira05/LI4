@@ -1,4 +1,4 @@
-@startuml servidor_central_parte5d_dominio_dtos
+@startuml servidor_central_dominio_dtos
 skinparam classAttributeIconSize 0
 skinparam classFontSize 12
 skinparam classHeaderBackgroundColor #E1F5EE
@@ -14,14 +14,10 @@ skinparam linetype ortho
 skinparam nodesep 40
 skinparam ranksep 50
 
-title Servidor Central — Parte 5D: Domínio (DTOs de Transferência)
+title Servidor Central — Domínio (DTOs de Transferência)
 
-' ╔══════════════════════════════════════╗
-' ║     DOMÍNIO - DTOS DE TRANSFERÊNCIA  ║
-' ╚══════════════════════════════════════╝
 package "Domínio (DTOs de Transferência)" #FEFEFE {
 
-  ' --- DTOs de transferência loja → servidor ---
   class PacoteFechoDTO {
     + idLoja : String
     + nomeLoja : String
@@ -30,14 +26,9 @@ package "Domínio (DTOs de Transferência)" #FEFEFE {
     + devolucoes : List~DevolucaoDTO~
     + remessas : List~RemessaDTO~
     + pagamentos : List~PagamentoDTO~
+    + sessoesCaixa : List~SessaoCaixaDTO~
     + logs : List~LogAuditoriaDTO~
   }
-  note bottom of PacoteFechoDTO
-    Objecto de transferência serializado
-    em JSON entre Software de Loja e
-    Servidor Central via HTTP (ADR-08).
-    Deserializado pelo RecepcaoPacoteHandler.
-  end note
 
   class VendaDTO {
     + idOriginalLoja : int
@@ -77,6 +68,14 @@ package "Domínio (DTOs de Transferência)" #FEFEFE {
     + tipoPagamento : String
   }
 
+  class SessaoCaixaDTO {
+    + idOriginalLoja : int
+    + idUtilizador : int
+    + saldoFinal : double
+    + dataAbertura : LocalDateTime
+    + dataEncerramento : LocalDateTime
+  }
+
   class LogAuditoriaDTO {
     + idOriginalLoja : int
     + acao : String
@@ -90,6 +89,7 @@ PacoteFechoDTO "1" *-- "0..*" VendaDTO
 PacoteFechoDTO "1" *-- "0..*" DevolucaoDTO
 PacoteFechoDTO "1" *-- "0..*" RemessaDTO
 PacoteFechoDTO "1" *-- "0..*" PagamentoDTO
+PacoteFechoDTO "1" *-- "0..*" SessaoCaixaDTO
 PacoteFechoDTO "1" *-- "0..*" LogAuditoriaDTO
 VendaDTO "1" *-- "0..*" LinhaVendaDTO
 

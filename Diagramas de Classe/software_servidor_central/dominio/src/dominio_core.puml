@@ -14,11 +14,8 @@ skinparam linetype ortho
 skinparam nodesep 40
 skinparam ranksep 50
 
-title Servidor Central — Parte 5A: Domínio (Entidades Core)
+title Servidor Central — Domínio (Entidades Core)
 
-' ╔══════════════════════════════════════╗
-' ║        DOMÍNIO - ENTIDADES CORE      ║
-' ╚══════════════════════════════════════╝
 package "Domínio (Entidades Core)" #FEFEFE {
 
   class CEO {
@@ -26,12 +23,14 @@ package "Domínio (Entidades Core)" #FEFEFE {
     - nomeUtilizador : String
     - hashPalavraPasse : String
     - tentativasLogin : int
-    - bloqueadaAte : LocalDateTime
+    - bloqueadoAte : LocalDateTime
     + getId() : int
     + getNomeUtilizador() : String
     + getTentativasLogin() : int
-    + getBloqueadaAte() : LocalDateTime
-    + estaBloqueada() : boolean
+    + getBloqueadoAte() : LocalDateTime
+    + estaBloqueado() : boolean
+    + registarTentativaFalhada() : void
+    + desbloquear() : void
   }
   note bottom of CEO
     Único perfil com acesso ao servidor
@@ -58,15 +57,19 @@ package "Domínio (Entidades Core)" #FEFEFE {
     - dataFecho : LocalDate
     - idLoja : String
     - estadoCompletude : EstadoFecho
+    - lojasFaltantes : List~String~
     + getDataFecho() : LocalDate
     + getIdLoja() : String
     + getEstadoCompletude() : EstadoFecho
+    + getLojasFaltantes() : List~String~
     + isCompleto() : boolean
   }
   note bottom of FechoDiaCentral
     Registo de cada fecho recebido.
-    EstadoFecho.PARCIAL quando nem
-    todas as lojas enviaram (RF15).
+    lojasFaltantes regista os idLoja
+    que ainda não enviaram para a data.
+    EstadoFecho.PARCIAL quando
+    lojasFaltantes não está vazio (RF15).
   end note
 
   class PedidoFecho {
@@ -82,7 +85,6 @@ package "Domínio (Entidades Core)" #FEFEFE {
     temporal configurável em minutos.
   end note
 
-  ' --- Enumerações Core ---
   enum EstadoFecho {
     COMPLETO
     PARCIAL
@@ -97,6 +99,7 @@ package "Domínio (Entidades Core)" #FEFEFE {
 
 ' Relações
 FechoDiaCentral --> Loja : idLoja
-PedidoFecho "1" *-- "0..*" FechoDiaCentral : fechosRecebidos
-
+FechoDiaCentral --> EstadoFecho
+PedidoFecho --> EstadoConsolidacao
+PedidoFecho "1" --> "0..*" FechoDiaCentral : fechosRecebidos
 @enduml

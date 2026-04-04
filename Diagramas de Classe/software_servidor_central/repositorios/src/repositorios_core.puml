@@ -1,4 +1,4 @@
-@startuml servidor_central_parte4a_repositorios_core
+@startuml servidor_central_repositorios_core
 skinparam classAttributeIconSize 0
 skinparam classFontSize 12
 skinparam classHeaderBackgroundColor #E1F5EE
@@ -14,20 +14,11 @@ skinparam linetype ortho
 skinparam nodesep 40
 skinparam ranksep 50
 
-title Servidor Central — Parte 4A: Repositórios (Core e Autenticação)
+title Servidor Central — Repositórios (Core e Autenticação)
 
-' ╔══════════════════════════════════════╗
-' ║    REPOSITÓRIO - CORE E AUTENTICAÇÃO ║
-' ╚══════════════════════════════════════╝
-package "Repositório (Core e Autenticação)" #FFF8EE {
+package "Repositório (Interfaces - Core e Autenticação)" #FFF0E0 {
 
   interface CEORepositorio {
-    + buscarPorCredenciais(nomeUtilizador : String, hashPalavraPasse : String) : CEO
-    + atualizar(ceo : CEO) : void
-  }
-
-  class CEORepositorioImpl {
-    - conexao : Connection
     + buscarPorCredenciais(nomeUtilizador : String, hashPalavraPasse : String) : CEO
     + atualizar(ceo : CEO) : void
   }
@@ -38,17 +29,26 @@ package "Repositório (Core e Autenticação)" #FFF8EE {
     + listarTodas() : List~Loja~
   }
 
+  interface FechoDiaCentralRepositorio {
+    + guardar(fecho : FechoDiaCentral) : void
+    + buscarPorData(data : LocalDate) : List~FechoDiaCentral~
+    + buscarLojasFaltantes(data : LocalDate) : List~Loja~
+  }
+}
+
+package "Repositório (Implementações - Core e Autenticação)" #FFF8EE {
+
+  class CEORepositorioImpl {
+    - conexao : Connection
+    + buscarPorCredenciais(nomeUtilizador : String, hashPalavraPasse : String) : CEO
+    + atualizar(ceo : CEO) : void
+  }
+
   class LojaRepositorioImpl {
     - conexao : Connection
     + buscarPorId(idLoja : String) : Loja
     + guardarSeNaoExistir(loja : Loja) : Loja
     + listarTodas() : List~Loja~
-  }
-
-  interface FechoDiaCentralRepositorio {
-    + guardar(fecho : FechoDiaCentral) : void
-    + buscarPorData(data : LocalDate) : List~FechoDiaCentral~
-    + buscarLojasFaltantes(data : LocalDate) : List~Loja~
   }
 
   class FechoDiaCentralRepositorioImpl {
@@ -59,7 +59,6 @@ package "Repositório (Core e Autenticação)" #FFF8EE {
   }
 }
 
-' Implementações realizam interfaces
 CEORepositorioImpl ..|> CEORepositorio
 LojaRepositorioImpl ..|> LojaRepositorio
 FechoDiaCentralRepositorioImpl ..|> FechoDiaCentralRepositorio

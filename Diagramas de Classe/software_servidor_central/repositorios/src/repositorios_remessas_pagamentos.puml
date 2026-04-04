@@ -1,4 +1,4 @@
-@startuml servidor_central_parte4c_repositorios_remessas_pagamentos
+@startuml servidor_central_repositorios_remessas_pagamentos
 skinparam classAttributeIconSize 0
 skinparam classFontSize 12
 skinparam classHeaderBackgroundColor #E1F5EE
@@ -14,21 +14,11 @@ skinparam linetype ortho
 skinparam nodesep 40
 skinparam ranksep 50
 
-title Servidor Central — Parte 4C: Repositórios (Remessas, Pagamentos e Auditoria)
+title Servidor Central — Repositórios (Remessas, Pagamentos e Auditoria)
 
-' ╔══════════════════════════════════════╗
-' ║  REPOSITÓRIO - REMESSAS, PAGAMENTOS  ║
-' ║            E AUDITORIA               ║
-' ╚══════════════════════════════════════╝
-package "Repositório (Remessas, Pagamentos e Auditoria)" #FFF8EE {
+package "Repositório (Interfaces - Remessas, Pagamentos e Auditoria)" #FFF0E0 {
 
   interface RemessaCentralRepositorio {
-    + guardarSeNaoExistir(remessa : RemessaCentral) : void
-    + buscarPorFiltro(filtro : FiltroRemessa) : List~RemessaCentral~
-  }
-
-  class RemessaCentralRepositorioImpl {
-    - conexao : Connection
     + guardarSeNaoExistir(remessa : RemessaCentral) : void
     + buscarPorFiltro(filtro : FiltroRemessa) : List~RemessaCentral~
   }
@@ -37,14 +27,23 @@ package "Repositório (Remessas, Pagamentos e Auditoria)" #FFF8EE {
     + guardarSeNaoExistir(pagamento : PagamentoCentral) : void
   }
 
-  class PagamentoCentralRepositorioImpl {
-    - conexao : Connection
-    + guardarSeNaoExistir(pagamento : PagamentoCentral) : void
-  }
-
   interface LogAuditoriaCentralRepositorio {
     + guardarSeNaoExistir(log : LogAuditoriaCentral) : void
     + buscarPorLojaEPeriodo(idLoja : String, inicio : LocalDate, fim : LocalDate) : List~LogAuditoriaCentral~
+  }
+}
+
+package "Repositório (Implementações - Remessas, Pagamentos e Auditoria)" #FFF8EE {
+
+  class RemessaCentralRepositorioImpl {
+    - conexao : Connection
+    + guardarSeNaoExistir(remessa : RemessaCentral) : void
+    + buscarPorFiltro(filtro : FiltroRemessa) : List~RemessaCentral~
+  }
+
+  class PagamentoCentralRepositorioImpl {
+    - conexao : Connection
+    + guardarSeNaoExistir(pagamento : PagamentoCentral) : void
   }
 
   class LogAuditoriaCentralRepositorioImpl {
@@ -54,7 +53,6 @@ package "Repositório (Remessas, Pagamentos e Auditoria)" #FFF8EE {
   }
 }
 
-' Implementações realizam interfaces
 RemessaCentralRepositorioImpl ..|> RemessaCentralRepositorio
 PagamentoCentralRepositorioImpl ..|> PagamentoCentralRepositorio
 LogAuditoriaCentralRepositorioImpl ..|> LogAuditoriaCentralRepositorio

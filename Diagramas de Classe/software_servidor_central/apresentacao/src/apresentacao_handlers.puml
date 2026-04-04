@@ -1,4 +1,4 @@
-@startuml servidor_central_parte1_apresentacao_handlers
+@startuml servidor_central_apresentacao_handlers
 skinparam classAttributeIconSize 0
 skinparam classFontSize 12
 skinparam classHeaderBackgroundColor #E1F5EE
@@ -14,62 +14,49 @@ skinparam linetype ortho
 skinparam nodesep 40
 skinparam ranksep 50
 
-title Servidor Central — Parte 1: Apresentação (Handlers HTTP)
+title Servidor Central — Apresentação (Handlers HTTP)
 
-' ╔══════════════════════════════════════╗
-' ║    CAMADA DE APRESENTAÇÃO            ║
-' ║    (Handlers HTTP Javalin)           ║
-' ╚══════════════════════════════════════╝
 package "Apresentação (Handlers Javalin)" #EEF4FF {
 
   class AutenticacaoCentralHandler {
-    - autenticacaoServico : AutenticacaoCentralServico
+    - autenticacaoServico : IAutenticacaoCentralServico
     + post_login(ctx : Context) : void
     + post_logout(ctx : Context) : void
   }
 
   class RecepcaoPacoteHandler {
-    - recepcaoPacoteServico : RecepcaoPacoteServico
+    - recepcaoPacoteServico : IRecepcaoPacoteServico
     + post_pacoteFecho(ctx : Context) : void
   }
-  note right of RecepcaoPacoteHandler
-    Endpoint HTTP POST via Javalin
-    (ADR-08). Recebe PacoteFechoDTO
-    serializado em JSON das lojas.
-  end note
 
   class DashboardHandler {
-    - dashboardServico : DashboardServico
+    - dashboardServico : IDashboardServico
     + get_metricasGlobais(ctx : Context) : void
     + get_metricasPorLoja(ctx : Context) : void
-    + get_alertasStock(ctx : Context) : void
   }
 
   class RelatorioHandler {
-    - relatorioServico : RelatorioServico
+    - relatorioServico : IRelatorioServico
     + get_relatorio(ctx : Context) : void
   }
 
   class RemessaRedeHandler {
-    - remessaRedeServico : RemessaRedeServico
+    - remessaRedeServico : IRemessaRedeServico
     + get_remessas(ctx : Context) : void
   }
 
   class ConsolidacaoHandler {
-    - consolidacaoServico : ConsolidacaoServico
+    - consolidacaoServico : IConsolidacaoServico
     + get_estadoConsolidacao(ctx : Context) : void
   }
 }
 
-' Handlers → Serviços
-AutenticacaoCentralHandler ..> AutenticacaoCentralServico
-RecepcaoPacoteHandler ..> RecepcaoPacoteServico
-DashboardHandler ..> DashboardServico
-RelatorioHandler ..> RelatorioServico
-RemessaRedeHandler ..> RemessaRedeServico
-ConsolidacaoHandler ..> ConsolidacaoServico
-
-' Handlers recebem/devolvem DTOs
-RecepcaoPacoteHandler ..> PacoteFechoDTO
+' Handlers → Interfaces de Serviço
+AutenticacaoCentralHandler ..> IAutenticacaoCentralServico
+RecepcaoPacoteHandler ..> IRecepcaoPacoteServico
+DashboardHandler ..> IDashboardServico
+RelatorioHandler ..> IRelatorioServico
+RemessaRedeHandler ..> IRemessaRedeServico
+ConsolidacaoHandler ..> IConsolidacaoServico
 
 @enduml
