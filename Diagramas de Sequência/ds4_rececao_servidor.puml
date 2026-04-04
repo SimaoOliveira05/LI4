@@ -18,11 +18,12 @@ title DS4 — Recepção do Pacote no Servidor Central (RF15, RF16, ADR-05, ADR-
 
 participant "Software\nde Loja\n(HTTP Client)" as SL <<Externo>>
 participant "RecepcaoPacoteHandler\n(Javalin)" as RPH <<Apresentação>>
-participant "RecepcaoPacoteServico" as RPS <<Serviço>>
-participant "ConsolidacaoServico" as CS <<Serviço>>
+participant "IRecepcaoPacoteServico" as RPS <<Serviço>>
+participant "IConsolidacaoServico" as CS <<Serviço>>
 participant "LojaRepositorio" as LR <<Repositório>>
 participant "VendaCentral\nRepositorio" as VCR <<Repositório>>
 participant "DevolucaoCentral\nRepositorio" as DCR <<Repositório>>
+participant "SessaoCaixaCentral\nRepositorio" as SCCR <<Repositório>>
 participant "RemessaCentral\nRepositorio" as RCR <<Repositório>>
 participant "PagamentoCentral\nRepositorio" as PCR <<Repositório>>
 participant "LogAuditoria\nCentralRepositorio" as LACR <<Repositório>>
@@ -87,6 +88,13 @@ else pacote íntegro
     activate DCR
     DCR --> RPS : ok (inserido ou ignorado)
     deactivate DCR
+  end
+
+  loop para cada SessaoCaixa no pacote
+    RPS -> SCCR : guardarSeNaoExistir(sessaoCaixaCentral)
+    activate SCCR
+    SCCR --> RPS : ok (inserido ou ignorado)
+    deactivate SCCR
   end
 
   loop para cada Remessa no pacote
