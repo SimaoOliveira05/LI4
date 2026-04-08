@@ -56,50 +56,19 @@ package "Domínio (Entidades Core)" #FEFEFE {
     - id : int
     - dataFecho : LocalDate
     - idLoja : String
-    - estadoCompletude : EstadoFecho
-    - lojasFaltantes : List~String~
     + getDataFecho() : LocalDate
     + getIdLoja() : String
-    + getEstadoCompletude() : EstadoFecho
-    + getLojasFaltantes() : List~String~
-    + isCompleto() : boolean
   }
-  note bottom of FechoDiaCentral
-    Registo de cada fecho recebido.
-    lojasFaltantes regista os idLoja
-    que ainda não enviaram para a data.
-    EstadoFecho.PARCIAL quando
-    lojasFaltantes não está vazio (RF15).
-  end note
 
-  class PedidoFecho {
-    - id : int
-    - dataPedido : LocalDate
-    - janelaTemporalMinutos : int
-    - estadoConsolidacao : EstadoConsolidacao
-    + isConsolidado() : boolean
-    + getJanelaTemporalMinutos() : int
-  }
-  note bottom of PedidoFecho
-    Consolidação nocturna. Janela
-    temporal configurável em minutos.
-  end note
+
 
   enum EstadoFecho {
     COMPLETO
     PARCIAL
   }
 
-  enum EstadoConsolidacao {
-    PENDENTE
-    CONSOLIDADO
-    ERRO
-  }
 }
 
 ' Relações
 FechoDiaCentral --> Loja : idLoja
-FechoDiaCentral --> EstadoFecho
-PedidoFecho --> EstadoConsolidacao
-PedidoFecho "1" --> "0..*" FechoDiaCentral : fechosRecebidos
 @enduml

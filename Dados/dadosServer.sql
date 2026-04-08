@@ -30,10 +30,6 @@ CREATE TABLE FechoDiaCentral (
     id                  INT             NOT NULL AUTO_INCREMENT,
     idLoja              VARCHAR(50)     NOT NULL,
     dataFecho           DATE            NOT NULL,
-    estadoFecho         ENUM(
-                            'COMPLETO',
-                            'PARCIAL'
-                        )               NOT NULL DEFAULT 'PARCIAL',
     dataRecepcao        DATETIME        NOT NULL,
     PRIMARY KEY (id),
     CONSTRAINT fk_fechodiacentral_loja
@@ -43,31 +39,6 @@ CREATE TABLE FechoDiaCentral (
         UNIQUE (idLoja, dataFecho)
 );
 
-CREATE TABLE PedidoFecho (
-    id                      INT             NOT NULL AUTO_INCREMENT,
-    dataPedido              DATE            NOT NULL,
-    janelaTemporalMinutos   INT             NOT NULL,
-    estadoConsolidacao      ENUM(
-                                'PENDENTE',
-                                'CONSOLIDADO',
-                                'ERRO'
-                            )               NOT NULL DEFAULT 'PENDENTE',
-    PRIMARY KEY (id),
-    CONSTRAINT chk_pedidofecho_janela
-        CHECK (janelaTemporalMinutos > 0)
-);
-
-CREATE TABLE PedidoFecho_FechoDiaCentral (
-    idPedidoFecho       INT     NOT NULL,
-    idFechoDiaCentral   INT     NOT NULL,
-    PRIMARY KEY (idPedidoFecho, idFechoDiaCentral),
-    CONSTRAINT fk_pf_fdc_pedido
-        FOREIGN KEY (idPedidoFecho)
-        REFERENCES PedidoFecho(id),
-    CONSTRAINT fk_pf_fdc_fecho
-        FOREIGN KEY (idFechoDiaCentral)
-        REFERENCES FechoDiaCentral(id)
-);
 
 -- ------------------------------------------------------------
 -- ENTIDADES TRANSACIONAIS

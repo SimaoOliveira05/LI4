@@ -11,7 +11,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 CREATE TABLE Utilizador (
     id                  INT             NOT NULL AUTO_INCREMENT,
     nomeUtilizador      VARCHAR(100)    NOT NULL UNIQUE,
-    hashPalavraPasse    VARBINARY(64)   NOT NULL,
+    hashPalavraPasse    VARCHAR(64)   NOT NULL,
     perfil              ENUM(
                             'FUNCIONARIO',
                             'GESTOR',
