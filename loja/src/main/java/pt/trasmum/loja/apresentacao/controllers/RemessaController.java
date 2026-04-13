@@ -7,9 +7,7 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import pt.trasmum.loja.app.AppContext;
 import pt.trasmum.loja.dominio.catalogo.Produto;
 import pt.trasmum.loja.dominio.core.Utilizador;
@@ -21,186 +19,142 @@ import java.util.List;
 
 public class RemessaController {
 
-    // Aba Remessa
-    @FXML private ComboBox<Fornecedor> cmbFornecedorRemessa;
-    @FXML private TextField txtProdutoId;
-    @FXML private TextField txtQtdRemessa;
-    @FXML private DatePicker dpValidade;
-    @FXML private TextField txtValorGuia;
-    @FXML private TableView<LinhaRemessa> tblLinhasRemessa;
-    @FXML private TableColumn<LinhaRemessa, String>  colProdutoR;
-    @FXML private TableColumn<LinhaRemessa, Integer> colQtdR;
-    @FXML private TableColumn<LinhaRemessa, String>  colValidadeR;
+    // ── Painel de gestão (lista + detalhe lateral) ─────────────────
+    @FXML private HBox  painelGestao;
+    @FXML private TableView<PedidoRemessa>            tblPedidos;
+    @FXML private TableColumn<PedidoRemessa, Integer> colId;
+    @FXML private TableColumn<PedidoRemessa, String>  colFornecedor;
+    @FXML private TableColumn<PedidoRemessa, String>  colData;
+    @FXML private TableColumn<PedidoRemessa, String>  colEstado;
+    @FXML private TableColumn<PedidoRemessa, Integer> colNrLinhas;
+    @FXML private ComboBox<String> cmbFiltro;
 
-    // Aba Pedidos
-    @FXML private TableView<PedidoRemessa> tblPedidos;
-    @FXML private TableColumn<PedidoRemessa, Integer> colIdPedido;
-    @FXML private TableColumn<PedidoRemessa, String>  colFornecedorPedido;
-    @FXML private TableColumn<PedidoRemessa, String>  colEstadoPedido;
-    @FXML private ComboBox<String> cmbFiltroPedido;
+    // Detalhe
+    @FXML private VBox  painelDetalhe;
+    @FXML private Label lblDetFornecedor;
+    @FXML private Label lblDetData;
+    @FXML private Label lblDetEstado;
+    @FXML private TableView<LinhaPedidoRemessa>            tblLinhasDetalhe;
+    @FXML private TableColumn<LinhaPedidoRemessa, String>  colDetProduto;
+    @FXML private TableColumn<LinhaPedidoRemessa, Integer> colDetQtd;
+    @FXML private Button btnRegistarChegada;
 
-    private final ObservableList<LinhaRemessa> linhasRemessa = FXCollections.observableArrayList();
-    private final ObservableList<PedidoRemessa> pedidos = FXCollections.observableArrayList();
+    // ── Painel de novo pedido ──────────────────────────────────────
+    @FXML private HBox  painelNovoPedido;
+    @FXML private TextField txtFiltroNP;
+    @FXML private FlowPane  painelProdutosNP;
+    @FXML private ComboBox<Fornecedor> cmbFornecedorNP;
+    @FXML private TextField txtQtdNP;
+    @FXML private TableView<LinhaNPExibicao>            tblLinhasNP;
+    @FXML private TableColumn<LinhaNPExibicao, String>  colNPProduto;
+    @FXML private TableColumn<LinhaNPExibicao, Integer> colNPQtd;
+    @FXML private TableColumn<LinhaNPExibicao, String>  colNPRemover;
+
+    private final ObservableList<PedidoRemessa>   pedidos  = FXCollections.observableArrayList();
+    private final ObservableList<LinhaNPExibicao> linhasNP = FXCollections.observableArrayList();
+    private List<Produto> todosProdutos;
+
+    // ── Classe de apresentação para linhas do novo pedido ─────────
+    static final class LinhaNPExibicao {
+        final int    idProduto;
+        final String nome;
+        int          quantidade;
+
+        LinhaNPExibicao(int idProduto, String nome, int quantidade) {
+            this.idProduto  = idProduto;
+            this.nome       = nome;
+            this.quantidade = quantidade;
+        }
+    }
+
+    // ── Inicialização ─────────────────────────────────────────────
 
     @FXML
     public void initialize() {
-        colProdutoR.setCellValueFactory(c -> {
-            Produto p = AppContext.getInstance().produtoRepo.buscarPorId(c.getValue().getIdProduto());
-            return new SimpleStringProperty(p != null ? p.getNome() : "—");
-        });
-        colQtdR.setCellValueFactory(c -> new SimpleIntegerProperty(c.getValue().getQuantidade()).asObject());
-        colValidadeR.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getDataValidade().toString()));
-        tblLinhasRemessa.setItems(linhasRemessa);
-
-        colIdPedido.setCellValueFactory(c -> new SimpleIntegerProperty(c.getValue().getId()).asObject());
-        colFornecedorPedido.setCellValueFactory(c -> {
+        // Tabela de pedidos
+        colId.setCellValueFactory(c ->
+                new SimpleIntegerProperty(c.getValue().getId()).asObject());
+        colFornecedor.setCellValueFactory(c -> {
             Fornecedor f = AppContext.getInstance().fornecedorRepo.buscarPorId(c.getValue().getIdFornecedor());
             return new SimpleStringProperty(f != null ? f.getNome() : "—");
         });
-        colEstadoPedido.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getEstado().name()));
+        colData.setCellValueFactory(c ->
+                new SimpleStringProperty(c.getValue().getDataCriacao().toString()));
+        colEstado.setCellValueFactory(c ->
+                new SimpleStringProperty(c.getValue().getEstado().name()));
+        colNrLinhas.setCellValueFactory(c ->
+                new SimpleIntegerProperty(c.getValue().getLinhas().size()).asObject());
         tblPedidos.setItems(pedidos);
 
-        cmbFiltroPedido.setItems(FXCollections.observableArrayList("TODOS", "PENDENTE", "CONCLUIDO"));
-        cmbFiltroPedido.setValue("TODOS");
+        // Selecção → painel de detalhe
+        tblPedidos.getSelectionModel().selectedItemProperty().addListener((obs, old, sel) -> {
+            if (sel == null) {
+                painelDetalhe.setVisible(false);
+                painelDetalhe.setManaged(false);
+            } else {
+                mostrarDetalhe(sel);
+            }
+        });
 
+        // Tabela de detalhe
+        colDetProduto.setCellValueFactory(c -> {
+            Produto p = AppContext.getInstance().produtoRepo.buscarPorId(c.getValue().getIdProduto());
+            return new SimpleStringProperty(p != null ? p.getNome() : "—");
+        });
+        colDetQtd.setCellValueFactory(c ->
+                new SimpleIntegerProperty(c.getValue().getQuantidadePretendida()).asObject());
+
+        // Filtro
+        cmbFiltro.setItems(FXCollections.observableArrayList("TODOS", "PENDENTE", "CONCLUIDO"));
+        cmbFiltro.setValue("TODOS");
+
+        // Tabela de novo pedido
+        colNPProduto.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().nome));
+        colNPQtd.setCellValueFactory(c ->
+                new SimpleIntegerProperty(c.getValue().quantidade).asObject());
+        colNPRemover.setCellFactory(tc -> new TableCell<>() {
+            private final Button btn = new Button("✕");
+            {
+                btn.setOnAction(e -> {
+                    LinhaNPExibicao item = getTableView().getItems().get(getIndex());
+                    linhasNP.remove(item);
+                });
+                btn.setStyle("-fx-font-size: 10px; -fx-padding: 2 6 2 6;");
+                btn.getStyleClass().add("btn-danger");
+            }
+            @Override protected void updateItem(String s, boolean empty) {
+                super.updateItem(s, empty);
+                setGraphic(empty ? null : btn);
+            }
+        });
+        tblLinhasNP.setItems(linhasNP);
+
+        // Fornecedores para novo pedido
         List<Fornecedor> fornecedores = AppContext.getInstance().fornecedorRepo.listarTodos();
-        cmbFornecedorRemessa.setItems(FXCollections.observableArrayList(fornecedores));
-        cmbFornecedorRemessa.setCellFactory(lv -> new ListCell<>() {
+        cmbFornecedorNP.setItems(FXCollections.observableArrayList(fornecedores));
+        cmbFornecedorNP.setCellFactory(lv -> new ListCell<>() {
             @Override protected void updateItem(Fornecedor f, boolean empty) {
                 super.updateItem(f, empty); setText(empty || f == null ? null : f.getNome());
             }
         });
-        cmbFornecedorRemessa.setButtonCell(new ListCell<>() {
+        cmbFornecedorNP.setButtonCell(new ListCell<>() {
             @Override protected void updateItem(Fornecedor f, boolean empty) {
                 super.updateItem(f, empty); setText(empty || f == null ? null : f.getNome());
             }
         });
+
+        todosProdutos = AppContext.getInstance().produtoRepo.listarAtivos();
 
         try { carregarPedidos(); } catch (Exception e) { mostrarErro("Erro ao carregar pedidos: " + e.getMessage()); }
     }
 
-    @FXML
-    public void onAdicionarLinhaRemessa() {
-        String codigo = txtProdutoId.getText().trim();
-        if (codigo.isBlank()) { mostrarErro("Introduza o código de barras do produto."); return; }
-        Produto produto = AppContext.getInstance().produtoRepo.buscarPorCodigoBarras(codigo);
-        if (produto == null) { mostrarErro("Produto não encontrado: " + codigo); return; }
-        try {
-            int qtd = Integer.parseInt(txtQtdRemessa.getText().trim());
-            LocalDate validade = dpValidade.getValue();
-            if (validade == null) { mostrarErro("Selecione a data de validade."); return; }
-            linhasRemessa.add(new LinhaRemessa(0, produto.getId(), qtd, validade));
-            txtProdutoId.clear(); txtQtdRemessa.clear(); dpValidade.setValue(null);
-        } catch (NumberFormatException e) { mostrarErro("Quantidade inválida."); }
-    }
+    // ── Lista de pedidos ──────────────────────────────────────────
 
     @FXML
-    public void onRegistarRemessa() {
-        Fornecedor forn = cmbFornecedorRemessa.getValue();
-        if (forn == null) { mostrarErro("Selecione um fornecedor."); return; }
-        if (linhasRemessa.isEmpty()) { mostrarErro("Adicione pelo menos uma linha."); return; }
-        double valorGuia;
-        try { valorGuia = Double.parseDouble(txtValorGuia.getText().replace(",", ".")); }
-        catch (NumberFormatException e) { mostrarErro("Valor de guia inválido."); return; }
-
-        Utilizador u = AppContext.getInstance().getUtilizadorAtual();
-        try {
-            AppContext.getInstance().remessaServico.registarRemessa(u, forn, new ArrayList<>(linhasRemessa), valorGuia);
-            linhasRemessa.clear();
-            mostrarInfo("Remessa registada com sucesso.");
-        } catch (Exception e) { mostrarErro(e.getMessage()); }
-    }
-
-    @FXML
-    public void onNovoPedido() {
-        // Diálogo para criar um PedidoRemessa
-        Dialog<List<LinhaPedidoRemessa>> dlg = new Dialog<>();
-        dlg.setTitle("Novo Pedido de Remessa");
-        dlg.setHeaderText("Selecione o fornecedor e adicione os produtos pretendidos.");
-        dlg.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
-
-        // Fornecedor
-        ComboBox<Fornecedor> cmbForn = new ComboBox<>();
-        cmbForn.setItems(FXCollections.observableArrayList(AppContext.getInstance().fornecedorRepo.listarTodos()));
-        cmbForn.setCellFactory(lv -> new ListCell<>() {
-            @Override protected void updateItem(Fornecedor f, boolean empty) {
-                super.updateItem(f, empty); setText(empty || f == null ? null : f.getNome());
-            }
-        });
-        cmbForn.setButtonCell(new ListCell<>() {
-            @Override protected void updateItem(Fornecedor f, boolean empty) {
-                super.updateItem(f, empty); setText(empty || f == null ? null : f.getNome());
-            }
-        });
-        cmbForn.setPrefWidth(220);
-
-        // Linhas do pedido (produto + quantidade)
-        ObservableList<LinhaPedidoRemessa> linhasPedido = FXCollections.observableArrayList();
-        TableView<LinhaPedidoRemessa> tbl = new TableView<>(linhasPedido);
-        tbl.setPrefHeight(180);
-        TableColumn<LinhaPedidoRemessa, String> cProd = new TableColumn<>("Produto");
-        cProd.setCellValueFactory(c -> {
-            Produto p = AppContext.getInstance().produtoRepo.buscarPorId(c.getValue().getIdProduto());
-            return new SimpleStringProperty(p != null ? p.getNome() : "—");
-        });
-        cProd.setPrefWidth(200);
-        TableColumn<LinhaPedidoRemessa, Integer> cQtd = new TableColumn<>("Qtd. pretendida");
-        cQtd.setCellValueFactory(c -> new SimpleIntegerProperty(c.getValue().getQuantidadePretendida()).asObject());
-        cQtd.setPrefWidth(130);
-        tbl.getColumns().addAll(cProd, cQtd);
-
-        // Campos para adicionar linha
-        TextField fProdId = new TextField(); fProdId.setPromptText("Cód. barras"); fProdId.setPrefWidth(150);
-        TextField fQtd   = new TextField(); fQtd.setPromptText("Quantidade");      fQtd.setPrefWidth(90);
-        Button btnAdd = new Button("Adicionar");
-        btnAdd.setOnAction(e -> {
-            try {
-                String codigo = fProdId.getText().trim();
-                int qtd = Integer.parseInt(fQtd.getText().trim());
-                if (qtd <= 0) { mostrarErro("Quantidade deve ser > 0."); return; }
-                Produto p = AppContext.getInstance().produtoRepo.buscarPorCodigoBarras(codigo);
-                if (p == null) { mostrarErro("Produto não encontrado: " + codigo); return; }
-                linhasPedido.add(new LinhaPedidoRemessa(0, p.getId(), qtd));
-                fProdId.clear(); fQtd.clear();
-            } catch (NumberFormatException ex) { mostrarErro("Quantidade inválida."); }
-        });
-
-        VBox conteudo = new VBox(10);
-        conteudo.setPadding(new Insets(12));
-        HBox hForn = new HBox(8, new Label("Fornecedor:"), cmbForn);
-        hForn.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-        HBox hLinha = new HBox(8, new Label("Cód. barras:"), fProdId, new Label("Qtd.:"), fQtd, btnAdd);
-        hLinha.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-        conteudo.getChildren().addAll(hForn, new Label("Linhas do pedido:"), hLinha, tbl);
-        dlg.getDialogPane().setContent(conteudo);
-
-        // Validação ao confirmar
-        Button btnOk = (Button) dlg.getDialogPane().lookupButton(ButtonType.OK);
-        btnOk.addEventFilter(javafx.event.ActionEvent.ACTION, e -> {
-            if (cmbForn.getValue() == null) {
-                mostrarErro("Selecione um fornecedor."); e.consume();
-            } else if (linhasPedido.isEmpty()) {
-                mostrarErro("Adicione pelo menos uma linha."); e.consume();
-            }
-        });
-
-        dlg.setResultConverter(bt -> bt == ButtonType.OK ? new ArrayList<>(linhasPedido) : null);
-
-        dlg.showAndWait().ifPresent(linhas -> {
-            Utilizador u = AppContext.getInstance().getUtilizadorAtual();
-            try {
-                AppContext.getInstance().remessaServico.criarPedidoRemessa(u, cmbForn.getValue(), linhas);
-                carregarPedidos();
-                mostrarInfo("Pedido de remessa criado.");
-            } catch (Exception e) { mostrarErro(e.getMessage()); }
-        });
-    }
-
-    @FXML
-    public void onFiltrarPedidos() { carregarPedidos(); }
+    public void onFiltrar() { carregarPedidos(); }
 
     private void carregarPedidos() {
-        String filtro = cmbFiltroPedido.getValue();
+        String filtro = cmbFiltro.getValue();
         List<PedidoRemessa> lista;
         if ("PENDENTE".equals(filtro)) {
             lista = AppContext.getInstance().remessaServico.listarPedidos(EstadoPedido.PENDENTE);
@@ -212,8 +166,224 @@ public class RemessaController {
             lista.addAll(AppContext.getInstance().remessaServico.listarPedidos(EstadoPedido.CONCLUIDO));
         }
         pedidos.setAll(lista);
+        painelDetalhe.setVisible(false);
+        painelDetalhe.setManaged(false);
     }
 
-    private void mostrarErro(String m) { Alert a = new Alert(Alert.AlertType.ERROR); a.setTitle("Erro"); a.setHeaderText(null); a.setContentText(m); a.showAndWait(); }
-    private void mostrarInfo(String m)  { Alert a = new Alert(Alert.AlertType.INFORMATION); a.setTitle("Informação"); a.setHeaderText(null); a.setContentText(m); a.showAndWait(); }
+    // ── Painel de detalhe ─────────────────────────────────────────
+
+    private void mostrarDetalhe(PedidoRemessa pedido) {
+        Fornecedor f = AppContext.getInstance().fornecedorRepo.buscarPorId(pedido.getIdFornecedor());
+        lblDetFornecedor.setText(f != null ? f.getNome() : "—");
+        lblDetData.setText(pedido.getDataCriacao().toString());
+        lblDetEstado.setText(pedido.getEstado().name());
+        tblLinhasDetalhe.setItems(FXCollections.observableArrayList(pedido.getLinhas()));
+
+        boolean pendente = pedido.getEstado() == EstadoPedido.PENDENTE;
+        btnRegistarChegada.setVisible(pendente);
+        btnRegistarChegada.setManaged(pendente);
+
+        painelDetalhe.setVisible(true);
+        painelDetalhe.setManaged(true);
+    }
+
+    // ── Registar chegada ──────────────────────────────────────────
+
+    @FXML
+    public void onRegistarChegada() {
+        PedidoRemessa pedido = tblPedidos.getSelectionModel().getSelectedItem();
+        if (pedido == null || pedido.getEstado() != EstadoPedido.PENDENTE) return;
+
+        Dialog<Boolean> dlg = new Dialog<>();
+        dlg.setTitle("Registar Chegada");
+        dlg.setHeaderText("Confirme as quantidades e validades recebidas.");
+        dlg.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(12); grid.setVgap(8);
+        grid.setPadding(new Insets(12));
+
+        // Cabeçalho
+        grid.add(boldLabel("Produto"),        0, 0);
+        grid.add(boldLabel("Qtd. pedida"),    1, 0);
+        grid.add(boldLabel("Qtd. recebida"),  2, 0);
+        grid.add(boldLabel("Validade"),       3, 0);
+
+        List<TextField>  camposQtd      = new ArrayList<>();
+        List<DatePicker> camposValidade = new ArrayList<>();
+        List<Integer>    idsProduto     = new ArrayList<>();
+
+        int row = 1;
+        for (LinhaPedidoRemessa linha : pedido.getLinhas()) {
+            Produto p = AppContext.getInstance().produtoRepo.buscarPorId(linha.getIdProduto());
+            idsProduto.add(linha.getIdProduto());
+
+            TextField tfQtd = new TextField(String.valueOf(linha.getQuantidadePretendida()));
+            tfQtd.setPrefWidth(70);
+            DatePicker dp = new DatePicker(LocalDate.now().plusMonths(6));
+            dp.setPrefWidth(150);
+
+            grid.add(new Label(p != null ? p.getNome() : "—"),                        0, row);
+            grid.add(new Label(String.valueOf(linha.getQuantidadePretendida())),        1, row);
+            grid.add(tfQtd,                                                             2, row);
+            grid.add(dp,                                                                3, row);
+
+            camposQtd.add(tfQtd);
+            camposValidade.add(dp);
+            row++;
+        }
+
+        grid.add(boldLabel("Valor da guia (€):"), 0, row);
+        TextField tfGuia = new TextField();
+        tfGuia.setPrefWidth(100);
+        grid.add(tfGuia, 1, row);
+
+        ScrollPane scroll = new ScrollPane(grid);
+        scroll.setFitToWidth(true);
+        scroll.setPrefHeight(300);
+        dlg.getDialogPane().setContent(scroll);
+
+        // Validação antes de confirmar
+        Button btnOk = (Button) dlg.getDialogPane().lookupButton(ButtonType.OK);
+        btnOk.addEventFilter(javafx.event.ActionEvent.ACTION, ev -> {
+            for (int i = 0; i < camposQtd.size(); i++) {
+                try {
+                    int q = Integer.parseInt(camposQtd.get(i).getText().trim());
+                    if (q < 0) throw new NumberFormatException();
+                } catch (NumberFormatException ex) {
+                    mostrarErro("Quantidade inválida na linha " + (i + 1));
+                    ev.consume(); return;
+                }
+                if (camposValidade.get(i).getValue() == null) {
+                    mostrarErro("Selecione a validade na linha " + (i + 1));
+                    ev.consume(); return;
+                }
+            }
+            try { Double.parseDouble(tfGuia.getText().replace(",", ".")); }
+            catch (NumberFormatException ex) { mostrarErro("Valor de guia inválido."); ev.consume(); }
+        });
+
+        dlg.setResultConverter(bt -> bt == ButtonType.OK);
+
+        dlg.showAndWait().ifPresent(ok -> {
+            if (!ok) return;
+            try {
+                List<LinhaRemessa> linhas = new ArrayList<>();
+                for (int i = 0; i < idsProduto.size(); i++) {
+                    int qtd = Integer.parseInt(camposQtd.get(i).getText().trim());
+                    if (qtd > 0) {
+                        linhas.add(new LinhaRemessa(0, idsProduto.get(i), qtd, camposValidade.get(i).getValue()));
+                    }
+                }
+                if (linhas.isEmpty()) { mostrarErro("Nenhuma quantidade recebida."); return; }
+                double valorGuia = Double.parseDouble(tfGuia.getText().replace(",", "."));
+                Fornecedor forn  = AppContext.getInstance().fornecedorRepo.buscarPorId(pedido.getIdFornecedor());
+                Utilizador u     = AppContext.getInstance().getUtilizadorAtual();
+                AppContext.getInstance().remessaServico.registarRemessa(u, forn, linhas, valorGuia);
+                mostrarInfo("Remessa registada com sucesso.");
+                carregarPedidos();
+            } catch (Exception ex) { mostrarErro(ex.getMessage()); }
+        });
+    }
+
+    // ── Novo pedido ───────────────────────────────────────────────
+
+    @FXML
+    public void onIniciarNovoPedido() {
+        linhasNP.clear();
+        txtFiltroNP.clear();
+        txtQtdNP.setText("1");
+        atualizarPainelProdutosNP("");
+        painelGestao.setVisible(false);
+        painelGestao.setManaged(false);
+        painelNovoPedido.setVisible(true);
+        painelNovoPedido.setManaged(true);
+    }
+
+    @FXML
+    public void onCancelarNovoPedido() {
+        painelNovoPedido.setVisible(false);
+        painelNovoPedido.setManaged(false);
+        painelGestao.setVisible(true);
+        painelGestao.setManaged(true);
+    }
+
+    @FXML
+    public void onFiltrarNP() {
+        atualizarPainelProdutosNP(txtFiltroNP.getText().trim());
+    }
+
+    private void atualizarPainelProdutosNP(String filtro) {
+        painelProdutosNP.getChildren().clear();
+        String f = filtro.toLowerCase();
+        todosProdutos.stream()
+                .filter(p -> f.isBlank()
+                        || p.getNome().toLowerCase().contains(f)
+                        || p.getCodigoBarras().toLowerCase().contains(f)
+                        || p.getCategoria().toLowerCase().contains(f))
+                .forEach(p -> painelProdutosNP.getChildren().add(criarBotaoProdutoNP(p)));
+    }
+
+    private Button criarBotaoProdutoNP(Produto produto) {
+        Button btn = new Button(produto.getNome());
+        btn.getStyleClass().add("produto-btn");
+        btn.setOnAction(e -> adicionarLinhaOrdem(produto));
+        return btn;
+    }
+
+    private void adicionarLinhaOrdem(Produto produto) {
+        int qtd;
+        try {
+            qtd = Integer.parseInt(txtQtdNP.getText().trim());
+            if (qtd <= 0) { mostrarErro("Quantidade deve ser > 0."); return; }
+        } catch (NumberFormatException e) { mostrarErro("Quantidade inválida."); return; }
+
+        LinhaNPExibicao existente = linhasNP.stream()
+                .filter(l -> l.idProduto == produto.getId())
+                .findFirst().orElse(null);
+        if (existente != null) {
+            existente.quantidade += qtd;
+            tblLinhasNP.refresh();
+        } else {
+            linhasNP.add(new LinhaNPExibicao(produto.getId(), produto.getNome(), qtd));
+        }
+        txtQtdNP.setText("1");
+    }
+
+    @FXML
+    public void onFinalizarNovoPedido() {
+        Fornecedor forn = cmbFornecedorNP.getValue();
+        if (forn == null)        { mostrarErro("Selecione um fornecedor."); return; }
+        if (linhasNP.isEmpty())  { mostrarErro("Adicione pelo menos um produto."); return; }
+
+        List<LinhaPedidoRemessa> linhas = linhasNP.stream()
+                .map(l -> new LinhaPedidoRemessa(0, l.idProduto, l.quantidade))
+                .toList();
+
+        Utilizador u = AppContext.getInstance().getUtilizadorAtual();
+        try {
+            AppContext.getInstance().remessaServico.criarPedidoRemessa(u, forn, linhas);
+            mostrarInfo("Pedido de remessa criado com sucesso.");
+            onCancelarNovoPedido();
+            carregarPedidos();
+        } catch (Exception e) { mostrarErro(e.getMessage()); }
+    }
+
+    // ── Auxiliares ────────────────────────────────────────────────
+
+    private static Label boldLabel(String text) {
+        Label l = new Label(text);
+        l.setStyle("-fx-font-weight: bold;");
+        return l;
+    }
+
+    private void mostrarErro(String m) {
+        Alert a = new Alert(Alert.AlertType.ERROR);
+        a.setTitle("Erro"); a.setHeaderText(null); a.setContentText(m); a.showAndWait();
+    }
+
+    private void mostrarInfo(String m) {
+        Alert a = new Alert(Alert.AlertType.INFORMATION);
+        a.setTitle("Informação"); a.setHeaderText(null); a.setContentText(m); a.showAndWait();
+    }
 }

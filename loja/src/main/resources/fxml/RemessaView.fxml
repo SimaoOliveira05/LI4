@@ -5,58 +5,106 @@
 <VBox xmlns="http://javafx.com/javafx/21"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="pt.trasmum.loja.apresentacao.controllers.RemessaController"
-      spacing="12" styleClass="view-root">
-    <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
-    <Label text="Remessas e Pedidos" styleClass="view-title"/>
+      spacing="0" styleClass="view-root">
 
-    <TabPane>
-        <!-- Aba Registar Remessa -->
-        <Tab text="Registar Remessa" closable="false">
-            <VBox spacing="10">
-                <padding><Insets top="12" right="8" bottom="8" left="8"/></padding>
-                <HBox spacing="8" alignment="CENTER_LEFT">
-                    <Label text="Fornecedor:"/>
-                    <ComboBox fx:id="cmbFornecedorRemessa" prefWidth="200"/>
-                    <Label text="Valor guia (€):"/>
-                    <TextField fx:id="txtValorGuia" prefWidth="100"/>
-                </HBox>
-                <HBox spacing="8" alignment="CENTER_LEFT">
-                    <Label text="Cód. Barras:"/>
-                    <TextField fx:id="txtProdutoId" promptText="Scan / digitar" prefWidth="160"/>
-                    <Label text="Qtd.:"/>
-                    <TextField fx:id="txtQtdRemessa" prefWidth="70"/>
-                    <Label text="Validade:"/>
-                    <DatePicker fx:id="dpValidade"/>
-                    <Button text="Adicionar linha" onAction="#onAdicionarLinhaRemessa" styleClass="btn-secondary"/>
-                </HBox>
-                <TableView fx:id="tblLinhasRemessa" prefHeight="200">
-                    <columns>
-                        <TableColumn fx:id="colProdutoR"  text="Produto" prefWidth="100"/>
-                        <TableColumn fx:id="colQtdR"      text="Qtd."    prefWidth="80"/>
-                        <TableColumn fx:id="colValidadeR" text="Validade" prefWidth="120"/>
-                    </columns>
-                </TableView>
-                <Button text="Registar Remessa" onAction="#onRegistarRemessa" styleClass="btn-primary"/>
-            </VBox>
-        </Tab>
+    <!-- ── Painel de Gestão (lista + detalhe lateral) ────────────────── -->
+    <HBox fx:id="painelGestao" VBox.vgrow="ALWAYS" spacing="12">
 
-        <!-- Aba Pedidos de Remessa -->
-        <Tab text="Pedidos de Remessa" closable="false">
-            <VBox spacing="10">
-                <padding><Insets top="12" right="8" bottom="8" left="8"/></padding>
-                <HBox spacing="8" alignment="CENTER_LEFT">
-                    <Label text="Filtrar:"/>
-                    <ComboBox fx:id="cmbFiltroPedido" prefWidth="150" onAction="#onFiltrarPedidos"/>
-                    <Button text="Novo Pedido" onAction="#onNovoPedido" styleClass="btn-primary"/>
-                </HBox>
-                <TableView fx:id="tblPedidos" VBox.vgrow="ALWAYS">
-                    <columns>
-                        <TableColumn fx:id="colIdPedido"        text="ID"         prefWidth="60"/>
-                        <TableColumn fx:id="colFornecedorPedido" text="Fornecedor" prefWidth="160"/>
-                        <TableColumn fx:id="colEstadoPedido"    text="Estado"     prefWidth="120"/>
-                    </columns>
-                </TableView>
-            </VBox>
-        </Tab>
-    </TabPane>
+        <!-- Esquerda: tabela de pedidos -->
+        <VBox HBox.hgrow="ALWAYS" spacing="8" minWidth="0">
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label text="Remessas e Pedidos" styleClass="view-title" HBox.hgrow="ALWAYS"/>
+                <ComboBox fx:id="cmbFiltro" prefWidth="130" onAction="#onFiltrar"/>
+                <Button text="Novo Pedido" onAction="#onIniciarNovoPedido" styleClass="btn-primary"/>
+            </HBox>
+            <TableView fx:id="tblPedidos" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colId"         text="#"          prefWidth="48"/>
+                    <TableColumn fx:id="colFornecedor"  text="Fornecedor" prefWidth="180"/>
+                    <TableColumn fx:id="colData"        text="Data"       prefWidth="100"/>
+                    <TableColumn fx:id="colEstado"      text="Estado"     prefWidth="110"/>
+                    <TableColumn fx:id="colNrLinhas"    text="Artigos"    prefWidth="65"/>
+                </columns>
+                <placeholder><Label text="Sem pedidos"/></placeholder>
+            </TableView>
+        </VBox>
+
+        <Separator orientation="VERTICAL"/>
+
+        <!-- Direita: painel de detalhe (oculto até seleccionar linha) -->
+        <VBox fx:id="painelDetalhe" prefWidth="380" minWidth="320" spacing="10"
+              visible="false" managed="false">
+            <padding><Insets top="4"/></padding>
+            <Label text="Detalhe do Pedido" styleClass="section-title"/>
+
+            <GridPane hgap="12" vgap="6">
+                <columnConstraints>
+                    <ColumnConstraints minWidth="90"/>
+                    <ColumnConstraints hgrow="ALWAYS"/>
+                </columnConstraints>
+                <Label text="Fornecedor:"   GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                <Label fx:id="lblDetFornecedor" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                <Label text="Data:"         GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                <Label fx:id="lblDetData"   GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                <Label text="Estado:"       GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                <Label fx:id="lblDetEstado" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+            </GridPane>
+
+            <Label text="Linhas do pedido:" styleClass="section-title"/>
+            <TableView fx:id="tblLinhasDetalhe" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colDetProduto" text="Produto"     prefWidth="220"/>
+                    <TableColumn fx:id="colDetQtd"     text="Qtd. pedida" prefWidth="110"/>
+                </columns>
+                <placeholder><Label text="Sem linhas"/></placeholder>
+            </TableView>
+
+            <Button fx:id="btnRegistarChegada" text="Registar Chegada"
+                    onAction="#onRegistarChegada"
+                    styleClass="btn-primary btn-large" maxWidth="Infinity"/>
+        </VBox>
+    </HBox>
+
+    <!-- ── Painel de Novo Pedido (oculto por defeito) ────────────────── -->
+    <HBox fx:id="painelNovoPedido" VBox.vgrow="ALWAYS" spacing="12"
+          visible="false" managed="false">
+
+        <!-- Esquerda: grid de produtos pesquisável -->
+        <VBox HBox.hgrow="ALWAYS" spacing="8" minWidth="0">
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label text="Novo Pedido de Remessa" styleClass="view-title" HBox.hgrow="ALWAYS"/>
+                <Button text="Cancelar" onAction="#onCancelarNovoPedido" styleClass="btn-danger"/>
+            </HBox>
+            <TextField fx:id="txtFiltroNP" promptText="Pesquisar produto…" onKeyReleased="#onFiltrarNP"/>
+            <ScrollPane VBox.vgrow="ALWAYS" fitToWidth="true" styleClass="produtos-scroll">
+                <FlowPane fx:id="painelProdutosNP" hgap="8" vgap="8" styleClass="produtos-painel">
+                    <padding><Insets top="4" right="4" bottom="4" left="4"/></padding>
+                </FlowPane>
+            </ScrollPane>
+        </VBox>
+
+        <Separator orientation="VERTICAL"/>
+
+        <!-- Direita: linhas do pedido + fornecedor + finalizar -->
+        <VBox prefWidth="420" minWidth="340" spacing="8">
+            <HBox spacing="8" alignment="CENTER_LEFT">
+                <Label text="Fornecedor:"/>
+                <ComboBox fx:id="cmbFornecedorNP" HBox.hgrow="ALWAYS"/>
+            </HBox>
+            <HBox spacing="8" alignment="CENTER_LEFT">
+                <Label text="Quantidade a pedir:"/>
+                <TextField fx:id="txtQtdNP" text="1" prefWidth="64"/>
+            </HBox>
+            <TableView fx:id="tblLinhasNP" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colNPProduto" text="Produto"    prefWidth="220"/>
+                    <TableColumn fx:id="colNPQtd"     text="Qtd."       prefWidth="70"/>
+                    <TableColumn fx:id="colNPRemover" text=""           prefWidth="52"/>
+                </columns>
+                <placeholder><Label text="Sem artigos"/></placeholder>
+            </TableView>
+            <Button text="Finalizar Pedido" onAction="#onFinalizarNovoPedido"
+                    styleClass="btn-primary btn-large" maxWidth="Infinity"/>
+        </VBox>
+    </HBox>
 </VBox>
