@@ -109,16 +109,10 @@ public class VendaServico implements IVendaServico {
 
     @Override
     public void anularVenda(Venda venda) {
-        // Repõe stock nos lotes
+        // Repõe stock nos lotes consumidos
         for (LinhaVenda linha : venda.getLinhas()) {
-            Lote lote = loteRepo.buscarLotesFEFO(0).stream()
-                    .filter(l -> l.getId() == linha.getIdLote())
-                    .findFirst()
-                    .orElse(null);
-            if (lote == null) {
-                // Busca directa via atualizar com delta
-                reporStockLote(linha.getIdLote(), linha.getQuantidade());
-            } else {
+            Lote lote = loteRepo.buscarPorId(linha.getIdLote());
+            if (lote != null) {
                 lote.setQuantidade(lote.getQuantidade() + linha.getQuantidade());
                 loteRepo.atualizar(lote);
             }
@@ -139,22 +133,6 @@ public class VendaServico implements IVendaServico {
     @Override
     public List<Venda> obterVendasPendentes() {
         return vendaRepo.buscarPendentes();
-    }
-
-    // Helper: repor stock diretamente via SQL de actualização
-    private void reporStockLote(int idLote, int quantidade) {
-        // Cria um Lote temporário só para chamar atualizar com o delta correcto
-        // A forma mais segura é carregar o lote primeiro
-        // Como não temos buscarPorId no LoteRepositorio, usamos buscarLotesFEFO com produto 0 como fallback
-        // (não encontrará nada) — por isso usamos outra abordagem: actualizamos directamente
-        // Nota: este cenário só ocorre se o lote foi completamente esvaziado (quantidade=0 → excluído do FEFO)
-        // Nesses casos a reposição correta requer um método adicional no repositório.
-        // Solução pragmática: criar Lote mock e actualizar.
-        Lote lote = new Lote();
-        lote.setId(idLote);
-        lote.setQuantidade(quantidade);
-        lote.setDataValidade(java.time.LocalDate.now().plusYears(1));
-        loteRepo.atualizar(lote);
     }
 
     // Classe auxiliar para criar um Utilizador a partir apenas do id (para auditoria)

@@ -21,8 +21,8 @@
                     <TextField fx:id="txtValorGuia" prefWidth="100"/>
                 </HBox>
                 <HBox spacing="8" alignment="CENTER_LEFT">
-                    <Label text="ID Produto:"/>
-                    <TextField fx:id="txtProdutoId" prefWidth="90"/>
+                    <Label text="Cód. Barras:"/>
+                    <TextField fx:id="txtProdutoId" promptText="Scan / digitar" prefWidth="160"/>
                     <Label text="Qtd.:"/>
                     <TextField fx:id="txtQtdRemessa" prefWidth="70"/>
                     <Label text="Validade:"/>

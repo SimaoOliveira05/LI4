@@ -60,6 +60,9 @@ public class AppContext {
     // Estado de sessão
     public volatile Utilizador utilizadorAtual;
 
+    /** Venda em curso — sobrevive a transições de vista. Null se não houver venda activa. */
+    public volatile pt.trasmum.loja.dominio.vendas.Venda vendaEmCurso;
+
     private AppContext() {
         this.configuracao = ConfiguracaoTerminal.carregar();
         this.conexao = DatabaseConnection.getInstance().getConnection();

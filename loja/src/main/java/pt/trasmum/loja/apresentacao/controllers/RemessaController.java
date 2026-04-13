@@ -28,7 +28,7 @@ public class RemessaController {
     @FXML private DatePicker dpValidade;
     @FXML private TextField txtValorGuia;
     @FXML private TableView<LinhaRemessa> tblLinhasRemessa;
-    @FXML private TableColumn<LinhaRemessa, Integer> colProdutoR;
+    @FXML private TableColumn<LinhaRemessa, String>  colProdutoR;
     @FXML private TableColumn<LinhaRemessa, Integer> colQtdR;
     @FXML private TableColumn<LinhaRemessa, String>  colValidadeR;
 
@@ -44,13 +44,19 @@ public class RemessaController {
 
     @FXML
     public void initialize() {
-        colProdutoR.setCellValueFactory(c -> new SimpleIntegerProperty(c.getValue().getIdProduto()).asObject());
+        colProdutoR.setCellValueFactory(c -> {
+            Produto p = AppContext.getInstance().produtoRepo.buscarPorId(c.getValue().getIdProduto());
+            return new SimpleStringProperty(p != null ? p.getNome() : "—");
+        });
         colQtdR.setCellValueFactory(c -> new SimpleIntegerProperty(c.getValue().getQuantidade()).asObject());
         colValidadeR.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getDataValidade().toString()));
         tblLinhasRemessa.setItems(linhasRemessa);
 
         colIdPedido.setCellValueFactory(c -> new SimpleIntegerProperty(c.getValue().getId()).asObject());
-        colFornecedorPedido.setCellValueFactory(c -> new SimpleStringProperty("Forn. " + c.getValue().getIdFornecedor()));
+        colFornecedorPedido.setCellValueFactory(c -> {
+            Fornecedor f = AppContext.getInstance().fornecedorRepo.buscarPorId(c.getValue().getIdFornecedor());
+            return new SimpleStringProperty(f != null ? f.getNome() : "—");
+        });
         colEstadoPedido.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getEstado().name()));
         tblPedidos.setItems(pedidos);
 
@@ -70,20 +76,22 @@ public class RemessaController {
             }
         });
 
-        carregarPedidos();
+        try { carregarPedidos(); } catch (Exception e) { mostrarErro("Erro ao carregar pedidos: " + e.getMessage()); }
     }
 
     @FXML
     public void onAdicionarLinhaRemessa() {
+        String codigo = txtProdutoId.getText().trim();
+        if (codigo.isBlank()) { mostrarErro("Introduza o código de barras do produto."); return; }
+        Produto produto = AppContext.getInstance().produtoRepo.buscarPorCodigoBarras(codigo);
+        if (produto == null) { mostrarErro("Produto não encontrado: " + codigo); return; }
         try {
-            int idProduto = Integer.parseInt(txtProdutoId.getText().trim());
             int qtd = Integer.parseInt(txtQtdRemessa.getText().trim());
             LocalDate validade = dpValidade.getValue();
             if (validade == null) { mostrarErro("Selecione a data de validade."); return; }
-            LinhaRemessa linha = new LinhaRemessa(0, idProduto, qtd, validade);
-            linhasRemessa.add(linha);
+            linhasRemessa.add(new LinhaRemessa(0, produto.getId(), qtd, validade));
             txtProdutoId.clear(); txtQtdRemessa.clear(); dpValidade.setValue(null);
-        } catch (NumberFormatException e) { mostrarErro("ID de produto ou quantidade inválida."); }
+        } catch (NumberFormatException e) { mostrarErro("Quantidade inválida."); }
     }
 
     @FXML
@@ -130,36 +138,38 @@ public class RemessaController {
         ObservableList<LinhaPedidoRemessa> linhasPedido = FXCollections.observableArrayList();
         TableView<LinhaPedidoRemessa> tbl = new TableView<>(linhasPedido);
         tbl.setPrefHeight(180);
-        TableColumn<LinhaPedidoRemessa, Integer> cProd = new TableColumn<>("ID Produto");
-        cProd.setCellValueFactory(c -> new SimpleIntegerProperty(c.getValue().getIdProduto()).asObject());
-        cProd.setPrefWidth(100);
+        TableColumn<LinhaPedidoRemessa, String> cProd = new TableColumn<>("Produto");
+        cProd.setCellValueFactory(c -> {
+            Produto p = AppContext.getInstance().produtoRepo.buscarPorId(c.getValue().getIdProduto());
+            return new SimpleStringProperty(p != null ? p.getNome() : "—");
+        });
+        cProd.setPrefWidth(200);
         TableColumn<LinhaPedidoRemessa, Integer> cQtd = new TableColumn<>("Qtd. pretendida");
         cQtd.setCellValueFactory(c -> new SimpleIntegerProperty(c.getValue().getQuantidadePretendida()).asObject());
         cQtd.setPrefWidth(130);
         tbl.getColumns().addAll(cProd, cQtd);
 
         // Campos para adicionar linha
-        TextField fProdId = new TextField(); fProdId.setPromptText("ID do produto"); fProdId.setPrefWidth(110);
-        TextField fQtd   = new TextField(); fQtd.setPromptText("Quantidade");       fQtd.setPrefWidth(90);
+        TextField fProdId = new TextField(); fProdId.setPromptText("Cód. barras"); fProdId.setPrefWidth(150);
+        TextField fQtd   = new TextField(); fQtd.setPromptText("Quantidade");      fQtd.setPrefWidth(90);
         Button btnAdd = new Button("Adicionar");
         btnAdd.setOnAction(e -> {
             try {
-                int idP = Integer.parseInt(fProdId.getText().trim());
+                String codigo = fProdId.getText().trim();
                 int qtd = Integer.parseInt(fQtd.getText().trim());
                 if (qtd <= 0) { mostrarErro("Quantidade deve ser > 0."); return; }
-                // Verifica se produto existe
-                Produto p = AppContext.getInstance().produtoRepo.buscarPorId(idP);
-                if (p == null) { mostrarErro("Produto " + idP + " não encontrado."); return; }
-                linhasPedido.add(new LinhaPedidoRemessa(0, idP, qtd));
+                Produto p = AppContext.getInstance().produtoRepo.buscarPorCodigoBarras(codigo);
+                if (p == null) { mostrarErro("Produto não encontrado: " + codigo); return; }
+                linhasPedido.add(new LinhaPedidoRemessa(0, p.getId(), qtd));
                 fProdId.clear(); fQtd.clear();
-            } catch (NumberFormatException ex) { mostrarErro("ID ou quantidade inválidos."); }
+            } catch (NumberFormatException ex) { mostrarErro("Quantidade inválida."); }
         });
 
         VBox conteudo = new VBox(10);
         conteudo.setPadding(new Insets(12));
         HBox hForn = new HBox(8, new Label("Fornecedor:"), cmbForn);
         hForn.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-        HBox hLinha = new HBox(8, new Label("Produto:"), fProdId, new Label("Qtd.:"), fQtd, btnAdd);
+        HBox hLinha = new HBox(8, new Label("Cód. barras:"), fProdId, new Label("Qtd.:"), fQtd, btnAdd);
         hLinha.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
         conteudo.getChildren().addAll(hForn, new Label("Linhas do pedido:"), hLinha, tbl);
         dlg.getDialogPane().setContent(conteudo);

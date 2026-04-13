@@ -140,8 +140,12 @@ public class CatalogoController {
         List<Lote> aVencer = AppContext.getInstance().catalogoServico.gerarAlertasValidade(dias);
         if (!aVencer.isEmpty()) {
             sb.append("\n⚠ A vencer (").append(dias).append(" dias):\n");
-            aVencer.forEach(l -> sb.append("  • Lote ").append(l.getId())
-                    .append(" — ").append(l.getDataValidade()).append("\n"));
+            aVencer.forEach(l -> {
+                Produto p = AppContext.getInstance().produtoRepo.buscarPorId(l.getIdProduto());
+                String nome = p != null ? p.getNome() : "Lote " + l.getId();
+                sb.append("  • ").append(nome)
+                  .append(" — val. ").append(l.getDataValidade()).append("\n");
+            });
         }
         if (sb.isEmpty()) sb.append("Sem alertas activos.");
         txtAlertas.setText(sb.toString());

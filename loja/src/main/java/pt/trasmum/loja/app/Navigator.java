@@ -45,8 +45,16 @@ public class Navigator {
             FXMLLoader loader = new FXMLLoader(Navigator.class.getResource(fxmlPath));
             Pane pane = loader.load();
             rootLayout.setCenter(pane);
-        } catch (IOException e) {
-            throw new RuntimeException("Erro ao carregar FXML: " + fxmlPath, e);
+        } catch (Exception e) {
+            // Mostra o erro ao utilizador em vez de falhar silenciosamente
+            javafx.scene.control.Alert alert = new javafx.scene.control.Alert(
+                    javafx.scene.control.Alert.AlertType.ERROR);
+            alert.setTitle("Erro de navegação");
+            alert.setHeaderText("Não foi possível carregar a vista: " + fxmlPath);
+            // Dá a causa raiz (normalmente a excepção lançada no initialize())
+            Throwable causa = e.getCause() != null ? e.getCause() : e;
+            alert.setContentText(causa.getClass().getSimpleName() + ": " + causa.getMessage());
+            alert.showAndWait();
         }
     }
 

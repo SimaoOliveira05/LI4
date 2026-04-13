@@ -9,13 +9,14 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import pt.trasmum.loja.app.AppContext;
 import pt.trasmum.loja.dominio.core.Utilizador;
+import pt.trasmum.loja.dominio.fornecedores.Fornecedor;
 import pt.trasmum.loja.dominio.fornecedores.Pagamento;
 
 public class PagamentoController {
 
     @FXML private TableView<Pagamento> tblPagamentos;
     @FXML private TableColumn<Pagamento, Integer> colId;
-    @FXML private TableColumn<Pagamento, Integer> colFornecedor;
+    @FXML private TableColumn<Pagamento, String>  colFornecedor;
     @FXML private TableColumn<Pagamento, Double>  colValor;
     @FXML private TableColumn<Pagamento, String>  colEstado;
 
@@ -24,7 +25,10 @@ public class PagamentoController {
     @FXML
     public void initialize() {
         colId.setCellValueFactory(c -> new SimpleIntegerProperty(c.getValue().getId()).asObject());
-        colFornecedor.setCellValueFactory(c -> new SimpleIntegerProperty(c.getValue().getIdFornecedor()).asObject());
+        colFornecedor.setCellValueFactory(c -> {
+            Fornecedor f = AppContext.getInstance().fornecedorRepo.buscarPorId(c.getValue().getIdFornecedor());
+            return new SimpleStringProperty(f != null ? f.getNome() : "—");
+        });
         colValor.setCellValueFactory(c -> new SimpleDoubleProperty(c.getValue().getValor()).asObject());
         colEstado.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getEstadoPagamento().name()));
         tblPagamentos.setItems(pagamentos);

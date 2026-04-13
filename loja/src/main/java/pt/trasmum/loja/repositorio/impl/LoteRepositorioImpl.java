@@ -51,6 +51,21 @@ public class LoteRepositorioImpl implements LoteRepositorio {
     }
 
     @Override
+    public Lote buscarPorId(int id) {
+        String sql = "SELECT l.*, d.id as dId, d.percentagem, d.dataAplicacao, d.idUtilizadorAplicou " +
+                     "FROM Lote l LEFT JOIN Desconto d ON d.idLote = l.id WHERE l.id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return mapearComDesconto(rs);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao buscar lote por id", e);
+        }
+        return null;
+    }
+
+    @Override
     public List<Lote> buscarLotesFEFO(int idProduto) {
         String sql = "SELECT l.*, d.id as dId, d.percentagem, d.dataAplicacao, d.idUtilizadorAplicou " +
                      "FROM Lote l LEFT JOIN Desconto d ON d.idLote = l.id " +

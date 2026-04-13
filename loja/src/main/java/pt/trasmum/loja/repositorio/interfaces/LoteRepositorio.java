@@ -8,6 +8,7 @@ import java.util.List;
 public interface LoteRepositorio {
     void guardar(Lote lote);
     void atualizar(Lote lote);
+    Lote buscarPorId(int id);
     List<Lote> buscarLotesFEFO(int idProduto);
     List<Lote> buscarLotesComDesconto();
     List<Lote> buscarAbaixoDaValidade(int diasLimite);

@@ -415,6 +415,48 @@
     -fx-border-color: #2563eb;
 }
 
+/* ── Painel de produtos (ecrã de venda) ─────────────────── */
+.produtos-scroll {
+    -fx-background-color: #f0f2f5;
+    -fx-border-color: #e5e7eb;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+}
+
+.produtos-painel {
+    -fx-background-color: transparent;
+}
+
+.produto-btn {
+    -fx-min-width: 130;
+    -fx-pref-width: 140;
+    -fx-min-height: 68;
+    -fx-pref-height: 68;
+    -fx-background-color: white;
+    -fx-border-color: #d1d5db;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-text-fill: #1e2a4a;
+    -fx-font-size: 11px;
+    -fx-wrap-text: true;
+    -fx-alignment: CENTER;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 4, 0, 0, 1);
+}
+
+.produto-btn:hover {
+    -fx-background-color: #eff6ff;
+    -fx-border-color: #2563eb;
+    -fx-border-width: 2;
+    -fx-effect: dropshadow(gaussian, rgba(37,99,235,0.15), 6, 0, 0, 2);
+}
+
+.produto-btn:pressed {
+    -fx-background-color: #dbeafe;
+    -fx-border-color: #1d4ed8;
+}
+
 /* ── Dialog ──────────────────────────────────────────────── */
 .dialog-pane {
     -fx-background-color: white;

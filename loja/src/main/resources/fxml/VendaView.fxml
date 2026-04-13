@@ -5,50 +5,92 @@
 <VBox xmlns="http://javafx.com/javafx/21"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="pt.trasmum.loja.apresentacao.controllers.VendaController"
-      spacing="12" styleClass="view-root">
-    <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
-    <Label text="Registo de Venda" styleClass="view-title"/>
+      spacing="8" styleClass="view-root">
+    <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
 
-    <HBox spacing="8" alignment="CENTER_LEFT">
-        <Button fx:id="btnIniciar" text="Iniciar Venda" onAction="#onIniciarVenda" styleClass="btn-primary"/>
+    <!-- Barra de título + controlo de venda -->
+    <HBox alignment="CENTER_LEFT" spacing="10">
+        <Label text="Registo de Venda" styleClass="view-title" HBox.hgrow="ALWAYS"/>
+        <Button fx:id="btnIniciar"  text="Nova Venda"    onAction="#onIniciarVenda"  styleClass="btn-secondary"/>
+        <Button fx:id="btnAnular"   text="Anular Venda"  onAction="#onAnularVenda"   styleClass="btn-danger"/>
     </HBox>
 
-    <HBox spacing="8" alignment="CENTER_LEFT">
-        <Label text="Código de barras:"/>
-        <TextField fx:id="txtCodigoBarras" promptText="Scan / digitar" prefWidth="220"/>
-        <Label text="Qtd.:"/>
-        <TextField fx:id="txtQuantidade" text="1" prefWidth="60"/>
-        <Button fx:id="btnAdicionar" text="Adicionar" onAction="#onAdicionarLinha" styleClass="btn-secondary"/>
-    </HBox>
+    <!-- Corpo principal: produtos (esquerda) | carrinho (direita) -->
+    <HBox VBox.vgrow="ALWAYS" spacing="12">
 
-    <TableView fx:id="tblLinhas" VBox.vgrow="ALWAYS">
-        <columns>
-            <TableColumn fx:id="colLote"    text="Lote"      prefWidth="80"/>
-            <TableColumn fx:id="colQtd"     text="Qtd."      prefWidth="70"/>
-            <TableColumn fx:id="colPreco"   text="Preço (€)" prefWidth="100"/>
-            <TableColumn fx:id="colSubtotal" text="Subtotal (€)" prefWidth="110"/>
-        </columns>
-    </TableView>
+        <!-- ── Painel esquerdo: catálogo de produtos ── -->
+        <VBox HBox.hgrow="ALWAYS" spacing="8" minWidth="0">
+            <TextField fx:id="txtFiltro"
+                       promptText="Pesquisar produto…"
+                       onKeyReleased="#onFiltrar"/>
+            <ScrollPane VBox.vgrow="ALWAYS" fitToWidth="true"
+                        styleClass="produtos-scroll">
+                <FlowPane fx:id="painelProdutos" hgap="8" vgap="8"
+                          styleClass="produtos-painel">
+                    <padding><Insets top="4" right="4" bottom="4" left="4"/></padding>
+                </FlowPane>
+            </ScrollPane>
+        </VBox>
 
-    <HBox spacing="16" alignment="CENTER_RIGHT">
-        <Label fx:id="lblTotal" text="Total: 0.00 €" styleClass="total-label"/>
-    </HBox>
+        <Separator orientation="VERTICAL"/>
 
-    <GridPane hgap="8" vgap="8">
-        <Label text="Método de pagamento:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
-        <HBox spacing="12" GridPane.columnIndex="1" GridPane.rowIndex="0">
-            <RadioButton fx:id="rbNumerario"  text="Numerário"/>
-            <RadioButton fx:id="rbMultibanco" text="Multibanco"/>
-        </HBox>
-        <Label text="Valor entregue (€):" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-        <TextField fx:id="txtValorEntregue" prefWidth="120" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
-        <Label fx:id="lblTroco" styleClass="troco-label" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
-        <Label text="NIF cliente (opcional):" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
-        <TextField fx:id="txtNif" prefWidth="150" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
-    </GridPane>
+        <!-- ── Painel direito: carrinho ── -->
+        <VBox prefWidth="450" minWidth="380" spacing="8">
 
-    <HBox spacing="8">
-        <Button fx:id="btnFinalizar" text="Finalizar Venda" onAction="#onFinalizarVenda" styleClass="btn-primary"/>
-        <Button fx:id="btnAnular"    text="Anular Venda"    onAction="#onAnularVenda"    styleClass="btn-danger"/>
+            <!-- Entrada por scan / teclado -->
+            <HBox spacing="6" alignment="CENTER_LEFT">
+                <TextField fx:id="txtCodigoBarras"
+                           promptText="Scan / código de barras"
+                           onAction="#onAdicionarLinha"
+                           HBox.hgrow="ALWAYS"/>
+                <TextField fx:id="txtQuantidade" text="1" prefWidth="52"
+                           onAction="#onAdicionarLinha"/>
+                <Button fx:id="btnAdicionar" text="Adicionar"
+                        onAction="#onAdicionarLinha" styleClass="btn-secondary"/>
+            </HBox>
+
+            <!-- Tabela de linhas -->
+            <TableView fx:id="tblLinhas" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colLote"     text="Produto"    prefWidth="180"/>
+                    <TableColumn fx:id="colQtd"      text="Qtd."       prefWidth="50"/>
+                    <TableColumn fx:id="colPreco"    text="Preço (€)"  prefWidth="90"/>
+                    <TableColumn fx:id="colSubtotal" text="Total (€)"  prefWidth="90"/>
+                </columns>
+                <placeholder><Label text="Sem artigos"/></placeholder>
+            </TableView>
+
+            <!-- Total -->
+            <HBox alignment="CENTER_RIGHT">
+                <Label fx:id="lblTotal" text="Total: 0.00 €" styleClass="total-label"/>
+            </HBox>
+
+            <!-- Pagamento -->
+            <GridPane hgap="10" vgap="6">
+                <columnConstraints>
+                    <ColumnConstraints minWidth="130"/>
+                    <ColumnConstraints hgrow="ALWAYS"/>
+                </columnConstraints>
+                <Label text="Método:"
+                       GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                <HBox spacing="14" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                    <RadioButton fx:id="rbNumerario"  text="Numerário"/>
+                    <RadioButton fx:id="rbMultibanco" text="Multibanco"/>
+                </HBox>
+                <Label text="Valor entregue (€):"
+                       GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                <TextField fx:id="txtValorEntregue" prefWidth="120"
+                           GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                <Label text="NIF cliente (opcional):"
+                       GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                <TextField fx:id="txtNif" prefWidth="150"
+                           GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+            </GridPane>
+
+            <!-- Finalizar -->
+            <Button fx:id="btnFinalizar" text="Finalizar Venda"
+                    onAction="#onFinalizarVenda"
+                    styleClass="btn-primary btn-large" maxWidth="Infinity"/>
+        </VBox>
     </HBox>
 </VBox>
