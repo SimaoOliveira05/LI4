@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:id="mainBorderPane"
+            fx:controller="pt.trasmum.loja.apresentacao.controllers.MainController"
+            styleClass="main-root">
+
+    <!-- Cabeçalho -->
+    <top>
+        <HBox styleClass="header" alignment="CENTER_LEFT" spacing="16">
+            <padding><Insets top="10" right="20" bottom="10" left="20"/></padding>
+            <Label text="TrasmUM" styleClass="header-logo"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="lblLoja" styleClass="header-info"/>
+            <Label fx:id="lblUtilizador" styleClass="header-info"/>
+            <Button text="−" onAction="#diminuirEscala" styleClass="btn-escala"/>
+            <Label fx:id="lblEscala" text="100%" styleClass="header-info"/>
+            <Button text="+" onAction="#aumentarEscala" styleClass="btn-escala"/>
+            <Button text="Terminar sessão" onAction="#onLogout" styleClass="btn-logout"/>
+        </HBox>
+    </top>
+
+    <!-- Menu lateral -->
+    <left>
+        <VBox fx:id="menuLateral" styleClass="sidebar" spacing="4" minWidth="180">
+            <padding><Insets top="16" right="8" bottom="16" left="8"/></padding>
+            <Button text="Venda"         onAction="#navegarVenda"          maxWidth="Infinity" styleClass="menu-btn"/>
+            <Button text="Devolução"     onAction="#navegarDevolucao"       maxWidth="Infinity" styleClass="menu-btn"/>
+            <Button text="Catálogo"      onAction="#navegarCatalogo"        maxWidth="Infinity" styleClass="menu-btn"/>
+            <Button text="Caixa"         onAction="#navegarCaixa"           maxWidth="Infinity" styleClass="menu-btn"/>
+            <Separator/>
+            <Button fx:id="btnRemessa"     text="Remessas"     onAction="#navegarRemessa"     maxWidth="Infinity" styleClass="menu-btn" visible="false" managed="false"/>
+            <Button fx:id="btnPagamento"   text="Pagamentos"   onAction="#navegarPagamento"   maxWidth="Infinity" styleClass="menu-btn" visible="false" managed="false"/>
+            <Button fx:id="btnUtilizadores" text="Utilizadores" onAction="#navegarUtilizadores" maxWidth="Infinity" styleClass="menu-btn" visible="false" managed="false"/>
+            <Button fx:id="btnFechoDia"    text="Fecho de Dia" onAction="#navegarFechoDia"    maxWidth="Infinity" styleClass="menu-btn menu-btn-danger" visible="false" managed="false"/>
+        </VBox>
+    </left>
+
+    <!-- Conteúdo central - carregado dinamicamente -->
+    <center>
+        <StackPane styleClass="content-area">
+            <Label text="A carregar…" styleClass="placeholder-text"/>
+        </StackPane>
+    </center>
+</BorderPane>

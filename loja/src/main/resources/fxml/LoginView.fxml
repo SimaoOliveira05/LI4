@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<StackPane xmlns="http://javafx.com/javafx/21"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="pt.trasmum.loja.apresentacao.controllers.LoginController"
+           styleClass="login-root">
+    <VBox alignment="CENTER" spacing="24" maxWidth="360" styleClass="login-card">
+        <padding><Insets top="40" right="40" bottom="40" left="40"/></padding>
+        <Label text="TrasmUM" styleClass="login-logo"/>
+        <Label text="Software de Loja" styleClass="login-subtitle"/>
+        <VBox spacing="8">
+            <Label text="Nome de utilizador"/>
+            <TextField fx:id="txtNomeUtilizador" promptText="Utilizador"
+                       onKeyReleased="#onCampoAlterado" styleClass="input-field"/>
+            <Label text="Palavra-passe"/>
+            <PasswordField fx:id="txtPalavraPasse" promptText="Palavra-passe"
+                           onKeyReleased="#onCampoAlterado" styleClass="input-field"/>
+        </VBox>
+        <Label fx:id="lblErro" styleClass="label-erro" wrapText="true"/>
+        <Button text="Entrar" onAction="#onLoginSubmit"
+                maxWidth="Infinity" styleClass="btn-primary"
+                defaultButton="true"/>
+    </VBox>
+</StackPane>
