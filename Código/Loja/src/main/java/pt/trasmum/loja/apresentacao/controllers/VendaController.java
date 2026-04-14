@@ -132,6 +132,7 @@ public class VendaController {
 
     private void onClicarProduto(Produto produto) {
         garantirVendaAtiva();
+        if (vendaAtual == null) return;
         try {
             AppContext.getInstance().vendaServico.adicionarLinha(vendaAtual, produto.getCodigoBarras(), 1);
             atualizarTabela();
@@ -144,12 +145,16 @@ public class VendaController {
 
     @FXML
     public void onIniciarVenda() {
-        Utilizador u = AppContext.getInstance().getUtilizadorAtual();
-        vendaAtual = AppContext.getInstance().vendaServico.iniciarVenda(u);
-        AppContext.getInstance().vendaEmCurso = vendaAtual;
-        linhasExibicao.clear();
-        lblTotal.setText("Total: 0.00 €");
-        setCarrinhoAtivo(true);
+        try {
+            Utilizador u = AppContext.getInstance().getUtilizadorAtual();
+            vendaAtual = AppContext.getInstance().vendaServico.iniciarVenda(u);
+            AppContext.getInstance().vendaEmCurso = vendaAtual;
+            linhasExibicao.clear();
+            lblTotal.setText("Total: 0.00 €");
+            setCarrinhoAtivo(true);
+        } catch (Exception e) {
+            mostrarErro(e.getMessage());
+        }
     }
 
     @FXML
@@ -288,9 +293,13 @@ public class VendaController {
     private void garantirVendaAtiva() {
         if (vendaAtual == null) {
             Utilizador u = AppContext.getInstance().getUtilizadorAtual();
-            vendaAtual = AppContext.getInstance().vendaServico.iniciarVenda(u);
-            AppContext.getInstance().vendaEmCurso = vendaAtual;
-            setCarrinhoAtivo(true);
+            try {
+                vendaAtual = AppContext.getInstance().vendaServico.iniciarVenda(u);
+                AppContext.getInstance().vendaEmCurso = vendaAtual;
+                setCarrinhoAtivo(true);
+            } catch (Exception e) {
+                mostrarErro(e.getMessage());
+            }
         }
     }
 

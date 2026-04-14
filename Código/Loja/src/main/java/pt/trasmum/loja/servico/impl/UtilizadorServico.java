@@ -30,9 +30,9 @@ public class UtilizadorServico implements IUtilizadorServico {
     public Utilizador criar(Utilizador gestor, UtilizadorDTO dados) {
         autorizacaoServico.exigirPerfil(gestor, PerfilUtilizador.GESTOR, PerfilUtilizador.CEO);
 
-        // CEO só cria GESTOR; GESTOR só cria FUNCIONARIO
-        if (gestor.getPerfil() == PerfilUtilizador.CEO && dados.perfil() != PerfilUtilizador.GESTOR) {
-            throw new pt.trasmum.loja.dominio.ExcecoesSeguranca.AcessoNegadoException("CEO só pode criar utilizadores com perfil GESTOR.");
+        // CEO cria GESTOR ou FUNCIONARIO; GESTOR só cria FUNCIONARIO
+        if (gestor.getPerfil() == PerfilUtilizador.CEO && dados.perfil() != PerfilUtilizador.GESTOR && dados.perfil() != PerfilUtilizador.FUNCIONARIO) {
+            throw new pt.trasmum.loja.dominio.ExcecoesSeguranca.AcessoNegadoException("CEO só pode criar utilizadores com perfil GESTOR ou FUNCIONARIO.");
         }
         if (gestor.getPerfil() == PerfilUtilizador.GESTOR && dados.perfil() != PerfilUtilizador.FUNCIONARIO) {
             throw new pt.trasmum.loja.dominio.ExcecoesSeguranca.AcessoNegadoException("GESTOR só pode criar utilizadores com perfil FUNCIONARIO.");

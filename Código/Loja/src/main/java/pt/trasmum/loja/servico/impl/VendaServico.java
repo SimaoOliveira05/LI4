@@ -8,6 +8,7 @@ import pt.trasmum.loja.dominio.catalogo.Produto;
 import pt.trasmum.loja.dominio.core.ConfiguracaoTerminal;
 import pt.trasmum.loja.dominio.core.TipoAcao;
 import pt.trasmum.loja.dominio.core.Utilizador;
+import pt.trasmum.loja.dominio.ExcecoesCaixa.SessaoCaixaNaoEncontradaException;
 import pt.trasmum.loja.dominio.vendas.*;
 import pt.trasmum.loja.dominio.vendas.Venda.MetodoPagamento;
 import pt.trasmum.loja.dominio.vendas.Venda.EstadoVenda;
@@ -42,6 +43,10 @@ public class VendaServico implements IVendaServico {
 
     @Override
     public Venda iniciarVenda(Utilizador utilizador) {
+        var sessao = sessaoCaixaRepo.buscarSessaoAtiva(utilizador.getId());
+        if (sessao == null) {
+            throw new SessaoCaixaNaoEncontradaException("Abra uma sessão de caixa antes de iniciar uma venda.");
+        }
         return new Venda(configuracao.getIdLoja(), utilizador.getId(), MetodoPagamento.NUMERARIO);
     }
 
@@ -83,6 +88,11 @@ public class VendaServico implements IVendaServico {
             throw new IllegalArgumentException("Valor entregue insuficiente.");
         }
 
+        var sessao = sessaoCaixaRepo.buscarSessaoAtiva(venda.getIdUtilizador());
+        if (sessao == null) {
+            throw new SessaoCaixaNaoEncontradaException("Não é possível finalizar a venda: abra uma sessão de caixa antes de registar a venda.");
+        }
+
         venda.setMetodoPagamento(metodo);
         venda.setTotalFaturado(total);
         venda.setEstado(EstadoVenda.FINALIZADA);
@@ -96,11 +106,8 @@ public class VendaServico implements IVendaServico {
 
         // Atualiza saldo da sessão de caixa (só para pagamentos em numerário)
         if (metodo == MetodoPagamento.NUMERARIO) {
-            var sessao = sessaoCaixaRepo.buscarSessaoAtiva(venda.getIdUtilizador());
-            if (sessao != null) {
-                sessao.setSaldoAtual(sessao.getSaldoAtual() + total);
-                sessaoCaixaRepo.atualizar(sessao);
-            }
+            sessao.setSaldoAtual(sessao.getSaldoAtual() + total);
+            sessaoCaixaRepo.atualizar(sessao);
         }
 
         auditoriaServico.registar(
