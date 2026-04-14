@@ -70,6 +70,15 @@ Registo de desvios entre o **design original** (diagramas UML, diagrama de compo
 
 ---
 
+## 2026-04-14 — Detalhes de lotes no catálogo expostos em novos métodos
+
+**Área**: UI-Contract
+**O quê**: Adicionados `CatalogoController.onVerDetalhesProduto()` e `CatalogoController.mostrarDetalhesLotes(Produto, List<Lote>)` para exibir um diálogo com os lotes FEFO do produto seleccionado.
+**Porquê**: A vista do catálogo precisava de um ponto de entrada para inspecionar os lotes de um produto sem sair do ecrã principal.
+**Impacto no design**: Diagrama de sequência do catálogo de produtos para o fluxo "Ver detalhes de produto"; actualizar o diagrama de classes de apresentação para incluir os novos métodos do controlador.
+
+---
+
 ## 2026-04-14 — Relação Fornecedor ↔ Produto (catálogo do fornecedor)
 
 **Área**: Domínio / Serviço / Repositório / UI-Contract
