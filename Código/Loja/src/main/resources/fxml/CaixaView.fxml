@@ -15,16 +15,33 @@
     </HBox>
 
     <HBox spacing="8">
-        <Button fx:id="btnAbrirSessao"    text="Abrir Sessão"      onAction="#onAbrirSessao"    styleClass="btn-primary"/>
-        <Button fx:id="btnRegistarSangria" text="Registar Sangria"  onAction="#onRegistarSangria" styleClass="btn-secondary"/>
-        <Button fx:id="btnFecharSessao"   text="Fechar Sessão"     onAction="#onFecharSessao"   styleClass="btn-danger"/>
+        <Button fx:id="btnAbrirSessao"     text="Abrir Sessão"     onAction="#onAbrirSessao"     styleClass="btn-primary"/>
+        <Button fx:id="btnRegistarSangria" text="Registar Sangria" onAction="#onRegistarSangria" styleClass="btn-secondary"/>
+        <Button fx:id="btnFecharSessao"    text="Fechar Sessão"    onAction="#onFecharSessao"    styleClass="btn-danger"/>
     </HBox>
+
+    <!-- Formulário inline de numerário — oculto por defeito -->
+    <VBox fx:id="formNumerario" spacing="8" managed="false" visible="false">
+        <Label fx:id="lblFormTitulo" styleClass="section-title"/>
+        <TableView fx:id="tblNumerarioForm" editable="true" prefHeight="340">
+            <columns>
+                <TableColumn fx:id="colFormDenom"    text="Denominação"  prefWidth="200"/>
+                <TableColumn fx:id="colFormQtd"      text="Qtd."         prefWidth="80"/>
+                <TableColumn fx:id="colFormSubtotal" text="Subtotal (€)" prefWidth="110"/>
+            </columns>
+        </TableView>
+        <HBox spacing="8" alignment="CENTER_RIGHT">
+            <Label fx:id="lblFormTotal" styleClass="saldo-label"/>
+            <Button text="Confirmar" onAction="#onConfirmarNumerario" styleClass="btn-primary"/>
+            <Button text="Cancelar"  onAction="#onCancelarNumerario"  styleClass="btn-secondary"/>
+        </HBox>
+    </VBox>
 
     <Label text="Fundo inicial:" styleClass="section-title"/>
     <TableView fx:id="tblFundo" VBox.vgrow="ALWAYS">
         <columns>
-            <TableColumn fx:id="colDenominacao" text="Denominação" prefWidth="220"/>
-            <TableColumn fx:id="colQuantidade"  text="Qtd."        prefWidth="80"/>
+            <TableColumn fx:id="colDenominacao" text="Denominação"  prefWidth="220"/>
+            <TableColumn fx:id="colQuantidade"  text="Qtd."         prefWidth="80"/>
             <TableColumn fx:id="colSubtotal"    text="Subtotal (€)" prefWidth="110"/>
         </columns>
     </TableView>

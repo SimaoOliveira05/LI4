@@ -1,26 +1,56 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.image.*?>
 <?import javafx.geometry.Insets?>
-<StackPane xmlns="http://javafx.com/javafx/21"
-           xmlns:fx="http://javafx.com/fxml/1"
-           fx:controller="pt.trasmum.loja.apresentacao.controllers.LoginController"
-           styleClass="login-root">
-    <VBox alignment="CENTER" spacing="24" maxWidth="360" styleClass="login-card">
-        <padding><Insets top="40" right="40" bottom="40" left="40"/></padding>
-        <Label text="TrasmUM" styleClass="login-logo"/>
-        <Label text="Software de Loja" styleClass="login-subtitle"/>
-        <VBox spacing="8">
-            <Label text="Nome de utilizador"/>
-            <TextField fx:id="txtNomeUtilizador" promptText="Utilizador"
-                       onKeyReleased="#onCampoAlterado" styleClass="input-field"/>
-            <Label text="Palavra-passe"/>
-            <PasswordField fx:id="txtPalavraPasse" promptText="Palavra-passe"
-                           onKeyReleased="#onCampoAlterado" styleClass="input-field"/>
+<HBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="pt.trasmum.loja.apresentacao.controllers.LoginController">
+
+    <!-- Painel esquerdo — branding -->
+    <StackPane HBox.hgrow="ALWAYS" styleClass="login-brand-panel">
+        <VBox alignment="CENTER" spacing="28" maxWidth="420">
+            <padding><Insets top="60" right="60" bottom="60" left="60"/></padding>
+            <StackPane styleClass="login-logo-container">
+                <ImageView fitWidth="220" preserveRatio="true" smooth="true">
+                    <image><Image url="@/images/logo.png"/></image>
+                </ImageView>
+            </StackPane>
+            <Label text="Software de Gestão de Loja" styleClass="login-brand-subtitle" wrapText="true"/>
+            <Label text="Solução integrada para gestão de vendas,&#10;stock e fecho de dia."
+                   styleClass="login-brand-desc" wrapText="true" textAlignment="CENTER"/>
         </VBox>
-        <Label fx:id="lblErro" styleClass="label-erro" wrapText="true"/>
-        <Button text="Entrar" onAction="#onLoginSubmit"
-                maxWidth="Infinity" styleClass="btn-primary"
-                defaultButton="true"/>
-    </VBox>
-</StackPane>
+    </StackPane>
+
+    <!-- Painel direito — formulário -->
+    <StackPane HBox.hgrow="ALWAYS" styleClass="login-form-panel">
+        <VBox alignment="CENTER_LEFT" spacing="0" maxWidth="420" styleClass="login-card">
+            <padding><Insets top="52" right="52" bottom="52" left="52"/></padding>
+
+            <Label text="Bem-vindo" styleClass="login-welcome"/>
+            <Label text="Inicie sessão para continuar" styleClass="login-hint"/>
+
+            <Region prefHeight="32"/>
+
+            <Label text="Nome de utilizador" styleClass="login-field-label"/>
+            <Region prefHeight="6"/>
+            <TextField fx:id="txtNomeUtilizador" promptText="Utilizador"
+                       onKeyReleased="#onCampoAlterado" maxWidth="Infinity"/>
+
+            <Region prefHeight="16"/>
+
+            <Label text="Palavra-passe" styleClass="login-field-label"/>
+            <Region prefHeight="6"/>
+            <PasswordField fx:id="txtPalavraPasse" promptText="Palavra-passe"
+                           onKeyReleased="#onCampoAlterado" maxWidth="Infinity"/>
+
+            <Region prefHeight="8"/>
+            <Label fx:id="lblErro" styleClass="label-erro" wrapText="true" maxWidth="Infinity"/>
+
+            <Region prefHeight="20"/>
+            <Button text="Entrar" onAction="#onLoginSubmit"
+                    maxWidth="Infinity" styleClass="btn-primary,btn-login"
+                    defaultButton="true"/>
+        </VBox>
+    </StackPane>
+</HBox>

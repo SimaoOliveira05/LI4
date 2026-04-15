@@ -3,29 +3,30 @@ package pt.trasmum.loja.dominio.tesouraria;
 public class DetalheNumerario {
 
     public enum Denominacao {
-        CEM_EUROS(100.0),
-        CINQUENTA_EUROS(50.0),
-        VINTE_EUROS(20.0),
-        DEZ_EUROS(10.0),
-        CINCO_EUROS(5.0),
-        DOIS_EUROS(2.0),
-        UM_EURO(1.0),
-        CINQUENTA_CENTIMOS(0.50),
-        VINTE_CENTIMOS(0.20),
-        DEZ_CENTIMOS(0.10),
-        CINCO_CENTIMOS(0.05),
-        DOIS_CENTIMOS(0.02),
-        UM_CENTIMO(0.01);
+        CEM_EUROS      (100.0,  "Cem Euros"),
+        CINQUENTA_EUROS( 50.0,  "Cinquenta Euros"),
+        VINTE_EUROS    ( 20.0,  "Vinte Euros"),
+        DEZ_EUROS      ( 10.0,  "Dez Euros"),
+        CINCO_EUROS    (  5.0,  "Cinco Euros"),
+        DOIS_EUROS     (  2.0,  "Dois Euros"),
+        UM_EURO        (  1.0,  "Um Euro"),
+        CINQUENTA_CENTIMOS(0.50, "Cinquenta Cêntimos"),
+        VINTE_CENTIMOS (  0.20, "Vinte Cêntimos"),
+        DEZ_CENTIMOS   (  0.10, "Dez Cêntimos"),
+        CINCO_CENTIMOS (  0.05, "Cinco Cêntimos"),
+        DOIS_CENTIMOS  (  0.02, "Dois Cêntimos"),
+        UM_CENTIMO     (  0.01, "Um Cêntimo");
 
         private final double valor;
+        private final String label;
 
-        Denominacao(double valor) {
+        Denominacao(double valor, String label) {
             this.valor = valor;
+            this.label = label;
         }
 
-        public double getValor() {
-            return valor;
-        }
+        public double getValor() { return valor; }
+        public String getLabel() { return label; }
     }
 
     private int id;

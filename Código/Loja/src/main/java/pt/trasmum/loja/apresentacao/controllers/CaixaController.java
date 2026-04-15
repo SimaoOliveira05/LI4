@@ -7,6 +7,9 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.layout.VBox;
+import javafx.util.converter.IntegerStringConverter;
 import pt.trasmum.loja.app.AppContext;
 import pt.trasmum.loja.dominio.core.ConfiguracaoTerminal;
 import pt.trasmum.loja.dominio.core.Utilizador;
@@ -28,42 +31,68 @@ public class CaixaController {
     @FXML private TableColumn<DetalheNumerario, Integer> colQuantidade;
     @FXML private TableColumn<DetalheNumerario, Double>  colSubtotal;
 
+    @FXML private VBox formNumerario;
+    @FXML private Label lblFormTitulo;
+    @FXML private TableView<LinhaForm> tblNumerarioForm;
+    @FXML private TableColumn<LinhaForm, String>  colFormDenom;
+    @FXML private TableColumn<LinhaForm, Integer> colFormQtd;
+    @FXML private TableColumn<LinhaForm, Double>  colFormSubtotal;
+    @FXML private Label lblFormTotal;
+
     private SessaoCaixa sessaoAtual;
+    private boolean modoFundo = true;
     private final ObservableList<DetalheNumerario> detalhes = FXCollections.observableArrayList();
+    private final ObservableList<LinhaForm> linhasForm = FXCollections.observableArrayList();
+
+    public static class LinhaForm {
+        final Denominacao denominacao;
+        final SimpleIntegerProperty quantidade = new SimpleIntegerProperty(0);
+
+        LinhaForm(Denominacao d) { this.denominacao = d; }
+
+        double getSubtotal() { return denominacao.getValor() * quantidade.get(); }
+    }
 
     @FXML
     public void initialize() {
-        colDenominacao.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getDenominacao().name()));
+        // Tabela de fundo da sessão
+        colDenominacao.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getDenominacao().getLabel()));
         colQuantidade.setCellValueFactory(c -> new SimpleIntegerProperty(c.getValue().getQuantidade()).asObject());
         colSubtotal.setCellValueFactory(c -> new SimpleDoubleProperty(c.getValue().getSubtotal()).asObject());
         tblFundo.setItems(detalhes);
+
+        // Tabela do formulário inline
+        colFormDenom.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().denominacao.getLabel()));
+        colFormQtd.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter() {
+            @Override public Integer fromString(String s) {
+                try { return Integer.parseInt(s.trim()); } catch (NumberFormatException e) { return 0; }
+            }
+        }));
+        colFormQtd.setCellValueFactory(c -> c.getValue().quantidade.asObject());
+        colFormQtd.setOnEditCommit(e -> {
+            e.getRowValue().quantidade.set(e.getNewValue() != null ? e.getNewValue() : 0);
+            atualizarTotalForm();
+            tblNumerarioForm.refresh();
+        });
+        colFormSubtotal.setCellValueFactory(c -> new SimpleDoubleProperty(c.getValue().getSubtotal()).asObject());
+        tblNumerarioForm.setItems(linhasForm);
+
         atualizarEstado();
     }
 
     @FXML
     public void onAbrirSessao() {
-        List<DetalheNumerario> fundo = pedirNumerario("Fundo Inicial de Caixa");
-        if (fundo == null) return;
-        Utilizador u = AppContext.getInstance().getUtilizadorAtual();
-        ConfiguracaoTerminal config = AppContext.getInstance().configuracao;
-        try {
-            sessaoAtual = AppContext.getInstance().caixaServico.abrirSessao(u, fundo, config);
-            atualizarEstado();
-            mostrarInfo("Sessão de caixa aberta. Saldo inicial: " + String.format("%.2f €", sessaoAtual.getSaldoAtual()));
-        } catch (Exception e) { mostrarErro(e.getMessage()); }
+        modoFundo = true;
+        lblFormTitulo.setText("Fundo Inicial de Caixa");
+        abrirFormNumerario();
     }
 
     @FXML
     public void onRegistarSangria() {
         if (sessaoAtual == null) { mostrarErro("Não existe sessão de caixa aberta."); return; }
-        List<DetalheNumerario> valor = pedirNumerario("Sangria de Caixa");
-        if (valor == null) return;
-        Utilizador u = AppContext.getInstance().getUtilizadorAtual();
-        try {
-            AppContext.getInstance().caixaServico.registarSangria(sessaoAtual, u, valor);
-            atualizarEstado();
-            mostrarInfo("Sangria registada.");
-        } catch (Exception e) { mostrarErro(e.getMessage()); }
+        modoFundo = false;
+        lblFormTitulo.setText("Sangria de Caixa");
+        abrirFormNumerario();
     }
 
     @FXML
@@ -81,6 +110,54 @@ public class CaixaController {
                 } catch (Exception e) { mostrarErro(e.getMessage()); }
             }
         });
+    }
+
+    @FXML
+    public void onConfirmarNumerario() {
+        List<DetalheNumerario> lista = new ArrayList<>();
+        for (LinhaForm l : linhasForm) {
+            if (l.quantidade.get() > 0) lista.add(new DetalheNumerario(l.denominacao, l.quantidade.get()));
+        }
+        fecharFormNumerario();
+        Utilizador u = AppContext.getInstance().getUtilizadorAtual();
+        try {
+            if (modoFundo) {
+                ConfiguracaoTerminal config = AppContext.getInstance().configuracao;
+                sessaoAtual = AppContext.getInstance().caixaServico.abrirSessao(u, lista, config);
+                mostrarInfo("Sessão de caixa aberta. Saldo inicial: " + String.format("%.2f €", sessaoAtual.getSaldoAtual()));
+            } else {
+                AppContext.getInstance().caixaServico.registarSangria(sessaoAtual, u, lista);
+                mostrarInfo("Sangria registada.");
+            }
+            atualizarEstado();
+        } catch (Exception e) { mostrarErro(e.getMessage()); }
+    }
+
+    @FXML
+    public void onCancelarNumerario() {
+        fecharFormNumerario();
+    }
+
+    private void abrirFormNumerario() {
+        linhasForm.clear();
+        for (Denominacao d : Denominacao.values()) linhasForm.add(new LinhaForm(d));
+        lblFormTotal.setText("Total: 0,00 €");
+        formNumerario.setVisible(true);
+        formNumerario.setManaged(true);
+        btnAbrirSessao.setDisable(true);
+        btnRegistarSangria.setDisable(true);
+        btnFecharSessao.setDisable(true);
+    }
+
+    private void fecharFormNumerario() {
+        formNumerario.setVisible(false);
+        formNumerario.setManaged(false);
+        atualizarEstado();
+    }
+
+    private void atualizarTotalForm() {
+        double total = linhasForm.stream().mapToDouble(LinhaForm::getSubtotal).sum();
+        lblFormTotal.setText(String.format("Total: %.2f €", total));
     }
 
     private void atualizarEstado() {
@@ -101,37 +178,6 @@ public class CaixaController {
             btnRegistarSangria.setDisable(true);
             btnFecharSessao.setDisable(true);
         }
-    }
-
-    private List<DetalheNumerario> pedirNumerario(String titulo) {
-        Dialog<List<DetalheNumerario>> dlg = new Dialog<>();
-        dlg.setTitle(titulo);
-        dlg.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
-
-        javafx.scene.layout.GridPane grid = new javafx.scene.layout.GridPane();
-        grid.setHgap(8); grid.setVgap(4);
-        Denominacao[] dens = Denominacao.values();
-        TextField[] campos = new TextField[dens.length];
-        for (int i = 0; i < dens.length; i++) {
-            grid.add(new Label(dens[i].name() + " (" + dens[i].getValor() + " €):"), 0, i);
-            campos[i] = new TextField("0");
-            campos[i].setPrefWidth(60);
-            grid.add(campos[i], 1, i);
-        }
-        dlg.getDialogPane().setContent(new javafx.scene.control.ScrollPane(grid));
-
-        dlg.setResultConverter(bt -> {
-            if (bt != ButtonType.OK) return null;
-            List<DetalheNumerario> lista = new ArrayList<>();
-            for (int i = 0; i < dens.length; i++) {
-                try {
-                    int qtd = Integer.parseInt(campos[i].getText().trim());
-                    if (qtd > 0) lista.add(new DetalheNumerario(dens[i], qtd));
-                } catch (NumberFormatException ignored) {}
-            }
-            return lista;
-        });
-        return dlg.showAndWait().orElse(null);
     }
 
     private void mostrarErro(String m) { Alert a = new Alert(Alert.AlertType.ERROR); a.setTitle("Erro"); a.setHeaderText(null); a.setContentText(m); a.showAndWait(); }

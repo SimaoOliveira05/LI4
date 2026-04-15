@@ -16,7 +16,6 @@
                            prefWidth="300" onKeyReleased="#onPesquisar"/>
                 <Button text="Criar"      onAction="#onCriarProduto"      styleClass="btn-primary"/>
                 <Button text="Editar"     onAction="#onEditarProduto"     styleClass="btn-secondary"/>
-                <Button text="Detalhes"  onAction="#onVerDetalhesProduto" styleClass="btn-secondary"/>
                 <Button text="Desativar"  onAction="#onDesativarProduto"  styleClass="btn-danger"/>
                 <Button text="Desconto"  onAction="#onAplicarDesconto"   styleClass="btn-secondary"/>
             </HBox>
@@ -37,11 +36,29 @@
     </center>
 
     <right>
-        <VBox spacing="8" minWidth="220" styleClass="alertas-panel">
+        <VBox spacing="8" minWidth="240" styleClass="alertas-panel">
             <padding><Insets top="0" right="0" bottom="0" left="12"/></padding>
-            <Label text="Alertas" styleClass="section-title"/>
-            <TextArea fx:id="txtAlertas" editable="false" wrapText="true"
-                      prefHeight="400" styleClass="alertas-area"/>
+
+            <!-- Detalhes do produto selecionado — oculto por defeito -->
+            <VBox fx:id="detalhesSection" spacing="4" managed="false" visible="false">
+                <Label text="Detalhes do Produto" styleClass="section-title"/>
+                <TableView fx:id="tblLotes" prefHeight="240">
+                    <columns>
+                        <TableColumn fx:id="colLoteId"       text="Lote"     prefWidth="45"/>
+                        <TableColumn fx:id="colLoteQtd"      text="Qtd"      prefWidth="45"/>
+                        <TableColumn fx:id="colLoteValidade" text="Validade"  prefWidth="88"/>
+                        <TableColumn fx:id="colLotePreco"    text="Preço"    prefWidth="72"/>
+                        <TableColumn fx:id="colLoteDesconto" text="Desconto" prefWidth="68"/>
+                    </columns>
+                </TableView>
+            </VBox>
+
+            <!-- Alertas — ocupa todo o espaço disponível -->
+            <VBox VBox.vgrow="ALWAYS" spacing="4">
+                <Label text="Alertas" styleClass="section-title"/>
+                <TextArea fx:id="txtAlertas" editable="false" wrapText="true"
+                          VBox.vgrow="ALWAYS" styleClass="alertas-area"/>
+            </VBox>
         </VBox>
     </right>
 </BorderPane>

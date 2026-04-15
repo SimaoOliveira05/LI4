@@ -32,6 +32,14 @@ public class CatalogoController {
     @FXML private TableColumn<Produto, Boolean> colAtivo;
     @FXML private TextArea txtAlertas;
 
+    @FXML private VBox detalhesSection;
+    @FXML private TableView<Lote> tblLotes;
+    @FXML private TableColumn<Lote, Number> colLoteId;
+    @FXML private TableColumn<Lote, Number> colLoteQtd;
+    @FXML private TableColumn<Lote, String> colLoteValidade;
+    @FXML private TableColumn<Lote, String> colLotePreco;
+    @FXML private TableColumn<Lote, String> colLoteDesconto;
+
     private final ObservableList<Produto> produtos = FXCollections.observableArrayList();
     private Map<Integer, Integer> stockTotais = new HashMap<>();
 
@@ -44,7 +52,18 @@ public class CatalogoController {
         colStock.setCellValueFactory(c -> new SimpleIntegerProperty(
                 stockTotais.getOrDefault(c.getValue().getId(), 0)).asObject());
         colAtivo.setCellValueFactory(c -> new SimpleBooleanProperty(c.getValue().isAtivo()).asObject());
+        colLoteId.setCellValueFactory(c -> new SimpleIntegerProperty(c.getValue().getId()));
+        colLoteQtd.setCellValueFactory(c -> new SimpleIntegerProperty(c.getValue().getQuantidade()));
+        colLoteValidade.setCellValueFactory(c -> new SimpleStringProperty(
+                c.getValue().getDataValidade() != null ? c.getValue().getDataValidade().toString() : "-"));
+        colLotePreco.setCellValueFactory(c -> new SimpleStringProperty(
+                String.format("%.2f €", c.getValue().getPrecoFinal())));
+        colLoteDesconto.setCellValueFactory(c -> new SimpleStringProperty(
+                c.getValue().temDesconto() ? String.format("%.1f%%", c.getValue().getDesconto().getPercentagem()) : "—"));
+
         tblProdutos.setItems(produtos);
+        tblProdutos.getSelectionModel().selectedItemProperty().addListener(
+                (obs, old, novo) -> atualizarDetalhes(novo));
         carregarProdutos();
         carregarAlertas();
     }
@@ -125,45 +144,17 @@ public class CatalogoController {
         });
     }
 
-    @FXML
-    public void onVerDetalhesProduto() {
-        Produto sel = tblProdutos.getSelectionModel().getSelectedItem();
-        if (sel == null) { mostrarErro("Selecione um produto para ver detalhes."); return; }
-        List<Lote> lotes = AppContext.getInstance().loteRepo.buscarLotesFEFO(sel.getId());
-        if (lotes.isEmpty()) { mostrarInfo("Sem lotes disponíveis para este produto."); return; }
-        mostrarDetalhesLotes(sel, lotes);
-    }
-
-    private void mostrarDetalhesLotes(Produto produto, List<Lote> lotes) {
-        Dialog<Void> dlg = new Dialog<>();
-        dlg.setTitle("Detalhes do Produto");
-        dlg.setHeaderText("Lotes de " + produto.getNome());
-        dlg.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
-
-        TableView<Lote> tblLotes = new TableView<>(FXCollections.observableArrayList(lotes));
-        TableColumn<Lote, Number> colLoteId = new TableColumn<>("Lote");
-        TableColumn<Lote, Number> colQtd = new TableColumn<>("Quantidade");
-        TableColumn<Lote, String> colValidade = new TableColumn<>("Validade");
-        TableColumn<Lote, String> colPreco = new TableColumn<>("Preço final");
-        TableColumn<Lote, String> colDesconto = new TableColumn<>("Desconto");
-
-        colLoteId.setCellValueFactory(c -> new SimpleIntegerProperty(c.getValue().getId()));
-        colQtd.setCellValueFactory(c -> new SimpleIntegerProperty(c.getValue().getQuantidade()));
-        colValidade.setCellValueFactory(c -> new SimpleStringProperty(
-                c.getValue().getDataValidade() != null ? c.getValue().getDataValidade().toString() : "-"));
-        colPreco.setCellValueFactory(c -> new SimpleStringProperty(
-                String.format("%.2f €", c.getValue().getPrecoFinal())));
-        colDesconto.setCellValueFactory(c -> new SimpleStringProperty(
-                c.getValue().temDesconto() ? String.format("%.1f%%", c.getValue().getDesconto().getPercentagem()) : "Nenhum"));
-
-        tblLotes.getColumns().addAll(colLoteId, colQtd, colValidade, colPreco, colDesconto);
-        tblLotes.setPrefWidth(560);
-        tblLotes.setPrefHeight(280);
-
-        VBox container = new VBox(8, tblLotes);
-        container.setPrefSize(580, 300);
-        dlg.getDialogPane().setContent(container);
-        dlg.showAndWait();
+    private void atualizarDetalhes(Produto p) {
+        if (p == null) {
+            tblLotes.getItems().clear();
+            detalhesSection.setVisible(false);
+            detalhesSection.setManaged(false);
+            return;
+        }
+        List<Lote> lotes = AppContext.getInstance().loteRepo.buscarLotesFEFO(p.getId());
+        tblLotes.setItems(FXCollections.observableArrayList(lotes));
+        detalhesSection.setVisible(true);
+        detalhesSection.setManaged(true);
     }
 
     private void carregarProdutos() {
