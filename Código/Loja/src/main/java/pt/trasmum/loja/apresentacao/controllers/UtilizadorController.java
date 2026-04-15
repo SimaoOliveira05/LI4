@@ -6,6 +6,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import pt.trasmum.loja.apresentacao.DialogoUtil;
 import pt.trasmum.loja.app.AppContext;
 import pt.trasmum.loja.dominio.core.PerfilUtilizador;
 import pt.trasmum.loja.dominio.core.Utilizador;
@@ -76,7 +77,7 @@ public class UtilizadorController {
     }
 
     private Optional<UtilizadorDTO> mostrarDialogoUtilizador(Utilizador existente) {
-        Dialog<UtilizadorDTO> dlg = new Dialog<>();
+        Dialog<UtilizadorDTO> dlg = DialogoUtil.comOwner(new Dialog<>());
         dlg.setTitle(existente == null ? "Criar Utilizador" : "Editar Utilizador");
         dlg.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
@@ -103,6 +104,6 @@ public class UtilizadorController {
         return dlg.showAndWait();
     }
 
-    private void mostrarErro(String m) { Alert a = new Alert(Alert.AlertType.ERROR); a.setTitle("Erro"); a.setHeaderText(null); a.setContentText(m); a.showAndWait(); }
-    private void mostrarInfo(String m)  { Alert a = new Alert(Alert.AlertType.INFORMATION); a.setTitle("Informação"); a.setHeaderText(null); a.setContentText(m); a.showAndWait(); }
+    private void mostrarErro(String m) { DialogoUtil.erro(m); }
+    private void mostrarInfo(String m)  { DialogoUtil.info(m); }
 }

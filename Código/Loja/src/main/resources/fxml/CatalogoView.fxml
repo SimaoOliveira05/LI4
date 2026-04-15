@@ -49,6 +49,7 @@
                         <TableColumn fx:id="colLoteValidade" text="Validade"  prefWidth="88"/>
                         <TableColumn fx:id="colLotePreco"    text="Preço"    prefWidth="72"/>
                         <TableColumn fx:id="colLoteDesconto" text="Desconto" prefWidth="68"/>
+                        <TableColumn fx:id="colLoteAbater"   text=""         prefWidth="62"/>
                     </columns>
                 </TableView>
             </VBox>

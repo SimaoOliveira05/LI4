@@ -1,10 +1,10 @@
 package pt.trasmum.loja.apresentacao.controllers;
 
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
+import pt.trasmum.loja.apresentacao.DialogoUtil;
 import pt.trasmum.loja.app.AppContext;
 import pt.trasmum.loja.app.Navigator;
 import pt.trasmum.loja.dominio.EnvioFechoFalhouException;
@@ -105,6 +105,6 @@ public class FechoDiaController {
         new Thread(task).start();
     }
 
-    private void mostrarErro(String m) { Alert a = new Alert(Alert.AlertType.ERROR); a.setTitle("Erro"); a.setHeaderText(null); a.setContentText(m); a.showAndWait(); }
-    private void mostrarInfo(String m)  { Alert a = new Alert(Alert.AlertType.INFORMATION); a.setTitle("Confirmação"); a.setHeaderText(null); a.setContentText(m); a.showAndWait(); }
+    private void mostrarErro(String m) { DialogoUtil.erro(m); }
+    private void mostrarInfo(String m)  { DialogoUtil.info(m); }
 }

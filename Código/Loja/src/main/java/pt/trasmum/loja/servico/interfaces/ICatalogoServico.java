@@ -13,6 +13,7 @@ public interface ICatalogoServico {
     void editarProduto(Utilizador utilizador, int id, ProdutoDTO dados);
     void desativarProduto(Utilizador utilizador, int id);
     Desconto aplicarDesconto(Utilizador utilizador, int idLote, double percentagem);
+    void abaterLote(Utilizador utilizador, int idLote, int quantidade);
     List<Produto> gerarAlertasStockMinimo();
     List<Lote> gerarAlertasValidade(int diasLimite);
     List<Produto> pesquisarProduto(String query);

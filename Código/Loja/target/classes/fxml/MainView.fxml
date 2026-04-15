@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.image.*?>
 <?import javafx.geometry.Insets?>
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
@@ -12,14 +13,17 @@
     <top>
         <HBox styleClass="header" alignment="CENTER_LEFT" spacing="16">
             <padding><Insets top="10" right="20" bottom="10" left="20"/></padding>
-            <Label text="TrasmUM" styleClass="header-logo"/>
+            <ImageView fitHeight="32" preserveRatio="true" smooth="true">
+                <image><Image url="@/images/logo.png"/></image>
+            </ImageView>
+            <Label text="TrasmUM" styleClass="header-title"/>
             <Region HBox.hgrow="ALWAYS"/>
-            <Label fx:id="lblLoja" styleClass="header-info"/>
-            <Label fx:id="lblUtilizador" styleClass="header-info"/>
+            <Label fx:id="lblLoja" styleClass="header-user"/>
+            <Label fx:id="lblUtilizador" styleClass="header-user"/>
             <Button text="−" onAction="#diminuirEscala" styleClass="btn-escala"/>
-            <Label fx:id="lblEscala" text="100%" styleClass="header-info"/>
+            <Label fx:id="lblEscala" text="100%" styleClass="header-user"/>
             <Button text="+" onAction="#aumentarEscala" styleClass="btn-escala"/>
-            <Button text="Terminar sessão" onAction="#onLogout" styleClass="btn-logout"/>
+            <Button text="Terminar sessão" onAction="#onLogout" styleClass="logout-btn"/>
         </HBox>
     </top>
 
@@ -28,7 +32,6 @@
         <VBox fx:id="menuLateral" styleClass="sidebar" spacing="4" minWidth="180">
             <padding><Insets top="16" right="8" bottom="16" left="8"/></padding>
             <Button text="Venda"         onAction="#navegarVenda"          maxWidth="Infinity" styleClass="menu-btn"/>
-            <Button text="Devolução"     onAction="#navegarDevolucao"       maxWidth="Infinity" styleClass="menu-btn"/>
             <Button text="Catálogo"      onAction="#navegarCatalogo"        maxWidth="Infinity" styleClass="menu-btn"/>
             <Button text="Caixa"         onAction="#navegarCaixa"           maxWidth="Infinity" styleClass="menu-btn"/>
             <Separator/>

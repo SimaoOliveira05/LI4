@@ -11,6 +11,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import pt.trasmum.loja.apresentacao.DialogoUtil;
 import pt.trasmum.loja.app.AppContext;
 import pt.trasmum.loja.dominio.catalogo.Produto;
 import pt.trasmum.loja.dominio.core.Utilizador;
@@ -176,7 +177,7 @@ public class FornecedorController {
     private void onAtualizarPreco(FornecedorProduto fp) {
         Fornecedor forn = tblFornecedores.getSelectionModel().getSelectedItem();
         if (forn == null) return;
-        TextInputDialog d = new TextInputDialog(String.valueOf(fp.getPrecoFornecedor()));
+        TextInputDialog d = DialogoUtil.comOwner(new TextInputDialog(String.valueOf(fp.getPrecoFornecedor())));
         d.setTitle("Atualizar Preço");
         d.setHeaderText(null);
         Produto p = produtosById.get(fp.getIdProduto());
@@ -195,11 +196,8 @@ public class FornecedorController {
     private void onDesassociar(FornecedorProduto fp) {
         Fornecedor forn = tblFornecedores.getSelectionModel().getSelectedItem();
         if (forn == null) return;
-        Alert conf = new Alert(Alert.AlertType.CONFIRMATION,
-                "Remover produto do catálogo do fornecedor?", ButtonType.OK, ButtonType.CANCEL);
-        conf.setHeaderText(null);
-        conf.showAndWait().ifPresent(bt -> {
-            if (bt != ButtonType.OK) return;
+        DialogoUtil.confirmar("Remover produto do catálogo do fornecedor?").ifPresent(bt -> {
+            if (bt != ButtonType.YES) return;
             try {
                 Utilizador u = AppContext.getInstance().getUtilizadorAtual();
                 AppContext.getInstance().fornecedorServico.desassociarProduto(u, forn.getId(), fp.getIdProduto());
@@ -209,7 +207,7 @@ public class FornecedorController {
     }
 
     private Optional<Fornecedor> editarDialogo(String titulo, Fornecedor base) {
-        Dialog<Fornecedor> dlg = new Dialog<>();
+        Dialog<Fornecedor> dlg = DialogoUtil.comOwner(new Dialog<>());
         dlg.setTitle(titulo);
         dlg.setHeaderText(null);
         dlg.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
@@ -252,12 +250,6 @@ public class FornecedorController {
         return dlg.showAndWait();
     }
 
-    private void mostrarErro(String m) {
-        Alert a = new Alert(Alert.AlertType.ERROR);
-        a.setTitle("Erro"); a.setHeaderText(null); a.setContentText(m); a.showAndWait();
-    }
-    private void mostrarInfo(String m) {
-        Alert a = new Alert(Alert.AlertType.INFORMATION);
-        a.setTitle("Informação"); a.setHeaderText(null); a.setContentText(m); a.showAndWait();
-    }
+    private void mostrarErro(String m) { DialogoUtil.erro(m); }
+    private void mostrarInfo(String m) { DialogoUtil.info(m); }
 }

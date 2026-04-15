@@ -55,7 +55,6 @@ public class MainController {
     }
 
     @FXML public void navegarVenda()       { Navigator.navegarParaCentro("/fxml/VendaView.fxml"); }
-    @FXML public void navegarDevolucao()   { Navigator.navegarParaCentro("/fxml/DevolucaoView.fxml"); }
     @FXML public void navegarCatalogo()    { Navigator.navegarParaCentro("/fxml/CatalogoView.fxml"); }
     @FXML public void navegarCaixa()       { Navigator.navegarParaCentro("/fxml/CaixaView.fxml"); }
     @FXML public void navegarRemessa()     { Navigator.navegarParaCentro("/fxml/RemessaView.fxml"); }

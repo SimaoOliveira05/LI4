@@ -3,10 +3,10 @@
 /home/simon/3Ano/LI4/Código/Loja/src/main/java/pt/trasmum/loja/app/GestorEscala.java
 /home/simon/3Ano/LI4/Código/Loja/src/main/java/pt/trasmum/loja/app/Main.java
 /home/simon/3Ano/LI4/Código/Loja/src/main/java/pt/trasmum/loja/app/Navigator.java
+/home/simon/3Ano/LI4/Código/Loja/src/main/java/pt/trasmum/loja/apresentacao/DialogoUtil.java
 /home/simon/3Ano/LI4/Código/Loja/src/main/java/pt/trasmum/loja/apresentacao/GeradorFaturaPdf.java
 /home/simon/3Ano/LI4/Código/Loja/src/main/java/pt/trasmum/loja/apresentacao/controllers/CaixaController.java
 /home/simon/3Ano/LI4/Código/Loja/src/main/java/pt/trasmum/loja/apresentacao/controllers/CatalogoController.java
-/home/simon/3Ano/LI4/Código/Loja/src/main/java/pt/trasmum/loja/apresentacao/controllers/DevolucaoController.java
 /home/simon/3Ano/LI4/Código/Loja/src/main/java/pt/trasmum/loja/apresentacao/controllers/FechoDiaController.java
 /home/simon/3Ano/LI4/Código/Loja/src/main/java/pt/trasmum/loja/apresentacao/controllers/FornecedorController.java
 /home/simon/3Ano/LI4/Código/Loja/src/main/java/pt/trasmum/loja/apresentacao/controllers/LoginController.java

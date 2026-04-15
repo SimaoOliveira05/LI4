@@ -2,6 +2,8 @@ package pt.trasmum.loja.dominio.core;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
 public class ConfiguracaoTerminal {
@@ -27,7 +29,7 @@ public class ConfiguracaoTerminal {
             if (is == null) {
                 throw new RuntimeException("config.properties não encontrado no classpath");
             }
-            props.load(is);
+            props.load(new InputStreamReader(is, StandardCharsets.UTF_8));
         } catch (IOException e) {
             throw new RuntimeException("Erro ao carregar config.properties", e);
         }

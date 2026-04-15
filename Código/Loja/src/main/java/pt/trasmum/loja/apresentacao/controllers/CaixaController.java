@@ -10,6 +10,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.VBox;
 import javafx.util.converter.IntegerStringConverter;
+import pt.trasmum.loja.apresentacao.DialogoUtil;
 import pt.trasmum.loja.app.AppContext;
 import pt.trasmum.loja.dominio.core.ConfiguracaoTerminal;
 import pt.trasmum.loja.dominio.core.Utilizador;
@@ -98,9 +99,7 @@ public class CaixaController {
     @FXML
     public void onFecharSessao() {
         if (sessaoAtual == null) { mostrarErro("Não existe sessão de caixa aberta."); return; }
-        Alert c = new Alert(Alert.AlertType.CONFIRMATION, "Fechar sessão de caixa?", ButtonType.YES, ButtonType.NO);
-        c.setHeaderText(null);
-        c.showAndWait().ifPresent(bt -> {
+        DialogoUtil.confirmar("Fechar sessão de caixa?").ifPresent(bt -> {
             if (bt == ButtonType.YES) {
                 try {
                     AppContext.getInstance().caixaServico.fecharSessao(sessaoAtual);
@@ -180,6 +179,6 @@ public class CaixaController {
         }
     }
 
-    private void mostrarErro(String m) { Alert a = new Alert(Alert.AlertType.ERROR); a.setTitle("Erro"); a.setHeaderText(null); a.setContentText(m); a.showAndWait(); }
-    private void mostrarInfo(String m)  { Alert a = new Alert(Alert.AlertType.INFORMATION); a.setTitle("Informação"); a.setHeaderText(null); a.setContentText(m); a.showAndWait(); }
+    private void mostrarErro(String m) { DialogoUtil.erro(m); }
+    private void mostrarInfo(String m)  { DialogoUtil.info(m); }
 }

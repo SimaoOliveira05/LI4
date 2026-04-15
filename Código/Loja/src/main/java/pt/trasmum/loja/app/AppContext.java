@@ -13,6 +13,8 @@ import pt.trasmum.loja.sincronizacao.SincronizacaoGateway;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.util.Properties;
 
@@ -167,7 +169,7 @@ public class AppContext {
     private Properties carregarProps() {
         Properties props = new Properties();
         try (InputStream is = ClassLoader.getSystemResourceAsStream("config.properties")) {
-            if (is != null) props.load(is);
+            if (is != null) props.load(new InputStreamReader(is, StandardCharsets.UTF_8));
         } catch (IOException e) { /* ignorar */ }
         return props;
     }

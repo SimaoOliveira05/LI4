@@ -2,10 +2,8 @@ package pt.trasmum.loja.servico.impl;
 
 import pt.trasmum.loja.dominio.EnvioFechoFalhouException;
 import pt.trasmum.loja.dominio.core.ConfiguracaoTerminal;
-import pt.trasmum.loja.dominio.core.EstadoSincronizacao;
 import pt.trasmum.loja.dominio.core.LogAuditoria;
 import pt.trasmum.loja.dominio.core.PerfilUtilizador;
-import pt.trasmum.loja.dominio.core.RegistoSincronizavel;
 import pt.trasmum.loja.dominio.core.Utilizador;
 import pt.trasmum.loja.dominio.fornecedores.Pagamento;
 import pt.trasmum.loja.dominio.fornecedores.Remessa;

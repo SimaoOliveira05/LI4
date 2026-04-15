@@ -21,9 +21,8 @@ public class Navigator {
     private static Stage stage;
     private static BorderPane rootLayout;
 
-    public static void setStage(Stage s) {
-        stage = s;
-    }
+    public static void setStage(Stage s) { stage = s; }
+    public static Stage getStage()       { return stage; }
 
     public static void setRootLayout(BorderPane root) {
         rootLayout = root;

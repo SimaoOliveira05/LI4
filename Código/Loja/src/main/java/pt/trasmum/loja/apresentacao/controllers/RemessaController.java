@@ -8,6 +8,7 @@ import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import pt.trasmum.loja.apresentacao.DialogoUtil;
 import pt.trasmum.loja.app.AppContext;
 import pt.trasmum.loja.dominio.catalogo.Produto;
 import pt.trasmum.loja.dominio.core.Utilizador;
@@ -202,7 +203,7 @@ public class RemessaController {
         PedidoRemessa pedido = tblPedidos.getSelectionModel().getSelectedItem();
         if (pedido == null || pedido.getEstado() != EstadoPedido.PENDENTE) return;
 
-        Dialog<Boolean> dlg = new Dialog<>();
+        Dialog<Boolean> dlg = DialogoUtil.comOwner(new Dialog<>());
         dlg.setTitle("Registar Chegada");
         dlg.setHeaderText("Confirme as quantidades e validades recebidas.");
         dlg.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
@@ -422,13 +423,6 @@ public class RemessaController {
         return l;
     }
 
-    private void mostrarErro(String m) {
-        Alert a = new Alert(Alert.AlertType.ERROR);
-        a.setTitle("Erro"); a.setHeaderText(null); a.setContentText(m); a.showAndWait();
-    }
-
-    private void mostrarInfo(String m) {
-        Alert a = new Alert(Alert.AlertType.INFORMATION);
-        a.setTitle("Informação"); a.setHeaderText(null); a.setContentText(m); a.showAndWait();
-    }
+    private void mostrarErro(String m) { DialogoUtil.erro(m); }
+    private void mostrarInfo(String m) { DialogoUtil.info(m); }
 }

@@ -91,6 +91,10 @@
 .login-error { -fx-text-fill: #dc2626; -fx-font-size: 12px; }
 
 /* ── Main layout ─────────────────────────────────────────── */
+.header .label {
+    -fx-text-fill: #a5b4d0;
+}
+
 .header {
     -fx-background-color: #1e2a4a;
     -fx-padding: 0 20 0 20;

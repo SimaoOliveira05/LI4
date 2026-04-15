@@ -7,6 +7,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import pt.trasmum.loja.apresentacao.DialogoUtil;
 import pt.trasmum.loja.app.AppContext;
 import pt.trasmum.loja.dominio.core.Utilizador;
 import pt.trasmum.loja.dominio.fornecedores.Fornecedor;
@@ -40,11 +41,7 @@ public class PagamentoController {
         Pagamento sel = tblPagamentos.getSelectionModel().getSelectedItem();
         if (sel == null) { mostrarErro("Selecione um pagamento."); return; }
 
-        Alert c = new Alert(Alert.AlertType.CONFIRMATION,
-                String.format("Liquidar pagamento #%d no valor de %.2f €?", sel.getId(), sel.getValor()),
-                ButtonType.YES, ButtonType.NO);
-        c.setTitle("Confirmação"); c.setHeaderText(null);
-        c.showAndWait().ifPresent(bt -> {
+        DialogoUtil.confirmar(String.format("Liquidar pagamento #%d no valor de %.2f €?", sel.getId(), sel.getValor())).ifPresent(bt -> {
             if (bt == ButtonType.YES) {
                 Utilizador u = AppContext.getInstance().getUtilizadorAtual();
                 try {
@@ -63,6 +60,6 @@ public class PagamentoController {
         pagamentos.setAll(AppContext.getInstance().pagamentoServico.listarPendentes());
     }
 
-    private void mostrarErro(String m) { Alert a = new Alert(Alert.AlertType.ERROR); a.setTitle("Erro"); a.setHeaderText(null); a.setContentText(m); a.showAndWait(); }
-    private void mostrarInfo(String m)  { Alert a = new Alert(Alert.AlertType.INFORMATION); a.setTitle("Informação"); a.setHeaderText(null); a.setContentText(m); a.showAndWait(); }
+    private void mostrarErro(String m) { DialogoUtil.erro(m); }
+    private void mostrarInfo(String m)  { DialogoUtil.info(m); }
 }

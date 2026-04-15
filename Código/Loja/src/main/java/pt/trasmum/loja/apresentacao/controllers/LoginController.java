@@ -15,6 +15,12 @@ public class LoginController {
     @FXML private Label lblErro;
 
     @FXML
+    public void initialize() {
+        txtNomeUtilizador.setText("admin");
+        txtPalavraPasse.setText("admin123");
+    }
+
+    @FXML
     public void onLoginSubmit() {
         lblErro.setText("");
         String nome = txtNomeUtilizador.getText().trim();

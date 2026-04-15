@@ -81,6 +81,17 @@ public class CatalogoServico implements ICatalogoServico {
     }
 
     @Override
+    public void abaterLote(Utilizador utilizador, int idLote, int quantidade) {
+        autorizacaoServico.exigirPerfil(utilizador, PerfilUtilizador.GESTOR, PerfilUtilizador.CEO);
+        Lote lote = loteRepo.buscarPorId(idLote);
+        if (lote == null) throw new RuntimeException("Lote não encontrado: " + idLote);
+        if (quantidade <= 0 || quantidade > lote.getQuantidade())
+            throw new IllegalArgumentException("Quantidade inválida. Disponível: " + lote.getQuantidade());
+        lote.setQuantidade(lote.getQuantidade() - quantidade);
+        loteRepo.atualizar(lote);
+    }
+
+    @Override
     public List<Produto> gerarAlertasStockMinimo() {
         return produtoRepo.buscarAbaixoStockMinimo();
     }

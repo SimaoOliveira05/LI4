@@ -101,3 +101,21 @@ Registo de desvios entre o **design original** (diagramas UML, diagrama de compo
 - **Diagrama de classes de serviços**: adicionar `IFornecedorServico` e actualizar assinatura do construtor de `RemessaServico` (nova dependência).
 - **Diagrama de casos de uso**: novo CU "Gerir catálogo do fornecedor" (actor: GESTOR/CEO). Ajustar o CU "Criar pedido de remessa" e "Registar chegada" para incluir validação contra catálogo.
 - **Diagrama de componentes**: a vista Fornecedor é um novo elemento do módulo de apresentação, já previsto como componente.
+
+---
+
+## 2026-04-15 — Ecrã de Devoluções eliminado; funcionalidade integrada em Venda
+
+**Área**: UI-Contract / Arquitetura
+**O quê**: Removida a vista/controlador independente `DevolucaoView.fxml` / `DevolucaoController`. A lógica de devolução foi integrada em `VendaController` e `VendaView.fxml` como um segundo separador ("Devoluções") dentro de um `TabPane`. O botão "Devolução" do menu lateral de `MainView` foi eliminado.
+**Porquê**: O caso de uso de devolução está intimamente ligado ao contexto de venda (pesquisa por número de fatura, devolução de artigos de uma venda anterior). Ter uma página separada para uma função acessória fragmentava desnecessariamente a navegação e aumentava a superfície de manutenção sem benefício funcional.
+**Impacto no design**: Diagrama de componentes — remover o componente `DevolucaoView`/`DevolucaoController` como elemento autónomo; representar as devoluções como parte do componente de Venda. Diagrama de casos de uso / navegação — o CU "Efetuar Devolução" deixa de ter ponto de entrada próprio no menu e passa a ser acedido a partir do ecrã de Venda.
+
+---
+
+## 2026-04-15 — Operação de abate de lote
+
+**Área**: Serviço / UI-Contract
+**O quê**: Adicionada operação "Abater lote" acessível a partir da tabela de lotes no painel de detalhes do catálogo. Cada linha de lote passa a ter um botão "Abater" que permite reduzir a quantidade do lote (total ou parcialmente). Se a quantidade chegar a zero o lote deixa de aparecer em vendas (`buscarLotesFEFO` já filtra `quantidade > 0`). A operação é restrita a GESTOR/CEO, registada em auditoria, e os alertas de validade são recarregados após o abate.
+**Porquê**: O sistema não tinha forma de registar a retirada física de lotes danificados ou expirados — o stock ficava inflacionado mesmo quando os produtos eram removidos da prateleira. Necessário para manter a integridade do stock e para dar seguimento aos alertas de "fora de validade".
+**Impacto no design**: Diagrama de classes de serviços — adicionar operação `abaterLote(Utilizador, int idLote, int quantidade)` a `ICatalogoServico`. Diagrama de sequência do catálogo — novo fluxo "Abater lote". Diagrama de casos de uso — novo CU "Abater lote" (actor: GESTOR/CEO).

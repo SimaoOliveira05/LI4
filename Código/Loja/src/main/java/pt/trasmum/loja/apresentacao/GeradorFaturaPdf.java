@@ -9,7 +9,6 @@ import pt.trasmum.loja.dominio.catalogo.Produto;
 import pt.trasmum.loja.dominio.core.ConfiguracaoTerminal;
 import pt.trasmum.loja.dominio.vendas.*;
 import pt.trasmum.loja.dominio.vendas.Venda.MetodoPagamento;
-import pt.trasmum.loja.dominio.vendas.Venda.EstadoVenda;
 
 import java.awt.Color;
 import java.io.FileOutputStream;

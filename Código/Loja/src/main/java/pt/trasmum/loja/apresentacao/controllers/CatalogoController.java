@@ -9,12 +9,14 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
+import pt.trasmum.loja.apresentacao.DialogoUtil;
 import pt.trasmum.loja.app.AppContext;
 import pt.trasmum.loja.dominio.catalogo.Lote;
 import pt.trasmum.loja.dominio.catalogo.Produto;
 import pt.trasmum.loja.dominio.core.Utilizador;
 import pt.trasmum.loja.servico.ProdutoDTO;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +41,7 @@ public class CatalogoController {
     @FXML private TableColumn<Lote, String> colLoteValidade;
     @FXML private TableColumn<Lote, String> colLotePreco;
     @FXML private TableColumn<Lote, String> colLoteDesconto;
+    @FXML private TableColumn<Lote, Void>   colLoteAbater;
 
     private final ObservableList<Produto> produtos = FXCollections.observableArrayList();
     private Map<Integer, Integer> stockTotais = new HashMap<>();
@@ -60,6 +63,18 @@ public class CatalogoController {
                 String.format("%.2f €", c.getValue().getPrecoFinal())));
         colLoteDesconto.setCellValueFactory(c -> new SimpleStringProperty(
                 c.getValue().temDesconto() ? String.format("%.1f%%", c.getValue().getDesconto().getPercentagem()) : "—"));
+        colLoteAbater.setCellFactory(tc -> new TableCell<>() {
+            private final Button btn = new Button("Abater");
+            {
+                btn.getStyleClass().add("btn-danger");
+                btn.setStyle("-fx-font-size: 10px; -fx-padding: 2 6 2 6;");
+                btn.setOnAction(e -> onAbaterLote(getTableView().getItems().get(getIndex())));
+            }
+            @Override protected void updateItem(Void v, boolean empty) {
+                super.updateItem(v, empty);
+                setGraphic(empty ? null : btn);
+            }
+        });
 
         tblProdutos.setItems(produtos);
         tblProdutos.getSelectionModel().selectedItemProperty().addListener(
@@ -123,7 +138,7 @@ public class CatalogoController {
         if (sel == null) { mostrarErro("Selecione um produto."); return; }
 
         // Pede idLote e percentagem
-        TextInputDialog dlg = new TextInputDialog("10");
+        TextInputDialog dlg = DialogoUtil.comOwner(new TextInputDialog("10"));
         dlg.setTitle("Aplicar Desconto");
         dlg.setHeaderText("Percentagem de desconto para o lote mais antigo de: " + sel.getNome());
         dlg.setContentText("Percentagem (%):");
@@ -138,6 +153,33 @@ public class CatalogoController {
                 carregarAlertas();
             } catch (NumberFormatException e) {
                 mostrarErro("Percentagem inválida.");
+            } catch (Exception e) {
+                mostrarErro(e.getMessage());
+            }
+        });
+    }
+
+    private void onAbaterLote(Lote lote) {
+        Produto p = AppContext.getInstance().produtoRepo.buscarPorId(lote.getIdProduto());
+        String nomeProduto = p != null ? p.getNome() : "Lote " + lote.getId();
+
+        TextInputDialog dlg = DialogoUtil.comOwner(new TextInputDialog(String.valueOf(lote.getQuantidade())));
+        dlg.setTitle("Abater Lote");
+        dlg.setHeaderText(nomeProduto + " — val. " + lote.getDataValidade());
+        dlg.setContentText("Quantidade a abater (máx. " + lote.getQuantidade() + "):");
+        dlg.showAndWait().ifPresent(txt -> {
+            try {
+                int qtd = Integer.parseInt(txt.trim());
+                Utilizador u = AppContext.getInstance().getUtilizadorAtual();
+                AppContext.getInstance().catalogoServico.abaterLote(u, lote.getId(), qtd);
+                Produto sel = tblProdutos.getSelectionModel().getSelectedItem();
+                carregarProdutos();
+                if (sel != null) atualizarDetalhes(
+                        AppContext.getInstance().produtoRepo.buscarPorId(sel.getId()));
+                carregarAlertas();
+                mostrarInfo("Abate registado: " + qtd + " un. do lote #" + lote.getId() + ".");
+            } catch (NumberFormatException e) {
+                mostrarErro("Quantidade inválida.");
             } catch (Exception e) {
                 mostrarErro(e.getMessage());
             }
@@ -164,28 +206,48 @@ public class CatalogoController {
 
     private void carregarAlertas() {
         StringBuilder sb = new StringBuilder();
+
         List<Produto> semStock = AppContext.getInstance().catalogoServico.gerarAlertasStockMinimo();
         if (!semStock.isEmpty()) {
             sb.append("⚠ Stock mínimo:\n");
             semStock.forEach(p -> sb.append("  • ").append(p.getNome()).append("\n"));
         }
+
         int dias = AppContext.getInstance().configuracao.getDiasAlertaValidade();
-        List<Lote> aVencer = AppContext.getInstance().catalogoServico.gerarAlertasValidade(dias);
+        List<Lote> janela = AppContext.getInstance().catalogoServico.gerarAlertasValidade(dias);
+
+        LocalDate hoje = LocalDate.now();
+        List<Lote> expirados = janela.stream().filter(l -> l.getDataValidade().isBefore(hoje)).toList();
+        List<Lote> aVencer   = janela.stream().filter(l -> !l.getDataValidade().isBefore(hoje)).toList();
+
+        if (!expirados.isEmpty()) {
+            sb.append("\n🚨 Fora de validade (remover do stock):\n");
+            expirados.forEach(l -> {
+                Produto p = AppContext.getInstance().produtoRepo.buscarPorId(l.getIdProduto());
+                String nome = p != null ? p.getNome() : "Lote " + l.getId();
+                sb.append("  • ").append(nome)
+                  .append(" — expirou ").append(l.getDataValidade())
+                  .append(" (").append(l.getQuantidade()).append(" un.)\n");
+            });
+        }
+
         if (!aVencer.isEmpty()) {
             sb.append("\n⚠ A vencer (").append(dias).append(" dias):\n");
             aVencer.forEach(l -> {
                 Produto p = AppContext.getInstance().produtoRepo.buscarPorId(l.getIdProduto());
                 String nome = p != null ? p.getNome() : "Lote " + l.getId();
                 sb.append("  • ").append(nome)
-                  .append(" — val. ").append(l.getDataValidade()).append("\n");
+                  .append(" — val. ").append(l.getDataValidade())
+                  .append(" (").append(l.getQuantidade()).append(" un.)\n");
             });
         }
+
         if (sb.isEmpty()) sb.append("Sem alertas activos.");
         txtAlertas.setText(sb.toString());
     }
 
     private Optional<ProdutoDTO> mostrarDialogoProduto(Produto existente) {
-        Dialog<ProdutoDTO> dlg = new Dialog<>();
+        Dialog<ProdutoDTO> dlg = DialogoUtil.comOwner(new Dialog<>());
         dlg.setTitle(existente == null ? "Criar Produto" : "Editar Produto");
         dlg.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
@@ -218,6 +280,6 @@ public class CatalogoController {
         return dlg.showAndWait();
     }
 
-    private void mostrarErro(String m) { Alert a = new Alert(Alert.AlertType.ERROR); a.setTitle("Erro"); a.setHeaderText(null); a.setContentText(m); a.showAndWait(); }
-    private void mostrarInfo(String m) { Alert a = new Alert(Alert.AlertType.INFORMATION); a.setTitle("Informação"); a.setHeaderText(null); a.setContentText(m); a.showAndWait(); }
+    private void mostrarErro(String m) { DialogoUtil.erro(m); }
+    private void mostrarInfo(String m) { DialogoUtil.info(m); }
 }
