@@ -105,7 +105,7 @@
         </Tab>
 
         <!-- ════════════════════════════ TAB: DEVOLUÇÕES ════════════════════════════ -->
-        <Tab text="Devoluções">
+        <Tab text="Devolução">
             <VBox spacing="16">
                 <padding><Insets top="12" bottom="4"/></padding>
 

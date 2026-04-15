@@ -45,13 +45,13 @@ public class Navigator {
             Pane pane = loader.load();
             rootLayout.setCenter(pane);
         } catch (Exception e) {
-            // Mostra o erro ao utilizador em vez de falhar silenciosamente
+            Throwable causa = e.getCause() != null ? e.getCause() : e;
             javafx.scene.control.Alert alert = new javafx.scene.control.Alert(
                     javafx.scene.control.Alert.AlertType.ERROR);
+            alert.initOwner(stage);
+            alert.initModality(javafx.stage.Modality.WINDOW_MODAL);
             alert.setTitle("Erro de navegação");
             alert.setHeaderText("Não foi possível carregar a vista: " + fxmlPath);
-            // Dá a causa raiz (normalmente a excepção lançada no initialize())
-            Throwable causa = e.getCause() != null ? e.getCause() : e;
             alert.setContentText(causa.getClass().getSimpleName() + ": " + causa.getMessage());
             alert.showAndWait();
         }

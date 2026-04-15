@@ -105,11 +105,11 @@
         </Tab>
 
         <!-- ════════════════════════════ TAB: DEVOLUÇÕES ════════════════════════════ -->
-        <Tab text="Devoluções">
+        <Tab text="Devolução">
             <VBox spacing="16">
                 <padding><Insets top="12" bottom="4"/></padding>
 
-                <Label text="Devolução" styleClass="view-title"/>
+                <Label text="Devolver Produto" styleClass="view-title"/>
 
                 <!-- Pesquisa de fatura -->
                 <HBox spacing="8" alignment="CENTER_LEFT">
