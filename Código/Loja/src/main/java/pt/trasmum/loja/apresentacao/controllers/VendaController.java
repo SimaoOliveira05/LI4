@@ -25,11 +25,13 @@ import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class VendaController {
 
     // ── Painel esquerdo ───────────────────────────────────────────────
     @FXML private TextField txtFiltro;
+    @FXML private ComboBox<String> cmbFiltroCategoria;
     @FXML private FlowPane  painelProdutos;
 
     // ── Devoluções ────────────────────────────────────────────────────
@@ -155,6 +157,18 @@ public class VendaController {
         });
 
         todosProdutos = AppContext.getInstance().produtoRepo.listarAtivos();
+        
+        // Inicializar filtro de categorias
+        List<String> categorias = todosProdutos.stream()
+                .map(Produto::getCategoria)
+                .filter(c -> c != null && !c.isBlank())
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+        cmbFiltroCategoria.getItems().add(0, "Todas");
+        cmbFiltroCategoria.getItems().addAll(categorias);
+        cmbFiltroCategoria.setValue("Todas");
+        
         atualizarPainelProdutos("");
 
         // Restaura venda em curso se o utilizador navegou para outra vista e voltou
@@ -174,10 +188,19 @@ public class VendaController {
         atualizarPainelProdutos(txtFiltro.getText().trim());
     }
 
+    @FXML
+    public void onFiltrarCategoria() {
+        atualizarPainelProdutos(txtFiltro.getText().trim());
+    }
+
     private void atualizarPainelProdutos(String filtro) {
         painelProdutos.getChildren().clear();
         String f = filtro.toLowerCase();
+        String categoriaSelecionada = cmbFiltroCategoria.getValue();
+        
         todosProdutos.stream()
+                .filter(p -> (categoriaSelecionada == null || categoriaSelecionada.equals("Todas") 
+                        || p.getCategoria().equals(categoriaSelecionada)))
                 .filter(p -> f.isBlank()
                         || p.getNome().toLowerCase().contains(f)
                         || p.getCodigoBarras().toLowerCase().contains(f)

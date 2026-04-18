@@ -9,4 +9,6 @@ import java.util.List;
 public interface IAuditoriaServico {
     void registar(Utilizador utilizador, TipoAcao acao, String entidade, int idEntidade);
     List<LogAuditoria> obterLogsPendentes();
+    List<LogAuditoria> obterTodosLogs();
+    List<LogAuditoria> obterLogsPorTipo(TipoAcao tipo);
 }

@@ -27,9 +27,14 @@
 
                     <!-- Painel esquerdo: catálogo de produtos -->
                     <VBox HBox.hgrow="ALWAYS" spacing="8" minWidth="0">
-                        <TextField fx:id="txtFiltro"
-                                   promptText="Pesquisar produto…"
-                                   onKeyReleased="#onFiltrar"/>
+                        <HBox spacing="6">
+                            <TextField fx:id="txtFiltro"
+                                       promptText="Pesquisar produto…"
+                                       onKeyReleased="#onFiltrar"
+                                       HBox.hgrow="ALWAYS"/>
+                            <ComboBox fx:id="cmbFiltroCategoria" promptText="Todas as categorias"
+                                      onAction="#onFiltrarCategoria" prefWidth="160"/>
+                        </HBox>
                         <ScrollPane VBox.vgrow="ALWAYS" fitToWidth="true"
                                     styleClass="produtos-scroll">
                             <FlowPane fx:id="painelProdutos" hgap="8" vgap="8"

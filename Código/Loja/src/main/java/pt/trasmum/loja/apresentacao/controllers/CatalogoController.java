@@ -21,10 +21,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class CatalogoController {
 
     @FXML private TextField txtPesquisa;
+    @FXML private ComboBox<String> cmbFiltroCategoria;
     @FXML private TableView<Produto> tblProdutos;
     @FXML private TableColumn<Produto, String>  colCodigo;
     @FXML private TableColumn<Produto, String>  colNome;
@@ -79,16 +81,45 @@ public class CatalogoController {
         tblProdutos.setItems(produtos);
         tblProdutos.getSelectionModel().selectedItemProperty().addListener(
                 (obs, old, novo) -> atualizarDetalhes(novo));
+        
         carregarProdutos();
+        inicializarFiltroCategorias();
         carregarAlertas();
+    }
+
+    private void inicializarFiltroCategorias() {
+        // Extrair categorias distintas de todos os produtos ativos
+        List<String> categorias = AppContext.getInstance().produtoRepo.listarAtivos().stream()
+                .map(Produto::getCategoria)
+                .filter(c -> c != null && !c.isBlank())
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+        cmbFiltroCategoria.getItems().clear();
+        cmbFiltroCategoria.getItems().add(0, "Todas");
+        cmbFiltroCategoria.getItems().addAll(categorias);
+        cmbFiltroCategoria.setValue("Todas");
+    }
+
+    @FXML
+    public void onFiltrarCategoria() {
+        onPesquisar();
     }
 
     @FXML
     public void onPesquisar() {
         String q = txtPesquisa.getText().trim();
-        List<Produto> resultado = q.isBlank()
+        String categoriaSelecionada = cmbFiltroCategoria.getValue();
+        
+        List<Produto> todos = q.isBlank()
                 ? AppContext.getInstance().produtoRepo.listarAtivos()
                 : AppContext.getInstance().catalogoServico.pesquisarProduto(q);
+        
+        List<Produto> resultado = todos.stream()
+                .filter(p -> categoriaSelecionada == null || categoriaSelecionada.equals("Todas") 
+                        || p.getCategoria().equals(categoriaSelecionada))
+                .collect(Collectors.toList());
+        
         produtos.setAll(resultado);
     }
 

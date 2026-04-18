@@ -119,3 +119,38 @@ Registo de desvios entre o **design original** (diagramas UML, diagrama de compo
 **O quê**: Adicionada operação "Abater lote" acessível a partir da tabela de lotes no painel de detalhes do catálogo. Cada linha de lote passa a ter um botão "Abater" que permite reduzir a quantidade do lote (total ou parcialmente). Se a quantidade chegar a zero o lote deixa de aparecer em vendas (`buscarLotesFEFO` já filtra `quantidade > 0`). A operação é restrita a GESTOR/CEO, registada em auditoria, e os alertas de validade são recarregados após o abate.
 **Porquê**: O sistema não tinha forma de registar a retirada física de lotes danificados ou expirados — o stock ficava inflacionado mesmo quando os produtos eram removidos da prateleira. Necessário para manter a integridade do stock e para dar seguimento aos alertas de "fora de validade".
 **Impacto no design**: Diagrama de classes de serviços — adicionar operação `abaterLote(Utilizador, int idLote, int quantidade)` a `ICatalogoServico`. Diagrama de sequência do catálogo — novo fluxo "Abater lote". Diagrama de casos de uso — novo CU "Abater lote" (actor: GESTOR/CEO).
+
+---
+
+## 2026-04-17 — Registo de auditoria para todas as ações críticas
+
+**Área**: Domínio / Serviço / Repositório
+**O quê**: Adicionado registo de auditoria para todas as ações críticas do sistema: vendas, devoluções, alterações de preços, aplicação de descontos, gestão de utilizadores, alterações ao catálogo local e fecho de dia. O enum `TipoAcao` já continha os tipos necessários (`VENDA`, `DEVOLUCAO`, `ALTERACAO_PRECO`, `APLICACAO_DESCONTO`, `GESTAO_UTILIZADOR`, `ALTERACAO_CATALOGO`, `FECHO_DIA`). O `FechoDiaServico.executarFecho()` passou a registar auditoria após fecho bem-sucedido.
+**Porquê**: O requisito "Todas as ações críticas devem ser registadas em logs de auditoria" exigia garantir que cada operação crítica gerasse um registo. O código já registava a maioria das ações; faltava apenas o fecho de dia.
+**Impacto no design**: Diagrama de classes de domínio — confirmar que `LogAuditoria` e `TipoAcao` cobrem todas as ações. Diagrama de sequência do fecho de dia — adicionar passo de registo de auditoria.
+
+---
+
+## 2026-04-17 — View e Controller de Logs de Auditoria
+
+**Área**: UI-Contract / Repositório / Serviço
+**O quê**: 
+- Novos métodos no repositório `LogAuditoriaRepositorio`: `buscarTodos()` e `buscarPorTipo(TipoAcao tipo)` para suporte à UI.
+- Novos métodos no serviço `IAuditoriaServico` / `AuditoriaServico`: `obterTodosLogs()` e `obterLogsPorTipo(TipoAcao tipo)`.
+- Nova vista `LogAuditoriaView.fxml` com `TableView` mostrando colunas: Data/Hora, Tipo, Entidade, ID Entidade, ID Utilizador, Estado.
+- Novo controlador `LogAuditoriaController` com filtro por tipo de ação (ComboBox) e botão Atualizar.
+- Novo item de menu "Auditoria" em `MainView.fxml` (visível apenas para GESTOR/CEO).
+**Porquê**: O sistema precisava de uma interface para visualização dos logs de auditoria, permitindo aos gestores verificar o histórico de operações. A ordenação é automática do mais recente para o mais antigo via `ORDER BY dataHora DESC`.
+**Impacto no design**: Diagrama de classes de repositórios — adicionar `buscarTodos()` e `buscarPorTipo()` a `LogAuditoriaRepositorio`. Diagrama de classes de serviços — adicionar métodos correspondentes a `IAuditoriaServico`. Diagrama de componentes — novo componente `LogAuditoriaView`/`LogAuditoriaController`. Diagrama de casos de uso — novo CU "Consultar logs de auditoria" (actor: GESTOR/CEO).
+
+---
+
+## 2026-04-18 — Filtro por categoria nas views de Venda e Catálogo
+
+**Área**: UI-Contract
+**O quê**: 
+- Na view de Venda: adicionado `ComboBox` ao lado da search bar para filtrar produtos por categoria. O filtro combina pesquisa por texto + categoria selecionada.
+- Na view de Catálogo: adicionado `ComboBox` ao lado do botão "Desconto" para filtrar produtos por categoria na tabela.
+- Ambos os controladores (`VendaController` e `CatalogoController`) foram alterados para extrair categorias distintas dos produtos ativos e popular o `ComboBox` dinamicamente.
+**Porquê**: O requisito de filtrar produtos por categoria melhorou a usabilidade em ambas as views, permitindo aos utilizadores encontrar produtos mais rapidamente.
+**Impacto no design**: Diagrama de componentes — atualizar `VendaView` e `CatalogoView` para incluir o elemento de filtro. Sem alteração ao modelo de domínio ou serviços.

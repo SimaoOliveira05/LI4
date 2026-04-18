@@ -25,6 +25,7 @@ public class MainController {
     @FXML private Button btnPagamento;
     @FXML private Button btnUtilizadores;
     @FXML private Button btnFechoDia;
+    @FXML private Button btnLogsAuditoria;
 
     @FXML
     public void initialize() {
@@ -42,6 +43,7 @@ public class MainController {
         btnPagamento.setVisible(gestor);   btnPagamento.setManaged(gestor);
         btnUtilizadores.setVisible(gestor); btnUtilizadores.setManaged(gestor);
         btnFechoDia.setVisible(gestor);    btnFechoDia.setManaged(gestor);
+        btnLogsAuditoria.setVisible(gestor); btnLogsAuditoria.setManaged(gestor);
 
         GestorEscala gestor2 = GestorEscala.getInstance();
         atualizarLblEscala(gestor2.getEscala());
@@ -62,6 +64,7 @@ public class MainController {
     @FXML public void navegarPagamento()   { Navigator.navegarParaCentro("/fxml/PagamentoView.fxml"); }
     @FXML public void navegarUtilizadores(){ Navigator.navegarParaCentro("/fxml/UtilizadorView.fxml"); }
     @FXML public void navegarFechoDia()    { Navigator.navegarParaCentro("/fxml/FechoDiaView.fxml"); }
+    @FXML public void navegarLogsAuditoria(){ Navigator.navegarParaCentro("/fxml/LogAuditoriaView.fxml"); }
 
     @FXML public void aumentarEscala() { GestorEscala.getInstance().aumentar(); }
     @FXML public void diminuirEscala() { GestorEscala.getInstance().diminuir(); }

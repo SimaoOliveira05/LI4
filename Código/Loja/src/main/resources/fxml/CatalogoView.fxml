@@ -14,6 +14,8 @@
             <HBox spacing="8">
                 <TextField fx:id="txtPesquisa" promptText="Pesquisar produto…"
                            prefWidth="300" onKeyReleased="#onPesquisar"/>
+                <ComboBox fx:id="cmbFiltroCategoria" promptText="Todas as categorias"
+                          onAction="#onFiltrarCategoria" prefWidth="160"/>
                 <Button text="Criar"      onAction="#onCriarProduto"      styleClass="btn-primary"/>
                 <Button text="Editar"     onAction="#onEditarProduto"     styleClass="btn-secondary"/>
                 <Button text="Desativar"  onAction="#onDesativarProduto"  styleClass="btn-danger"/>

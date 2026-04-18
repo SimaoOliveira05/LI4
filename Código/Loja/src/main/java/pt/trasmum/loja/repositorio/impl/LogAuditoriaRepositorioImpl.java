@@ -70,6 +70,34 @@ public class LogAuditoriaRepositorioImpl implements LogAuditoriaRepositorio {
         return lista;
     }
 
+    @Override
+    public List<LogAuditoria> buscarTodos() {
+        String sql = "SELECT * FROM LogAuditoria ORDER BY dataHora DESC";
+        List<LogAuditoria> lista = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) lista.add(mapear(rs));
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao buscar todos os logs", e);
+        }
+        return lista;
+    }
+
+    @Override
+    public List<LogAuditoria> buscarPorTipo(TipoAcao tipo) {
+        String sql = "SELECT * FROM LogAuditoria WHERE acao = ? ORDER BY dataHora DESC";
+        List<LogAuditoria> lista = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, tipo.name());
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) lista.add(mapear(rs));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao buscar logs por tipo", e);
+        }
+        return lista;
+    }
+
     private LogAuditoria mapear(ResultSet rs) throws SQLException {
         LogAuditoria log = new LogAuditoria();
         log.setId(rs.getInt("id"));

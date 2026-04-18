@@ -4,6 +4,7 @@ import pt.trasmum.loja.dominio.EnvioFechoFalhouException;
 import pt.trasmum.loja.dominio.core.ConfiguracaoTerminal;
 import pt.trasmum.loja.dominio.core.LogAuditoria;
 import pt.trasmum.loja.dominio.core.PerfilUtilizador;
+import pt.trasmum.loja.dominio.core.TipoAcao;
 import pt.trasmum.loja.dominio.core.Utilizador;
 import pt.trasmum.loja.dominio.fornecedores.Pagamento;
 import pt.trasmum.loja.dominio.fornecedores.Remessa;
@@ -108,6 +109,10 @@ public class FechoDiaServico implements IFechoDiaServico {
 
         fecho.marcarConfirmado();
         fechoDiaRepo.guardar(fecho);
+
+        // Regista auditoria do fecho de dia
+        auditoriaServico.registar(utilizador, TipoAcao.FECHO_DIA, "FechoDia", fecho.getId());
+
         return fecho;
     }
 

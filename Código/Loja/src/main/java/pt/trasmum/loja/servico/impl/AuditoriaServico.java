@@ -29,4 +29,14 @@ public class AuditoriaServico implements IAuditoriaServico {
     public List<LogAuditoria> obterLogsPendentes() {
         return logRepo.buscarPendentes();
     }
+
+    @Override
+    public List<LogAuditoria> obterTodosLogs() {
+        return logRepo.buscarTodos();
+    }
+
+    @Override
+    public List<LogAuditoria> obterLogsPorTipo(TipoAcao tipo) {
+        return logRepo.buscarPorTipo(tipo);
+    }
 }

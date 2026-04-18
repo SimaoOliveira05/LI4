@@ -39,6 +39,7 @@
             <Button fx:id="btnFornecedor"  text="Fornecedores" onAction="#navegarFornecedor"  maxWidth="Infinity" styleClass="menu-btn" visible="false" managed="false"/>
             <Button fx:id="btnPagamento"   text="Pagamentos"   onAction="#navegarPagamento"   maxWidth="Infinity" styleClass="menu-btn" visible="false" managed="false"/>
             <Button fx:id="btnUtilizadores" text="Utilizadores" onAction="#navegarUtilizadores" maxWidth="Infinity" styleClass="menu-btn" visible="false" managed="false"/>
+            <Button fx:id="btnLogsAuditoria" text="Auditoria" onAction="#navegarLogsAuditoria" maxWidth="Infinity" styleClass="menu-btn" visible="false" managed="false"/>
             <Button fx:id="btnFechoDia"    text="Fecho de Dia" onAction="#navegarFechoDia"    maxWidth="Infinity" styleClass="menu-btn menu-btn-danger" visible="false" managed="false"/>
         </VBox>
     </left>
