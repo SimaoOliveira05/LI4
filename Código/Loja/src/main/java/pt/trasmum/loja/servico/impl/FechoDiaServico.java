@@ -1,11 +1,14 @@
 package pt.trasmum.loja.servico.impl;
 
-import pt.trasmum.loja.dominio.EnvioFechoFalhouException;
+import pt.trasmum.loja.dominio.catalogo.Lote;
+import pt.trasmum.loja.dominio.catalogo.Produto;
 import pt.trasmum.loja.dominio.core.ConfiguracaoTerminal;
 import pt.trasmum.loja.dominio.core.LogAuditoria;
 import pt.trasmum.loja.dominio.core.PerfilUtilizador;
 import pt.trasmum.loja.dominio.core.TipoAcao;
 import pt.trasmum.loja.dominio.core.Utilizador;
+import pt.trasmum.loja.dominio.exceptions.EnvioFechoFalhouException;
+import pt.trasmum.loja.dominio.fornecedores.Fornecedor;
 import pt.trasmum.loja.dominio.fornecedores.Pagamento;
 import pt.trasmum.loja.dominio.fornecedores.Remessa;
 import pt.trasmum.loja.dominio.tesouraria.FechoDia;
@@ -20,7 +23,9 @@ import pt.trasmum.loja.sincronizacao.SincronizacaoGateway;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class FechoDiaServico implements IFechoDiaServico {
 
@@ -37,6 +42,10 @@ public class FechoDiaServico implements IFechoDiaServico {
     private final PagamentoRepositorio pagamentoRepo;
     private final SessaoCaixaRepositorio sessaoCaixaRepo;
     private final LogAuditoriaRepositorio logRepo;
+    private final ProdutoRepositorio produtoRepo;
+    private final LoteRepositorio loteRepo;
+    private final FornecedorRepositorio fornecedorRepo;
+    private final UtilizadorRepositorio utilizadorRepo;
     private final SincronizacaoGateway sincronizacaoGateway;
     private final ConfiguracaoTerminal configuracao;
 
@@ -46,7 +55,10 @@ public class FechoDiaServico implements IFechoDiaServico {
                             FechoDiaRepositorio fechoDiaRepo, VendaRepositorio vendaRepo,
                             DevolucaoRepositorio devolucaoRepo, RemessaRepositorio remessaRepo,
                             PagamentoRepositorio pagamentoRepo, SessaoCaixaRepositorio sessaoCaixaRepo,
-                            LogAuditoriaRepositorio logRepo, SincronizacaoGateway sincronizacaoGateway,
+                            LogAuditoriaRepositorio logRepo, ProdutoRepositorio produtoRepo,
+                            LoteRepositorio loteRepo, FornecedorRepositorio fornecedorRepo,
+                            UtilizadorRepositorio utilizadorRepo,
+                            SincronizacaoGateway sincronizacaoGateway,
                             ConfiguracaoTerminal configuracao) {
         this.vendaServico = vendaServico;
         this.devolucaoServico = devolucaoServico;
@@ -61,6 +73,10 @@ public class FechoDiaServico implements IFechoDiaServico {
         this.pagamentoRepo = pagamentoRepo;
         this.sessaoCaixaRepo = sessaoCaixaRepo;
         this.logRepo = logRepo;
+        this.produtoRepo = produtoRepo;
+        this.loteRepo = loteRepo;
+        this.fornecedorRepo = fornecedorRepo;
+        this.utilizadorRepo = utilizadorRepo;
         this.sincronizacaoGateway = sincronizacaoGateway;
         this.configuracao = configuracao;
     }
@@ -69,7 +85,6 @@ public class FechoDiaServico implements IFechoDiaServico {
     public FechoDia executarFecho(Utilizador utilizador, ConfiguracaoTerminal config) {
         autorizacaoServico.exigirPerfil(utilizador, PerfilUtilizador.GESTOR, PerfilUtilizador.CEO);
 
-        // Recolhe pendentes
         List<Venda> vendas = vendaServico.obterVendasPendentes();
         List<Devolucao> devolucoes = devolucaoServico.obterDevolucoesPendentes();
         List<SessaoCaixa> sessoes = caixaServico.obterSessoesPendentes();
@@ -77,7 +92,6 @@ public class FechoDiaServico implements IFechoDiaServico {
         List<Pagamento> pagamentos = remessaServico.obterPagamentosPendentes();
         List<LogAuditoria> logs = auditoriaServico.obterLogsPendentes();
 
-        // Marca EM_TRANSITO
         vendas.forEach(v -> { v.marcarEmTransito(); atualizarSincVenda(v); });
         devolucoes.forEach(d -> { d.marcarEmTransito(); atualizarSincDevolucao(d); });
         sessoes.forEach(s -> { s.marcarEmTransito(); sessaoCaixaRepo.atualizar(s); });
@@ -85,7 +99,6 @@ public class FechoDiaServico implements IFechoDiaServico {
         pagamentos.forEach(p -> { p.marcarEmTransito(); pagamentoRepo.atualizar(p); });
         logs.forEach(l -> { l.marcarEmTransito(); logRepo.atualizar(l); });
 
-        // Constrói pacote
         PacoteFechoDTO pacote = construirPacote(config, vendas, devolucoes, remessas, pagamentos, sessoes, logs);
 
         boolean sucesso = sincronizacaoGateway.enviarFechoDia(pacote);
@@ -93,13 +106,11 @@ public class FechoDiaServico implements IFechoDiaServico {
         FechoDia fecho = new FechoDia(config.getIdLoja(), utilizador.getId(), LocalDate.now());
 
         if (!sucesso) {
-            // Reverte tudo para PENDENTE
             reverterEmTransito();
-            fechoDiaRepo.guardar(fecho); // persiste com PENDENTE
+            fechoDiaRepo.guardar(fecho);
             throw new EnvioFechoFalhouException("Falha no envio do fecho de dia ao servidor central.");
         }
 
-        // Marca tudo como CONFIRMADO
         vendas.forEach(v -> { v.marcarConfirmado(); atualizarSincVenda(v); });
         devolucoes.forEach(d -> { d.marcarConfirmado(); atualizarSincDevolucao(d); });
         sessoes.forEach(s -> { s.marcarConfirmado(); sessaoCaixaRepo.atualizar(s); });
@@ -110,7 +121,6 @@ public class FechoDiaServico implements IFechoDiaServico {
         fecho.marcarConfirmado();
         fechoDiaRepo.guardar(fecho);
 
-        // Regista auditoria do fecho de dia
         auditoriaServico.registar(utilizador, TipoAcao.FECHO_DIA, "FechoDia", fecho.getId());
 
         return fecho;
@@ -131,7 +141,6 @@ public class FechoDiaServico implements IFechoDiaServico {
 
     @Override
     public void reverterEmTransito() {
-        // Chama buscarPendentes em todos os repos — cada um reverte EM_TRANSITO → PENDENTE
         vendaRepo.buscarPendentes();
         devolucaoRepo.buscarPendentes();
         sessaoCaixaRepo.buscarPendentes();
@@ -141,18 +150,16 @@ public class FechoDiaServico implements IFechoDiaServico {
         fechoDiaRepo.buscarPendentes();
     }
 
-    // ---- Helpers de mapeamento -------------------------------------------
-
     private PacoteFechoDTO construirPacote(ConfiguracaoTerminal config,
             List<Venda> vendas, List<Devolucao> devolucoes, List<Remessa> remessas,
             List<Pagamento> pagamentos, List<SessaoCaixa> sessoes, List<LogAuditoria> logs) {
         PacoteFechoDTO p = new PacoteFechoDTO();
         p.idLoja = config.getIdLoja();
         p.nomeLoja = config.getNomeLoja();
-        p.dataFecho = LocalDate.now();
+        p.dataFecho = LocalDate.now().toString();
         p.vendas = mapVendas(vendas);
         p.devolucoes = mapDevolucoes(devolucoes);
-        p.remessas = mapRemessas(remessas);
+        p.remessas = mapRemessas(remessas, pagamentos);
         p.pagamentos = mapPagamentos(pagamentos);
         p.sessoesCaixa = mapSessoes(sessoes);
         p.logs = mapLogs(logs);
@@ -160,26 +167,30 @@ public class FechoDiaServico implements IFechoDiaServico {
     }
 
     private List<VendaDTO> mapVendas(List<Venda> vendas) {
+        Map<Integer, Produto> produtoCache = new HashMap<>();
+        Map<Integer, Lote> loteCache = new HashMap<>();
         List<VendaDTO> dtos = new ArrayList<>();
         for (Venda v : vendas) {
             VendaDTO dto = new VendaDTO();
-            dto.id = v.getId();
-            dto.idLoja = v.getIdLoja();
-            dto.idUtilizador = v.getIdUtilizador();
+            dto.idOriginalLoja = v.getId();
             dto.dataHora = v.getDataHora() != null ? v.getDataHora().toString() : null;
-            dto.metodoPagamento = v.getMetodoPagamento() != null ? v.getMetodoPagamento().name() : null;
             dto.totalFaturado = v.getTotalFaturado();
-            dto.estado = v.getEstado() != null ? v.getEstado().name() : null;
-            if (v.getFatura() != null) {
-                dto.numeroFatura = v.getFatura().getNumeroFatura();
-                dto.nifCliente = v.getFatura().getNifCliente();
-            }
+            dto.metodoPagamento = v.getMetodoPagamento() != null ? v.getMetodoPagamento().name() : null;
             dto.linhas = new ArrayList<>();
             for (var linha : v.getLinhas()) {
                 LinhaVendaDTO l = new LinhaVendaDTO();
-                l.idLote = linha.getIdLote();
+                l.idOriginalLoja = linha.getId();
                 l.quantidade = linha.getQuantidade();
                 l.precoUnitario = linha.getPrecoUnitario();
+                l.subtotal = linha.calcularSubtotal();
+                Lote lote = loteCache.computeIfAbsent(linha.getIdLote(), loteRepo::buscarPorId);
+                if (lote != null) {
+                    Produto prod = produtoCache.computeIfAbsent(lote.getIdProduto(), produtoRepo::buscarPorId);
+                    if (prod != null) {
+                        l.nomeProduto = prod.getNome();
+                        l.categoria = prod.getCategoria();
+                    }
+                }
                 dto.linhas.add(l);
             }
             dtos.add(dto);
@@ -191,39 +202,33 @@ public class FechoDiaServico implements IFechoDiaServico {
         List<DevolucaoDTO> dtos = new ArrayList<>();
         for (Devolucao d : devs) {
             DevolucaoDTO dto = new DevolucaoDTO();
-            dto.id = d.getId();
-            dto.idLoja = d.getIdLoja();
-            dto.numeroFatura = d.getNumeroFatura();
-            dto.idUtilizador = d.getIdUtilizador();
-            dto.idLote = d.getIdLote();
+            dto.idOriginalLoja = d.getId();
+            dto.idOriginalVenda = d.getIdFatura();
             dto.dataHora = d.getDataHora() != null ? d.getDataHora().toString() : null;
             dto.quantidade = d.getQuantidade();
-            dto.dataValidadeEmbalagem = d.getDataValidadeEmbalagem() != null ? d.getDataValidadeEmbalagem().toString() : null;
             dto.valorRestituido = d.getValorRestituido();
             dtos.add(dto);
         }
         return dtos;
     }
 
-    private List<RemessaDTO> mapRemessas(List<Remessa> remessas) {
+    private List<RemessaDTO> mapRemessas(List<Remessa> remessas, List<Pagamento> pagamentos) {
+        Map<Integer, Fornecedor> fornCache = new HashMap<>();
+        Map<Integer, Boolean> pagaPorRemessa = new HashMap<>();
+        for (Pagamento p : pagamentos) {
+            if (p.getEstadoPagamento() == Pagamento.EstadoPagamento.PAGO) {
+                pagaPorRemessa.put(p.getIdRemessa(), true);
+            }
+        }
         List<RemessaDTO> dtos = new ArrayList<>();
         for (Remessa r : remessas) {
             RemessaDTO dto = new RemessaDTO();
-            dto.id = r.getId();
-            dto.idLoja = r.getIdLoja();
-            dto.idFornecedor = r.getIdFornecedor();
-            dto.idUtilizador = r.getIdUtilizador();
+            dto.idOriginalLoja = r.getId();
+            Fornecedor f = fornCache.computeIfAbsent(r.getIdFornecedor(), fornecedorRepo::buscarPorId);
+            dto.nomeFornecedor = f != null ? f.getNome() : "Desconhecido";
             dto.dataRecepcao = r.getDataRecepcao() != null ? r.getDataRecepcao().toString() : null;
             dto.valorTotalGuia = r.getValorTotalGuia();
-            dto.linhas = new ArrayList<>();
-            for (var linha : r.getLinhas()) {
-                LinhaRemessaDTO l = new LinhaRemessaDTO();
-                l.idProduto = linha.getIdProduto();
-                l.idLoteGerado = linha.getIdLoteGerado();
-                l.quantidade = linha.getQuantidade();
-                l.dataValidade = linha.getDataValidade() != null ? linha.getDataValidade().toString() : null;
-                dto.linhas.add(l);
-            }
+            dto.estadoPagamento = pagaPorRemessa.getOrDefault(r.getId(), false) ? "PAGA" : "PENDENTE_PAGAMENTO";
             dtos.add(dto);
         }
         return dtos;
@@ -233,13 +238,11 @@ public class FechoDiaServico implements IFechoDiaServico {
         List<PagamentoDTO> dtos = new ArrayList<>();
         for (Pagamento p : pagamentos) {
             PagamentoDTO dto = new PagamentoDTO();
-            dto.id = p.getId();
-            dto.idLoja = p.getIdLoja();
-            dto.idFornecedor = p.getIdFornecedor();
-            dto.idRemessa = p.getIdRemessa();
+            dto.idOriginalLoja = p.getId();
+            dto.idOriginalRemessa = p.getIdRemessa();
             dto.valor = p.getValor();
-            dto.estadoPagamento = p.getEstadoPagamento() != null ? p.getEstadoPagamento().name() : null;
-            dto.dataHora = p.getDataHora() != null ? p.getDataHora().toString() : null;
+            dto.dataPagamento = p.getDataHora() != null ? p.getDataHora().toString() : null;
+            dto.tipoPagamento = null;
             dtos.add(dto);
         }
         return dtos;
@@ -249,10 +252,9 @@ public class FechoDiaServico implements IFechoDiaServico {
         List<SessaoCaixaDTO> dtos = new ArrayList<>();
         for (SessaoCaixa s : sessoes) {
             SessaoCaixaDTO dto = new SessaoCaixaDTO();
-            dto.id = s.getId();
-            dto.idLoja = s.getIdLoja();
+            dto.idOriginalLoja = s.getId();
             dto.idUtilizador = s.getIdUtilizador();
-            dto.saldoAtual = s.getSaldoAtual();
+            dto.saldoFinal = s.getSaldoAtual();
             dto.dataAbertura = s.getDataAbertura() != null ? s.getDataAbertura().toString() : null;
             dto.dataEncerramento = s.getDataEncerramento() != null ? s.getDataEncerramento().toString() : null;
             dtos.add(dto);
@@ -261,22 +263,19 @@ public class FechoDiaServico implements IFechoDiaServico {
     }
 
     private List<LogAuditoriaDTO> mapLogs(List<LogAuditoria> logs) {
+        Map<Integer, Utilizador> userCache = new HashMap<>();
         List<LogAuditoriaDTO> dtos = new ArrayList<>();
         for (LogAuditoria l : logs) {
             LogAuditoriaDTO dto = new LogAuditoriaDTO();
-            dto.id = l.getId();
-            dto.idLoja = l.getIdLoja();
+            dto.idOriginalLoja = l.getId();
             dto.acao = l.getAcao() != null ? l.getAcao().name() : null;
             dto.dataHora = l.getDataHora() != null ? l.getDataHora().toString() : null;
-            dto.idUtilizador = l.getIdUtilizador();
-            dto.entidade = l.getEntidade();
-            dto.idEntidade = l.getIdEntidade();
+            Utilizador u = userCache.computeIfAbsent(l.getIdUtilizador(), utilizadorRepo::buscarPorId);
+            dto.nomeUtilizador = u != null ? u.getNomeUtilizador() : "Desconhecido";
             dtos.add(dto);
         }
         return dtos;
     }
-
-    // ---- Helpers de atualização de sincronização -------------------------
 
     private void atualizarSincVenda(Venda v) {
         vendaRepo.atualizarSincronizacao(v.getId(), v.getEstadoSincronizacao());

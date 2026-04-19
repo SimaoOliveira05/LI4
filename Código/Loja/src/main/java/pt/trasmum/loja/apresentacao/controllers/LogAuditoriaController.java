@@ -1,23 +1,23 @@
 package pt.trasmum.loja.apresentacao.controllers;
 
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.util.StringConverter;
 import pt.trasmum.loja.app.AppContext;
 import pt.trasmum.loja.dominio.core.LogAuditoria;
 import pt.trasmum.loja.dominio.core.TipoAcao;
+import pt.trasmum.loja.dominio.core.Utilizador;
 
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 public class LogAuditoriaController {
 
@@ -28,38 +28,56 @@ public class LogAuditoriaController {
     @FXML private TableColumn<LogAuditoria, String> colDataHora;
     @FXML private TableColumn<LogAuditoria, String> colTipo;
     @FXML private TableColumn<LogAuditoria, String> colEntidade;
-    @FXML private TableColumn<LogAuditoria, Integer> colIdEntidade;
-    @FXML private TableColumn<LogAuditoria, Integer> colIdUtilizador;
+    @FXML private TableColumn<LogAuditoria, String> colUtilizador;
     @FXML private TableColumn<LogAuditoria, String> colEstado;
 
     private final ObservableList<LogAuditoria> logs = FXCollections.observableArrayList();
+    private final Map<Integer, String> cacheNomesUtilizadores = new HashMap<>();
 
     @FXML
     public void initialize() {
-        // Configurar colunas
         colDataHora.setCellValueFactory(c -> new SimpleStringProperty(
                 c.getValue().getDataHora() != null ? c.getValue().getDataHora().format(FORMATO_DATA_HORA) : "—"));
         colTipo.setCellValueFactory(c -> new SimpleStringProperty(
-                c.getValue().getAcao() != null ? c.getValue().getAcao().name() : "—"));
+                c.getValue().getAcao() != null ? c.getValue().getAcao().toString() : "—"));
         colEntidade.setCellValueFactory(c -> new SimpleStringProperty(
                 c.getValue().getEntidade() != null ? c.getValue().getEntidade() : "—"));
-        colIdEntidade.setCellValueFactory(c -> new SimpleObjectProperty<>(c.getValue().getIdEntidade()));
-        colIdUtilizador.setCellValueFactory(c -> new SimpleObjectProperty<>(c.getValue().getIdUtilizador()));
+        colUtilizador.setCellValueFactory(c -> new SimpleStringProperty(
+                nomeUtilizador(c.getValue().getIdUtilizador())));
         colEstado.setCellValueFactory(c -> new SimpleStringProperty(
-                c.getValue().getEstadoSincronizacao() != null ? c.getValue().getEstadoSincronizacao().name() : "—"));
+                c.getValue().getEstadoSincronizacao() != null ? c.getValue().getEstadoSincronizacao().toString() : "—"));
 
         tblLogs.setItems(logs);
 
-        // Configurar filtro - opção "Todos" + tipos de ação
-        cmbFiltroTipo.getItems().add(null); // Opção "Todos"
+        cmbFiltroTipo.setConverter(new StringConverter<>() {
+            @Override public String toString(TipoAcao t) { return t == null ? "Todos" : t.toString(); }
+            @Override public TipoAcao fromString(String s) { return null; }
+        });
+        cmbFiltroTipo.setCellFactory(lv -> new ListCell<>() {
+            @Override protected void updateItem(TipoAcao item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty ? null : (item == null ? "Todos" : item.toString()));
+            }
+        });
+        cmbFiltroTipo.getItems().add(null);
         cmbFiltroTipo.getItems().addAll(TipoAcao.values());
         cmbFiltroTipo.setValue(null);
 
-        // Listener para filtrar ao selecionar
         cmbFiltroTipo.valueProperty().addListener((obs, oldVal, newVal) -> aplicarFiltro());
 
-        // Carregar todos os logs inicialmente
         carregarLogs();
+    }
+
+    private String nomeUtilizador(Integer id) {
+        if (id == null) return "—";
+        return cacheNomesUtilizadores.computeIfAbsent(id, i -> {
+            try {
+                Utilizador u = AppContext.getInstance().utilizadorRepo.buscarPorId(i);
+                return u != null ? u.getNomeUtilizador() : ("#" + i);
+            } catch (Exception e) {
+                return "#" + i;
+            }
+        });
     }
 
     private void carregarLogs() {
@@ -80,7 +98,6 @@ public class LogAuditoriaController {
 
             List<LogAuditoria> logsFiltrados;
             if (tipoSelecionado == null) {
-                // Sem filtro - mostrar todos
                 logsFiltrados = auditoriaServico.obterTodosLogs();
             } else {
                 logsFiltrados = auditoriaServico.obterLogsPorTipo(tipoSelecionado);
@@ -93,6 +110,7 @@ public class LogAuditoriaController {
 
     @FXML
     private void onAtualizar() {
+        cacheNomesUtilizadores.clear();
         aplicarFiltro();
     }
 }

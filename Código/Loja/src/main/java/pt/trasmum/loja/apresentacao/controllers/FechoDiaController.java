@@ -7,9 +7,9 @@ import javafx.scene.control.ProgressIndicator;
 import pt.trasmum.loja.apresentacao.DialogoUtil;
 import pt.trasmum.loja.app.AppContext;
 import pt.trasmum.loja.app.Navigator;
-import pt.trasmum.loja.dominio.EnvioFechoFalhouException;
 import pt.trasmum.loja.dominio.core.ConfiguracaoTerminal;
 import pt.trasmum.loja.dominio.core.Utilizador;
+import pt.trasmum.loja.dominio.exceptions.EnvioFechoFalhouException;
 import pt.trasmum.loja.dominio.tesouraria.FechoDia;
 
 public class FechoDiaController {

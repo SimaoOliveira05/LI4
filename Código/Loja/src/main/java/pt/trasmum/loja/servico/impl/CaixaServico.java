@@ -1,8 +1,8 @@
 package pt.trasmum.loja.servico.impl;
 
-import pt.trasmum.loja.dominio.ExcecoesCaixa.SessaoCaixaJaAbertaException;
 import pt.trasmum.loja.dominio.core.ConfiguracaoTerminal;
 import pt.trasmum.loja.dominio.core.Utilizador;
+import pt.trasmum.loja.dominio.exceptions.ExcecoesCaixa.SessaoCaixaJaAbertaException;
 import pt.trasmum.loja.dominio.tesouraria.DetalheNumerario;
 import pt.trasmum.loja.dominio.tesouraria.Sangria;
 import pt.trasmum.loja.dominio.tesouraria.SessaoCaixa;

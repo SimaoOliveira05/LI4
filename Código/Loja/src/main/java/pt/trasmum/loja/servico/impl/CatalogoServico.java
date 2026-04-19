@@ -3,7 +3,6 @@ package pt.trasmum.loja.servico.impl;
 import pt.trasmum.loja.dominio.catalogo.Desconto;
 import pt.trasmum.loja.dominio.catalogo.Lote;
 import pt.trasmum.loja.dominio.catalogo.Produto;
-import pt.trasmum.loja.dominio.core.ConfiguracaoTerminal;
 import pt.trasmum.loja.dominio.core.PerfilUtilizador;
 import pt.trasmum.loja.dominio.core.TipoAcao;
 import pt.trasmum.loja.dominio.core.Utilizador;
@@ -23,16 +22,13 @@ public class CatalogoServico implements ICatalogoServico {
     private final LoteRepositorio loteRepo;
     private final IAutorizacaoServico autorizacaoServico;
     private final IAuditoriaServico auditoriaServico;
-    private final ConfiguracaoTerminal configuracao;
 
     public CatalogoServico(ProdutoRepositorio produtoRepo, LoteRepositorio loteRepo,
-                           IAutorizacaoServico autorizacaoServico, IAuditoriaServico auditoriaServico,
-                           ConfiguracaoTerminal configuracao) {
+                           IAutorizacaoServico autorizacaoServico, IAuditoriaServico auditoriaServico) {
         this.produtoRepo = produtoRepo;
         this.loteRepo = loteRepo;
         this.autorizacaoServico = autorizacaoServico;
         this.auditoriaServico = auditoriaServico;
-        this.configuracao = configuracao;
     }
 
     @Override
@@ -49,7 +45,7 @@ public class CatalogoServico implements ICatalogoServico {
     public void editarProduto(Utilizador utilizador, int id, ProdutoDTO dados) {
         autorizacaoServico.exigirPerfil(utilizador, PerfilUtilizador.GESTOR, PerfilUtilizador.CEO);
         Produto produto = produtoRepo.buscarPorId(id);
-        if (produto == null) throw new pt.trasmum.loja.dominio.ExcecoesCatalogo.ProdutoNaoEncontradoException("Produto não encontrado: " + id);
+        if (produto == null) throw new pt.trasmum.loja.dominio.exceptions.ExcecoesCatalogo.ProdutoNaoEncontradoException("Produto não encontrado: " + id);
         boolean precoAlterado = Double.compare(produto.getPrecoBase(), dados.precoBase()) != 0;
         produto.setCodigoBarras(dados.codigoBarras());
         produto.setNome(dados.nome());
@@ -65,7 +61,7 @@ public class CatalogoServico implements ICatalogoServico {
     public void desativarProduto(Utilizador utilizador, int id) {
         autorizacaoServico.exigirPerfil(utilizador, PerfilUtilizador.GESTOR, PerfilUtilizador.CEO);
         Produto produto = produtoRepo.buscarPorId(id);
-        if (produto == null) throw new pt.trasmum.loja.dominio.ExcecoesCatalogo.ProdutoNaoEncontradoException("Produto não encontrado: " + id);
+        if (produto == null) throw new pt.trasmum.loja.dominio.exceptions.ExcecoesCatalogo.ProdutoNaoEncontradoException("Produto não encontrado: " + id);
         produto.setAtivo(false);
         produtoRepo.atualizar(produto);
         auditoriaServico.registar(utilizador, TipoAcao.ALTERACAO_CATALOGO, "Produto", id);

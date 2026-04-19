@@ -1,14 +1,14 @@
 package pt.trasmum.loja.servico.impl;
 
-import pt.trasmum.loja.dominio.ExcecoesCatalogo.ProdutoInativoException;
-import pt.trasmum.loja.dominio.ExcecoesCatalogo.ProdutoNaoEncontradoException;
-import pt.trasmum.loja.dominio.ExcecoesCatalogo.ProdutoNaoFornecidoException;
 import pt.trasmum.loja.dominio.RemessaSemLinhasException;
 import pt.trasmum.loja.dominio.catalogo.Produto;
 import pt.trasmum.loja.dominio.core.ConfiguracaoTerminal;
 import pt.trasmum.loja.dominio.core.PerfilUtilizador;
 import pt.trasmum.loja.dominio.core.TipoAcao;
 import pt.trasmum.loja.dominio.core.Utilizador;
+import pt.trasmum.loja.dominio.exceptions.ExcecoesCatalogo.ProdutoInativoException;
+import pt.trasmum.loja.dominio.exceptions.ExcecoesCatalogo.ProdutoNaoEncontradoException;
+import pt.trasmum.loja.dominio.exceptions.ExcecoesCatalogo.ProdutoNaoFornecidoException;
 import pt.trasmum.loja.dominio.fornecedores.*;
 import pt.trasmum.loja.dominio.fornecedores.PedidoRemessa.EstadoPedido;
 import pt.trasmum.loja.repositorio.interfaces.*;

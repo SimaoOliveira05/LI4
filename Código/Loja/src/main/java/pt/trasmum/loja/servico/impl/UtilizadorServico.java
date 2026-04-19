@@ -32,10 +32,10 @@ public class UtilizadorServico implements IUtilizadorServico {
 
         // CEO cria GESTOR ou FUNCIONARIO; GESTOR só cria FUNCIONARIO
         if (gestor.getPerfil() == PerfilUtilizador.CEO && dados.perfil() != PerfilUtilizador.GESTOR && dados.perfil() != PerfilUtilizador.FUNCIONARIO) {
-            throw new pt.trasmum.loja.dominio.ExcecoesSeguranca.AcessoNegadoException("CEO só pode criar utilizadores com perfil GESTOR ou FUNCIONARIO.");
+            throw new pt.trasmum.loja.dominio.exceptions.ExcecoesSeguranca.AcessoNegadoException("CEO só pode criar utilizadores com perfil GESTOR ou FUNCIONARIO.");
         }
         if (gestor.getPerfil() == PerfilUtilizador.GESTOR && dados.perfil() != PerfilUtilizador.FUNCIONARIO) {
-            throw new pt.trasmum.loja.dominio.ExcecoesSeguranca.AcessoNegadoException("GESTOR só pode criar utilizadores com perfil FUNCIONARIO.");
+            throw new pt.trasmum.loja.dominio.exceptions.ExcecoesSeguranca.AcessoNegadoException("GESTOR só pode criar utilizadores com perfil FUNCIONARIO.");
         }
 
         String hash = BCrypt.hashpw(dados.palavraPasse(), BCrypt.gensalt());

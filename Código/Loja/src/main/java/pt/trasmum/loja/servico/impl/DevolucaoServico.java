@@ -1,14 +1,14 @@
 package pt.trasmum.loja.servico.impl;
 
-import pt.trasmum.loja.dominio.ExcecoesVenda.ArtigoNaoConstaNaFaturaException;
-import pt.trasmum.loja.dominio.ExcecoesVenda.DevolucaoJaProcessadaException;
-import pt.trasmum.loja.dominio.ExcecoesVenda.FaturaNaoEncontradaException;
-import pt.trasmum.loja.dominio.ExcecoesVenda.QuantidadeDevolucaoExcedidaException;
 import pt.trasmum.loja.dominio.catalogo.Lote;
 import pt.trasmum.loja.dominio.catalogo.Produto;
 import pt.trasmum.loja.dominio.core.ConfiguracaoTerminal;
 import pt.trasmum.loja.dominio.core.TipoAcao;
 import pt.trasmum.loja.dominio.core.Utilizador;
+import pt.trasmum.loja.dominio.exceptions.ExcecoesVenda.ArtigoNaoConstaNaFaturaException;
+import pt.trasmum.loja.dominio.exceptions.ExcecoesVenda.DevolucaoJaProcessadaException;
+import pt.trasmum.loja.dominio.exceptions.ExcecoesVenda.FaturaNaoEncontradaException;
+import pt.trasmum.loja.dominio.exceptions.ExcecoesVenda.QuantidadeDevolucaoExcedidaException;
 import pt.trasmum.loja.dominio.vendas.Devolucao;
 import pt.trasmum.loja.dominio.vendas.LinhaVenda;
 import pt.trasmum.loja.dominio.vendas.Venda;

@@ -1,3 +1,0 @@
--- Conta de instalação temporária — hash BCrypt gerado no arranque pela classe Main
--- INSERT INTO Utilizador (nomeUtilizador, hashPalavraPasse, perfil, ativo, emSessao)
--- VALUES ('admin', '<hash_bcrypt_de_admin123>', 'CEO', 1, 0);

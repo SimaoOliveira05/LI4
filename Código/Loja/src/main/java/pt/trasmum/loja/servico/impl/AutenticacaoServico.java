@@ -1,9 +1,9 @@
 package pt.trasmum.loja.servico.impl;
 
-import pt.trasmum.loja.dominio.ExcecoesSeguranca.CredenciaisInvalidasException;
-import pt.trasmum.loja.dominio.ExcecoesSeguranca.SessaoDuplicadaException;
 import pt.trasmum.loja.dominio.core.TipoAcao;
 import pt.trasmum.loja.dominio.core.Utilizador;
+import pt.trasmum.loja.dominio.exceptions.ExcecoesSeguranca.CredenciaisInvalidasException;
+import pt.trasmum.loja.dominio.exceptions.ExcecoesSeguranca.SessaoDuplicadaException;
 import pt.trasmum.loja.repositorio.interfaces.UtilizadorRepositorio;
 import pt.trasmum.loja.servico.interfaces.IAuditoriaServico;
 import pt.trasmum.loja.servico.interfaces.IAutenticacaoServico;

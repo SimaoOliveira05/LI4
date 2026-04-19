@@ -12,7 +12,7 @@
     <Label text="Esta operação sincroniza todos os dados pendentes com o Servidor Central."
            wrapText="true" styleClass="view-desc"/>
 
-    <ProgressIndicator fx:id="progressIndicador" prefSize="60"/>
+    <ProgressIndicator fx:id="progressIndicador" prefWidth="60" prefHeight="60"/>
 
     <Label fx:id="lblEstado" wrapText="true" styleClass="estado-label"/>
 

@@ -1,14 +1,14 @@
 package pt.trasmum.loja.servico.impl;
 
-import pt.trasmum.loja.dominio.ExcecoesCatalogo.ProdutoInativoException;
-import pt.trasmum.loja.dominio.ExcecoesCatalogo.ProdutoNaoEncontradoException;
-import pt.trasmum.loja.dominio.ExcecoesVenda.StockInsuficienteException;
 import pt.trasmum.loja.dominio.catalogo.Lote;
 import pt.trasmum.loja.dominio.catalogo.Produto;
 import pt.trasmum.loja.dominio.core.ConfiguracaoTerminal;
 import pt.trasmum.loja.dominio.core.TipoAcao;
 import pt.trasmum.loja.dominio.core.Utilizador;
-import pt.trasmum.loja.dominio.ExcecoesCaixa.SessaoCaixaNaoEncontradaException;
+import pt.trasmum.loja.dominio.exceptions.ExcecoesCaixa.SessaoCaixaNaoEncontradaException;
+import pt.trasmum.loja.dominio.exceptions.ExcecoesCatalogo.ProdutoInativoException;
+import pt.trasmum.loja.dominio.exceptions.ExcecoesCatalogo.ProdutoNaoEncontradoException;
+import pt.trasmum.loja.dominio.exceptions.ExcecoesVenda.StockInsuficienteException;
 import pt.trasmum.loja.dominio.vendas.*;
 import pt.trasmum.loja.dominio.vendas.Venda.MetodoPagamento;
 import pt.trasmum.loja.dominio.vendas.Venda.EstadoVenda;

@@ -1,96 +1,72 @@
 package pt.trasmum.loja.sincronizacao;
 
-import java.time.LocalDate;
 import java.util.List;
 
 public class PacoteFechoDTO {
     public String idLoja;
     public String nomeLoja;
-    public LocalDate dataFecho;
+    public String dataFecho;
+    public String hashIntegridade;
     public List<VendaDTO> vendas;
     public List<DevolucaoDTO> devolucoes;
     public List<RemessaDTO> remessas;
     public List<PagamentoDTO> pagamentos;
     public List<SessaoCaixaDTO> sessoesCaixa;
     public List<LogAuditoriaDTO> logs;
-    public String hashIntegridade;
-
-    // ---- DTOs internos ----
 
     public static class VendaDTO {
-        public int id;
-        public String idLoja;
-        public int idUtilizador;
+        public int idOriginalLoja;
         public String dataHora;
-        public String metodoPagamento;
         public double totalFaturado;
-        public String estado;
-        public String numeroFatura;
-        public String nifCliente;
+        public String metodoPagamento;
         public List<LinhaVendaDTO> linhas;
     }
 
     public static class LinhaVendaDTO {
-        public int idLote;
+        public int idOriginalLoja;
+        public String nomeProduto;
+        public String categoria;
         public int quantidade;
         public double precoUnitario;
+        public double subtotal;
     }
 
     public static class DevolucaoDTO {
-        public int id;
-        public String idLoja;
-        public String numeroFatura;
-        public int idUtilizador;
-        public int idLote;
+        public int idOriginalLoja;
+        public int idOriginalVenda;
         public String dataHora;
         public int quantidade;
-        public String dataValidadeEmbalagem;
         public double valorRestituido;
     }
 
     public static class RemessaDTO {
-        public int id;
-        public String idLoja;
-        public int idFornecedor;
-        public int idUtilizador;
+        public int idOriginalLoja;
+        public String nomeFornecedor;
         public String dataRecepcao;
         public double valorTotalGuia;
-        public List<LinhaRemessaDTO> linhas;
-    }
-
-    public static class LinhaRemessaDTO {
-        public int idProduto;
-        public int idLoteGerado;
-        public int quantidade;
-        public String dataValidade;
+        public String estadoPagamento;
     }
 
     public static class PagamentoDTO {
-        public int id;
-        public String idLoja;
-        public int idFornecedor;
-        public int idRemessa;
+        public int idOriginalLoja;
+        public int idOriginalRemessa;
         public double valor;
-        public String estadoPagamento;
-        public String dataHora;
+        public String dataPagamento;
+        public String tipoPagamento;
     }
 
     public static class SessaoCaixaDTO {
-        public int id;
-        public String idLoja;
+        public int idOriginalLoja;
         public int idUtilizador;
-        public double saldoAtual;
+        public double saldoFinal;
         public String dataAbertura;
         public String dataEncerramento;
     }
 
     public static class LogAuditoriaDTO {
-        public int id;
-        public String idLoja;
+        public int idOriginalLoja;
         public String acao;
         public String dataHora;
-        public int idUtilizador;
-        public String entidade;
-        public int idEntidade;
+        public String nomeUtilizador;
     }
 }

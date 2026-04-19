@@ -23,11 +23,10 @@
         <TableView fx:id="tblLogs">
             <columns>
                 <TableColumn fx:id="colDataHora"    text="Data/Hora"      prefWidth="160"/>
-                <TableColumn fx:id="colTipo"        text="Tipo"           prefWidth="130"/>
-                <TableColumn fx:id="colEntidade"    text="Entidade"       prefWidth="130"/>
-                <TableColumn fx:id="colIdEntidade"  text="ID Entidade"    prefWidth="100"/>
-                <TableColumn fx:id="colIdUtilizador" text="ID Utilizador"  prefWidth="110"/>
-                <TableColumn fx:id="colEstado"      text="Estado"         prefWidth="110"/>
+                <TableColumn fx:id="colTipo"        text="Tipo"           prefWidth="180"/>
+                <TableColumn fx:id="colEntidade"    text="Entidade"       prefWidth="140"/>
+                <TableColumn fx:id="colUtilizador"  text="Utilizador"     prefWidth="160"/>
+                <TableColumn fx:id="colEstado"      text="Sincronização"  prefWidth="140"/>
             </columns>
         </TableView>
     </center>

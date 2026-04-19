@@ -98,7 +98,7 @@ public class AppContext {
         this.auditoriaServico    = new AuditoriaServico(logAuditoriaRepo, configuracao);
         this.autenticacaoServico = new AutenticacaoServico(utilizadorRepo, auditoriaServico);
         this.caixaServico        = new CaixaServico(sessaoCaixaRepo);
-        this.catalogoServico     = new CatalogoServico(produtoRepo, loteRepo, autorizacaoServico, auditoriaServico, configuracao);
+        this.catalogoServico     = new CatalogoServico(produtoRepo, loteRepo, autorizacaoServico, auditoriaServico);
         this.vendaServico        = new VendaServico(vendaRepo, produtoRepo, loteRepo, sessaoCaixaRepo, auditoriaServico, configuracao);
         this.devolucaoServico    = new DevolucaoServico(vendaRepo, devolucaoRepo, loteRepo, produtoRepo, auditoriaServico, configuracao);
         this.fornecedorServico   = new FornecedorServico(fornecedorRepo, fornecedorProdutoRepo, produtoRepo, autorizacaoServico, auditoriaServico);
@@ -109,6 +109,7 @@ public class AppContext {
                 vendaServico, devolucaoServico, caixaServico, remessaServico,
                 auditoriaServico, autorizacaoServico, fechoDiaRepo,
                 vendaRepo, devolucaoRepo, remessaRepo, pagamentoRepo, sessaoCaixaRepo, logAuditoriaRepo,
+                produtoRepo, loteRepo, fornecedorRepo, utilizadorRepo,
                 sincronizacaoGateway, configuracao);
 
         limparSessoesOrfas();

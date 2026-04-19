@@ -1,8 +1,8 @@
 package pt.trasmum.loja.servico.impl;
 
-import pt.trasmum.loja.dominio.ExcecoesSeguranca.AcessoNegadoException;
 import pt.trasmum.loja.dominio.core.PerfilUtilizador;
 import pt.trasmum.loja.dominio.core.Utilizador;
+import pt.trasmum.loja.dominio.exceptions.ExcecoesSeguranca.AcessoNegadoException;
 import pt.trasmum.loja.servico.interfaces.IAutorizacaoServico;
 
 public class AutorizacaoServico implements IAutorizacaoServico {
