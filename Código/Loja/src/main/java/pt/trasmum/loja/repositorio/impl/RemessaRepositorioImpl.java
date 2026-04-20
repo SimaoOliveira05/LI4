@@ -55,7 +55,8 @@ public class RemessaRepositorioImpl implements RemessaRepositorio {
                 try (PreparedStatement ps = connection.prepareStatement(sqlLote, Statement.RETURN_GENERATED_KEYS)) {
                     ps.setInt(1, linha.getIdProduto());
                     ps.setInt(2, linha.getQuantidade());
-                    ps.setDate(3, Date.valueOf(linha.getDataValidade()));
+                    if (linha.getDataValidade() != null) ps.setDate(3, Date.valueOf(linha.getDataValidade()));
+                    else ps.setNull(3, Types.DATE);
                     ps.setInt(4, linha.getIdProduto());
                     ps.executeUpdate();
                     try (ResultSet keys = ps.getGeneratedKeys()) {
@@ -74,7 +75,8 @@ public class RemessaRepositorioImpl implements RemessaRepositorio {
                     ps.setInt(2, linha.getIdProduto());
                     ps.setInt(3, linha.getIdLoteGerado());
                     ps.setInt(4, linha.getQuantidade());
-                    ps.setDate(5, Date.valueOf(linha.getDataValidade()));
+                    if (linha.getDataValidade() != null) ps.setDate(5, Date.valueOf(linha.getDataValidade()));
+                    else ps.setNull(5, Types.DATE);
                     ps.executeUpdate();
                     try (ResultSet keys = ps.getGeneratedKeys()) {
                         if (keys.next()) linha.setId(keys.getInt(1));
@@ -149,7 +151,8 @@ public class RemessaRepositorioImpl implements RemessaRepositorio {
                     l.setIdProduto(rs.getInt("idProduto"));
                     l.setIdLoteGerado(rs.getInt("idLoteGerado"));
                     l.setQuantidade(rs.getInt("quantidade"));
-                    l.setDataValidade(rs.getDate("dataValidade").toLocalDate());
+                    Date dv = rs.getDate("dataValidade");
+                    l.setDataValidade(dv != null ? dv.toLocalDate() : null);
                     linhas.add(l);
                 }
             }

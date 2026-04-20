@@ -3,6 +3,7 @@ package pt.trasmum.loja.apresentacao.controllers;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Separator;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import pt.trasmum.loja.app.AppContext;
@@ -20,12 +21,11 @@ public class MainController {
     @FXML private Label lblEscala;
 
     // Botões de gestão (visíveis apenas para GESTOR/CEO)
-    @FXML private Button btnRemessa;
-    @FXML private Button btnFornecedor;
+    @FXML private Separator sepGestao;
+    @FXML private Button btnAprovisionamento;
     @FXML private Button btnPagamento;
-    @FXML private Button btnUtilizadores;
+    @FXML private Button btnAdministracao;
     @FXML private Button btnFechoDia;
-    @FXML private Button btnLogsAuditoria;
 
     @FXML
     public void initialize() {
@@ -38,12 +38,11 @@ public class MainController {
         lblLoja.setText(AppContext.getInstance().configuracao.getNomeLoja());
 
         boolean gestor = u != null && (u.getPerfil() == PerfilUtilizador.GESTOR || u.getPerfil() == PerfilUtilizador.CEO);
-        btnRemessa.setVisible(gestor);     btnRemessa.setManaged(gestor);
-        btnFornecedor.setVisible(gestor);  btnFornecedor.setManaged(gestor);
-        btnPagamento.setVisible(gestor);   btnPagamento.setManaged(gestor);
-        btnUtilizadores.setVisible(gestor); btnUtilizadores.setManaged(gestor);
-        btnFechoDia.setVisible(gestor);    btnFechoDia.setManaged(gestor);
-        btnLogsAuditoria.setVisible(gestor); btnLogsAuditoria.setManaged(gestor);
+        sepGestao.setVisible(gestor);            sepGestao.setManaged(gestor);
+        btnAprovisionamento.setVisible(gestor);  btnAprovisionamento.setManaged(gestor);
+        btnPagamento.setVisible(gestor);         btnPagamento.setManaged(gestor);
+        btnAdministracao.setVisible(gestor);     btnAdministracao.setManaged(gestor);
+        btnFechoDia.setVisible(gestor);          btnFechoDia.setManaged(gestor);
 
         GestorEscala gestor2 = GestorEscala.getInstance();
         atualizarLblEscala(gestor2.getEscala());
@@ -56,15 +55,13 @@ public class MainController {
         lblEscala.setText(String.format("%.0f%%", fator * 100));
     }
 
-    @FXML public void navegarVenda()       { Navigator.navegarParaCentro("/fxml/VendaView.fxml"); }
-    @FXML public void navegarCatalogo()    { Navigator.navegarParaCentro("/fxml/CatalogoView.fxml"); }
-    @FXML public void navegarCaixa()       { Navigator.navegarParaCentro("/fxml/CaixaView.fxml"); }
-    @FXML public void navegarRemessa()     { Navigator.navegarParaCentro("/fxml/RemessaView.fxml"); }
-    @FXML public void navegarFornecedor()  { Navigator.navegarParaCentro("/fxml/FornecedorView.fxml"); }
-    @FXML public void navegarPagamento()   { Navigator.navegarParaCentro("/fxml/PagamentoView.fxml"); }
-    @FXML public void navegarUtilizadores(){ Navigator.navegarParaCentro("/fxml/UtilizadorView.fxml"); }
-    @FXML public void navegarFechoDia()    { Navigator.navegarParaCentro("/fxml/FechoDiaView.fxml"); }
-    @FXML public void navegarLogsAuditoria(){ Navigator.navegarParaCentro("/fxml/LogAuditoriaView.fxml"); }
+    @FXML public void navegarVenda()            { Navigator.navegarParaCentro("/fxml/VendaView.fxml"); }
+    @FXML public void navegarCatalogo()         { Navigator.navegarParaCentro("/fxml/CatalogoView.fxml"); }
+    @FXML public void navegarCaixa()            { Navigator.navegarParaCentro("/fxml/CaixaView.fxml"); }
+    @FXML public void navegarAprovisionamento() { Navigator.navegarParaCentro("/fxml/AprovisionamentoView.fxml"); }
+    @FXML public void navegarPagamento()        { Navigator.navegarParaCentro("/fxml/PagamentoView.fxml"); }
+    @FXML public void navegarAdministracao()    { Navigator.navegarParaCentro("/fxml/AdministracaoView.fxml"); }
+    @FXML public void navegarFechoDia()         { Navigator.navegarParaCentro("/fxml/FechoDiaView.fxml"); }
 
     @FXML public void aumentarEscala() { GestorEscala.getInstance().aumentar(); }
     @FXML public void diminuirEscala() { GestorEscala.getInstance().diminuir(); }

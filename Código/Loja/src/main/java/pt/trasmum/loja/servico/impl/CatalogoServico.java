@@ -35,7 +35,7 @@ public class CatalogoServico implements ICatalogoServico {
     public Produto criarProduto(Utilizador utilizador, ProdutoDTO dados) {
         autorizacaoServico.exigirPerfil(utilizador, PerfilUtilizador.GESTOR, PerfilUtilizador.CEO);
         Produto produto = new Produto(dados.codigoBarras(), dados.nome(), dados.categoria(),
-                                      dados.precoBase(), dados.stockMinimo());
+                                      dados.precoBase(), dados.stockMinimo(), dados.temValidade());
         produtoRepo.guardar(produto);
         auditoriaServico.registar(utilizador, TipoAcao.ALTERACAO_CATALOGO, "Produto", produto.getId());
         return produto;
@@ -52,6 +52,7 @@ public class CatalogoServico implements ICatalogoServico {
         produto.setCategoria(dados.categoria());
         produto.setPrecoBase(dados.precoBase());
         produto.setStockMinimo(dados.stockMinimo());
+        produto.setTemValidade(dados.temValidade());
         produtoRepo.atualizar(produto);
         TipoAcao acao = precoAlterado ? TipoAcao.ALTERACAO_PRECO : TipoAcao.ALTERACAO_CATALOGO;
         auditoriaServico.registar(utilizador, acao, "Produto", produto.getId());

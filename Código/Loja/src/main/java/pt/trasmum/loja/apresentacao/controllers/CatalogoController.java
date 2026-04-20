@@ -196,7 +196,7 @@ public class CatalogoController {
 
         TextInputDialog dlg = DialogoUtil.comOwner(new TextInputDialog(String.valueOf(lote.getQuantidade())));
         dlg.setTitle("Abater Lote");
-        dlg.setHeaderText(nomeProduto + " — val. " + lote.getDataValidade());
+        dlg.setHeaderText(nomeProduto + " — val. " + (lote.getDataValidade() != null ? lote.getDataValidade() : "sem validade"));
         dlg.setContentText("Quantidade a abater (máx. " + lote.getQuantidade() + "):");
         dlg.showAndWait().ifPresent(txt -> {
             try {
@@ -287,6 +287,8 @@ public class CatalogoController {
         TextField fCategoria = new TextField(existente != null ? existente.getCategoria() : "");
         TextField fPreco     = new TextField(existente != null ? String.valueOf(existente.getPrecoBase()) : "");
         TextField fStock     = new TextField(existente != null ? String.valueOf(existente.getStockMinimo()) : "0");
+        CheckBox  fValidade  = new CheckBox("Tem data de validade");
+        fValidade.setSelected(existente == null || existente.isTemValidade());
 
         javafx.scene.layout.GridPane grid = new javafx.scene.layout.GridPane();
         grid.setHgap(8); grid.setVgap(8);
@@ -295,6 +297,7 @@ public class CatalogoController {
         grid.add(new Label("Categoria:"), 0, 2);        grid.add(fCategoria, 1, 2);
         grid.add(new Label("Preço base (€):"), 0, 3);   grid.add(fPreco, 1, 3);
         grid.add(new Label("Stock mínimo:"), 0, 4);     grid.add(fStock, 1, 4);
+        grid.add(fValidade, 1, 5);
         dlg.getDialogPane().setContent(grid);
 
         dlg.setResultConverter(bt -> {
@@ -303,7 +306,8 @@ public class CatalogoController {
                     return new ProdutoDTO(fCodigo.getText().trim(), fNome.getText().trim(),
                             fCategoria.getText().trim(),
                             Double.parseDouble(fPreco.getText().replace(",", ".")),
-                            Integer.parseInt(fStock.getText().trim()));
+                            Integer.parseInt(fStock.getText().trim()),
+                            fValidade.isSelected());
                 } catch (NumberFormatException e) { return null; }
             }
             return null;

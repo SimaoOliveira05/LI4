@@ -17,14 +17,15 @@ public class ProdutoRepositorioImpl implements ProdutoRepositorio {
 
     @Override
     public void guardar(Produto produto) {
-        String sql = "INSERT INTO Produto (codigoBarras, nome, categoria, precoBase, stockMinimo, ativo) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Produto (codigoBarras, nome, categoria, precoBase, stockMinimo, temValidade, ativo) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, produto.getCodigoBarras());
             ps.setString(2, produto.getNome());
             ps.setString(3, produto.getCategoria());
             ps.setDouble(4, produto.getPrecoBase());
             ps.setInt(5, produto.getStockMinimo());
-            ps.setBoolean(6, produto.isAtivo());
+            ps.setBoolean(6, produto.isTemValidade());
+            ps.setBoolean(7, produto.isAtivo());
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) produto.setId(keys.getInt(1));
@@ -36,15 +37,16 @@ public class ProdutoRepositorioImpl implements ProdutoRepositorio {
 
     @Override
     public void atualizar(Produto produto) {
-        String sql = "UPDATE Produto SET codigoBarras=?, nome=?, categoria=?, precoBase=?, stockMinimo=?, ativo=? WHERE id=?";
+        String sql = "UPDATE Produto SET codigoBarras=?, nome=?, categoria=?, precoBase=?, stockMinimo=?, temValidade=?, ativo=? WHERE id=?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, produto.getCodigoBarras());
             ps.setString(2, produto.getNome());
             ps.setString(3, produto.getCategoria());
             ps.setDouble(4, produto.getPrecoBase());
             ps.setInt(5, produto.getStockMinimo());
-            ps.setBoolean(6, produto.isAtivo());
-            ps.setInt(7, produto.getId());
+            ps.setBoolean(6, produto.isTemValidade());
+            ps.setBoolean(7, produto.isAtivo());
+            ps.setInt(8, produto.getId());
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao atualizar produto", e);
@@ -135,6 +137,7 @@ public class ProdutoRepositorioImpl implements ProdutoRepositorio {
         p.setCategoria(rs.getString("categoria"));
         p.setPrecoBase(rs.getDouble("precoBase"));
         p.setStockMinimo(rs.getInt("stockMinimo"));
+        p.setTemValidade(rs.getBoolean("temValidade"));
         p.setAtivo(rs.getBoolean("ativo"));
         return p;
     }

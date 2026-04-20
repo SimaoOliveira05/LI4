@@ -107,4 +107,28 @@
                     styleClass="btn-primary btn-large" maxWidth="Infinity"/>
         </VBox>
     </HBox>
+
+    <!-- ── Painel de Registo de Chegada (oculto por defeito) ─────────── -->
+    <VBox fx:id="painelRegistarChegada" VBox.vgrow="ALWAYS" spacing="10"
+          visible="false" managed="false">
+        <padding><Insets top="4" right="4" bottom="4" left="4"/></padding>
+        <HBox alignment="CENTER_LEFT" spacing="10">
+            <Label fx:id="lblChegadaTitulo" text="Registar Chegada" styleClass="view-title" HBox.hgrow="ALWAYS"/>
+            <Button text="Cancelar" onAction="#onCancelarRegistarChegada" styleClass="btn-danger"/>
+        </HBox>
+        <Label text="Confirme as quantidades e validades recebidas." styleClass="section-title"/>
+        <ScrollPane VBox.vgrow="ALWAYS" fitToWidth="true">
+            <GridPane fx:id="gridChegada" hgap="12" vgap="8">
+                <padding><Insets top="8" right="8" bottom="8" left="8"/></padding>
+            </GridPane>
+        </ScrollPane>
+        <HBox spacing="12" alignment="CENTER_LEFT">
+            <Label text="Valor da guia (€):"/>
+            <TextField fx:id="txtValorGuia" prefWidth="120"/>
+            <Label fx:id="lblSugeridoChegada" styleClass="sugerido-label"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Confirmar Chegada" onAction="#onConfirmarRegistarChegada"
+                    styleClass="btn-primary btn-large"/>
+        </HBox>
+    </VBox>
 </VBox>

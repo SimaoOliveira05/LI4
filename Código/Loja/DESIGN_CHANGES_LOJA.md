@@ -16,6 +16,45 @@ Registo de desvios entre o **design original** (diagramas UML, diagrama de compo
 
 ---
 
+## 2026-04-20 — Suporte a produtos sem data de validade
+
+**Área**: Domínio | Repositório | UI-Contract
+
+**O quê**:
+- `Produto` passa a ter o atributo `boolean temValidade` (default `true`). Construtor adicional `(codigoBarras, nome, categoria, precoBase, stockMinimo, temValidade)`.
+- Schema: `Produto.temValidade BIT NOT NULL DEFAULT 1`; `Lote.dataValidade` e `LinhaRemessa.dataValidade` passaram de `NOT NULL` para `NULL`.
+- `ProdutoDTO` (record do serviço) ganhou o campo `temValidade`.
+- `CatalogoController`: diálogo Criar/Editar produto tem agora checkbox "Tem data de validade".
+- `RemessaController`: no ecrã de "Registar Chegada", o `DatePicker` da linha é desativado quando o produto não tem validade; a `LinhaRemessa` é gravada com `dataValidade = null`.
+- Repositórios (`ProdutoRepositorioImpl`, `LoteRepositorioImpl`, `RemessaRepositorioImpl`) escrevem/lêem `dataValidade` de forma null-safe (via `setNull`/`rs.getDate` com verificação).
+- FEFO (`buscarLotesFEFO`): a ordenação passa a `ORDER BY dataValidade IS NULL, dataValidade ASC` — lotes sem validade ficam no fim, para que lotes com validade sejam consumidos primeiro.
+- Alertas de validade (`Catálogo`): a query já filtra `dataValidade <= ...`, pelo que lotes sem validade nunca geram alertas (comportamento pretendido).
+
+**Porquê**: nem todos os artigos da loja têm prazo de validade (ex: pilhas, produtos não-perecíveis). Obrigar a introduzir uma data artificial corrompia os lotes e gerava alertas falsos.
+
+**Impacto no design**:
+- Diagrama de classes: `Produto` ganha `temValidade:boolean`; nos diagramas de DB, `Lote.dataValidade` e `LinhaRemessa.dataValidade` deixam de ser obrigatórios.
+- `Devolucao.dataValidadeEmbalagem` mantém-se `NOT NULL` por agora — devolver um produto sem validade não foi reconsiderado nesta alteração. Caso seja relevante, fica como trabalho futuro (tornar nullable e adaptar o fluxo de devolução no `VendaController`).
+
+---
+
+## 2026-04-20 — Consolidação do menu de navegação do gestor
+
+**Área**: UI-Contract
+
+**O quê**: Reorganização da barra lateral (`MainView`) para reduzir a carga cognitiva do perfil GESTOR/CEO. O menu passa de 9 → 7 itens:
+- Novas vistas agregadoras: `AprovisionamentoView` (TabPane com Remessas + Fornecedores) e `AdministracaoView` (TabPane com Utilizadores + Auditoria). Ambas reutilizam as vistas e controladores existentes via `<fx:include>`; não foram introduzidos novos controladores.
+- Itens do menu do gestor: Venda, Catálogo, Caixa, Aprovisionamento, Pagamentos, Administração, Fecho de Dia.
+- Itens do menu do funcionário: Venda, Catálogo, Caixa (inalterado).
+
+**Porquê**: O menu tornou-se denso com 9 opções para o gestor, muitas das quais representam funcionalidades relacionadas (remessas ↔ fornecedores; utilizadores ↔ auditoria).
+
+**Impacto no design**: o diagrama de componentes/UI da camada de apresentação deve refletir as duas vistas agregadoras `AprovisionamentoView` / `AdministracaoView` como compostas pelas vistas originais. Não há alterações de domínio, serviços ou repositórios.
+
+Adicionalmente: o registo de chegada de remessa deixou de ser um `Dialog` modal — `RemessaView` ganhou um terceiro painel interno (`painelRegistarChegada`), alinhado com o padrão já existente em "Novo Pedido". O fluxo passa a alternar painéis (gestão ↔ novo pedido ↔ registar chegada) sem pop-ups.
+
+---
+
 ## 2026-04-19 — `PacoteFechoDTO` reescrito para o contrato do servidor central
 
 **Área**: UI-Contract | Serviço

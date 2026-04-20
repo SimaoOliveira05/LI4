@@ -24,7 +24,8 @@ public class LoteRepositorioImpl implements LoteRepositorio {
         try (PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, lote.getIdProduto());
             ps.setInt(2, lote.getQuantidade());
-            ps.setDate(3, Date.valueOf(lote.getDataValidade()));
+            if (lote.getDataValidade() != null) ps.setDate(3, Date.valueOf(lote.getDataValidade()));
+            else ps.setNull(3, Types.DATE);
             ps.setDouble(4, lote.getPrecoVenda());
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
@@ -41,7 +42,8 @@ public class LoteRepositorioImpl implements LoteRepositorio {
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, lote.getIdProduto());
             ps.setInt(2, lote.getQuantidade());
-            ps.setDate(3, Date.valueOf(lote.getDataValidade()));
+            if (lote.getDataValidade() != null) ps.setDate(3, Date.valueOf(lote.getDataValidade()));
+            else ps.setNull(3, Types.DATE);
             ps.setDouble(4, lote.getPrecoVenda());
             ps.setInt(5, lote.getId());
             ps.executeUpdate();
@@ -69,7 +71,7 @@ public class LoteRepositorioImpl implements LoteRepositorio {
     public List<Lote> buscarLotesFEFO(int idProduto) {
         String sql = "SELECT l.*, d.id as dId, d.percentagem, d.dataAplicacao, d.idUtilizadorAplicou " +
                      "FROM Lote l LEFT JOIN Desconto d ON d.idLote = l.id " +
-                     "WHERE l.idProduto = ? AND l.quantidade > 0 ORDER BY l.dataValidade ASC";
+                     "WHERE l.idProduto = ? AND l.quantidade > 0 ORDER BY l.dataValidade IS NULL, l.dataValidade ASC";
         List<Lote> lista = new ArrayList<>();
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, idProduto);
@@ -149,7 +151,8 @@ public class LoteRepositorioImpl implements LoteRepositorio {
         lote.setId(rs.getInt("id"));
         lote.setIdProduto(rs.getInt("idProduto"));
         lote.setQuantidade(rs.getInt("quantidade"));
-        lote.setDataValidade(rs.getDate("dataValidade").toLocalDate());
+        Date dv = rs.getDate("dataValidade");
+        lote.setDataValidade(dv != null ? dv.toLocalDate() : null);
         lote.setPrecoVenda(rs.getDouble("precoVenda"));
 
         int dId = rs.getInt("dId");

@@ -34,13 +34,11 @@
             <Button text="Venda"         onAction="#navegarVenda"          maxWidth="Infinity" styleClass="menu-btn"/>
             <Button text="Catálogo"      onAction="#navegarCatalogo"        maxWidth="Infinity" styleClass="menu-btn"/>
             <Button text="Caixa"         onAction="#navegarCaixa"           maxWidth="Infinity" styleClass="menu-btn"/>
-            <Separator/>
-            <Button fx:id="btnRemessa"     text="Remessas"     onAction="#navegarRemessa"     maxWidth="Infinity" styleClass="menu-btn" visible="false" managed="false"/>
-            <Button fx:id="btnFornecedor"  text="Fornecedores" onAction="#navegarFornecedor"  maxWidth="Infinity" styleClass="menu-btn" visible="false" managed="false"/>
-            <Button fx:id="btnPagamento"   text="Pagamentos"   onAction="#navegarPagamento"   maxWidth="Infinity" styleClass="menu-btn" visible="false" managed="false"/>
-            <Button fx:id="btnUtilizadores" text="Utilizadores" onAction="#navegarUtilizadores" maxWidth="Infinity" styleClass="menu-btn" visible="false" managed="false"/>
-            <Button fx:id="btnLogsAuditoria" text="Auditoria" onAction="#navegarLogsAuditoria" maxWidth="Infinity" styleClass="menu-btn" visible="false" managed="false"/>
-            <Button fx:id="btnFechoDia"    text="Fecho de Dia" onAction="#navegarFechoDia"    maxWidth="Infinity" styleClass="menu-btn menu-btn-danger" visible="false" managed="false"/>
+            <Separator fx:id="sepGestao" visible="false" managed="false"/>
+            <Button fx:id="btnAprovisionamento" text="Aprovisionamento" onAction="#navegarAprovisionamento" maxWidth="Infinity" styleClass="menu-btn" visible="false" managed="false"/>
+            <Button fx:id="btnPagamento"        text="Pagamentos"       onAction="#navegarPagamento"        maxWidth="Infinity" styleClass="menu-btn" visible="false" managed="false"/>
+            <Button fx:id="btnAdministracao"    text="Administração"    onAction="#navegarAdministracao"    maxWidth="Infinity" styleClass="menu-btn" visible="false" managed="false"/>
+            <Button fx:id="btnFechoDia"         text="Fecho de Dia"     onAction="#navegarFechoDia"         maxWidth="Infinity" styleClass="menu-btn menu-btn-danger" visible="false" managed="false"/>
         </VBox>
     </left>
 

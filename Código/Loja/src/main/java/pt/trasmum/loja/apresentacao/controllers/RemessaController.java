@@ -52,6 +52,17 @@ public class RemessaController {
     @FXML private TableColumn<LinhaNPExibicao, Integer> colNPQtd;
     @FXML private TableColumn<LinhaNPExibicao, String>  colNPRemover;
 
+    // ── Painel de registo de chegada ──────────────────────────────
+    @FXML private VBox       painelRegistarChegada;
+    @FXML private Label      lblChegadaTitulo;
+    @FXML private GridPane   gridChegada;
+    @FXML private TextField  txtValorGuia;
+    @FXML private Label      lblSugeridoChegada;
+    private PedidoRemessa     pedidoChegada;
+    private final List<TextField>  camposQtdChegada      = new ArrayList<>();
+    private final List<DatePicker> camposValidadeChegada = new ArrayList<>();
+    private final List<Integer>    idsProdutoChegada     = new ArrayList<>();
+
     private final ObservableList<PedidoRemessa>   pedidos  = FXCollections.observableArrayList();
     private final ObservableList<LinhaNPExibicao> linhasNP = FXCollections.observableArrayList();
     private List<Produto> produtosFornecedor = new ArrayList<>();
@@ -203,122 +214,124 @@ public class RemessaController {
         PedidoRemessa pedido = tblPedidos.getSelectionModel().getSelectedItem();
         if (pedido == null || pedido.getEstado() != EstadoPedido.PENDENTE) return;
 
-        Dialog<Boolean> dlg = DialogoUtil.comOwner(new Dialog<>());
-        dlg.setTitle("Registar Chegada");
-        dlg.setHeaderText("Confirme as quantidades e validades recebidas.");
-        dlg.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        pedidoChegada = pedido;
+        camposQtdChegada.clear();
+        camposValidadeChegada.clear();
+        idsProdutoChegada.clear();
+        gridChegada.getChildren().clear();
 
-        GridPane grid = new GridPane();
-        grid.setHgap(12); grid.setVgap(8);
-        grid.setPadding(new Insets(12));
+        Fornecedor forn = AppContext.getInstance().fornecedorRepo.buscarPorId(pedido.getIdFornecedor());
+        lblChegadaTitulo.setText("Registar Chegada — " + (forn != null ? forn.getNome() : "pedido #" + pedido.getId()));
 
-        // Cabeçalho
-        grid.add(boldLabel("Produto"),        0, 0);
-        grid.add(boldLabel("Qtd. pedida"),    1, 0);
-        grid.add(boldLabel("Qtd. recebida"),  2, 0);
-        grid.add(boldLabel("Validade"),       3, 0);
-
-        List<TextField>  camposQtd      = new ArrayList<>();
-        List<DatePicker> camposValidade = new ArrayList<>();
-        List<Integer>    idsProduto     = new ArrayList<>();
+        gridChegada.add(boldLabel("Produto"),       0, 0);
+        gridChegada.add(boldLabel("Qtd. pedida"),   1, 0);
+        gridChegada.add(boldLabel("Qtd. recebida"), 2, 0);
+        gridChegada.add(boldLabel("Validade"),      3, 0);
 
         int row = 1;
         for (LinhaPedidoRemessa linha : pedido.getLinhas()) {
             Produto p = AppContext.getInstance().produtoRepo.buscarPorId(linha.getIdProduto());
-            idsProduto.add(linha.getIdProduto());
+            idsProdutoChegada.add(linha.getIdProduto());
 
             TextField tfQtd = new TextField(String.valueOf(linha.getQuantidadePretendida()));
-            tfQtd.setPrefWidth(70);
-            DatePicker dp = new DatePicker(LocalDate.now().plusMonths(6));
-            dp.setPrefWidth(150);
+            tfQtd.setPrefWidth(80);
+            DatePicker dp = new DatePicker();
+            dp.setPrefWidth(160);
+            boolean temValidade = p == null || p.isTemValidade();
+            if (temValidade) {
+                dp.setValue(LocalDate.now().plusMonths(6));
+            } else {
+                dp.setDisable(true);
+                dp.setPromptText("sem validade");
+            }
 
-            grid.add(new Label(p != null ? p.getNome() : "—"),                        0, row);
-            grid.add(new Label(String.valueOf(linha.getQuantidadePretendida())),        1, row);
-            grid.add(tfQtd,                                                             2, row);
-            grid.add(dp,                                                                3, row);
+            gridChegada.add(new Label(p != null ? p.getNome() : "—"),                0, row);
+            gridChegada.add(new Label(String.valueOf(linha.getQuantidadePretendida())), 1, row);
+            gridChegada.add(tfQtd,                                                    2, row);
+            gridChegada.add(dp,                                                       3, row);
 
-            camposQtd.add(tfQtd);
-            camposValidade.add(dp);
+            camposQtdChegada.add(tfQtd);
+            camposValidadeChegada.add(dp);
+            tfQtd.textProperty().addListener((o, a, b) -> atualizarSugeridoChegada());
             row++;
         }
 
-        grid.add(boldLabel("Valor da guia (€):"), 0, row);
-        TextField tfGuia = new TextField();
-        tfGuia.setPrefWidth(100);
-        grid.add(tfGuia, 1, row);
+        txtValorGuia.clear();
+        atualizarSugeridoChegada();
 
-        Label lblSugerido = new Label("Sugerido: —");
-        lblSugerido.setStyle("-fx-font-style: italic; -fx-text-fill: #555;");
-        grid.add(lblSugerido, 2, row, 2, 1);
+        painelGestao.setVisible(false);
+        painelGestao.setManaged(false);
+        painelRegistarChegada.setVisible(true);
+        painelRegistarChegada.setManaged(true);
+    }
 
-        Runnable atualizarSugerido = () -> {
-            double total = 0.0;
-            boolean algumDesconhecido = false;
-            for (int i = 0; i < camposQtd.size(); i++) {
-                int q;
-                try { q = Integer.parseInt(camposQtd.get(i).getText().trim()); }
-                catch (NumberFormatException ex) { continue; }
-                if (q <= 0) continue;
-                double preco = AppContext.getInstance().fornecedorServico
-                        .precoDoFornecedor(pedido.getIdFornecedor(), idsProduto.get(i));
-                if (preco < 0) algumDesconhecido = true;
-                else total += preco * q;
-            }
-            String txt = String.format("Sugerido: %.2f €", total);
-            if (algumDesconhecido) txt += " (+ preços em falta)";
-            lblSugerido.setText(txt);
-        };
-        for (TextField tf : camposQtd) {
-            tf.textProperty().addListener((o, a, b) -> atualizarSugerido.run());
+    private void atualizarSugeridoChegada() {
+        if (pedidoChegada == null) { lblSugeridoChegada.setText(""); return; }
+        double total = 0.0;
+        boolean algumDesconhecido = false;
+        for (int i = 0; i < camposQtdChegada.size(); i++) {
+            int q;
+            try { q = Integer.parseInt(camposQtdChegada.get(i).getText().trim()); }
+            catch (NumberFormatException ex) { continue; }
+            if (q <= 0) continue;
+            double preco = AppContext.getInstance().fornecedorServico
+                    .precoDoFornecedor(pedidoChegada.getIdFornecedor(), idsProdutoChegada.get(i));
+            if (preco < 0) algumDesconhecido = true;
+            else total += preco * q;
         }
-        atualizarSugerido.run();
+        String txt = String.format("Sugerido: %.2f €", total);
+        if (algumDesconhecido) txt += " (+ preços em falta)";
+        lblSugeridoChegada.setText(txt);
+    }
 
-        ScrollPane scroll = new ScrollPane(grid);
-        scroll.setFitToWidth(true);
-        scroll.setPrefHeight(300);
-        dlg.getDialogPane().setContent(scroll);
+    @FXML
+    public void onCancelarRegistarChegada() {
+        pedidoChegada = null;
+        camposQtdChegada.clear();
+        camposValidadeChegada.clear();
+        idsProdutoChegada.clear();
+        gridChegada.getChildren().clear();
+        painelRegistarChegada.setVisible(false);
+        painelRegistarChegada.setManaged(false);
+        painelGestao.setVisible(true);
+        painelGestao.setManaged(true);
+    }
 
-        // Validação antes de confirmar
-        Button btnOk = (Button) dlg.getDialogPane().lookupButton(ButtonType.OK);
-        btnOk.addEventFilter(javafx.event.ActionEvent.ACTION, ev -> {
-            for (int i = 0; i < camposQtd.size(); i++) {
-                try {
-                    int q = Integer.parseInt(camposQtd.get(i).getText().trim());
-                    if (q < 0) throw new NumberFormatException();
-                } catch (NumberFormatException ex) {
-                    mostrarErro("Quantidade inválida na linha " + (i + 1));
-                    ev.consume(); return;
-                }
-                if (camposValidade.get(i).getValue() == null) {
-                    mostrarErro("Selecione a validade na linha " + (i + 1));
-                    ev.consume(); return;
+    @FXML
+    public void onConfirmarRegistarChegada() {
+        if (pedidoChegada == null) return;
+        for (int i = 0; i < camposQtdChegada.size(); i++) {
+            try {
+                int q = Integer.parseInt(camposQtdChegada.get(i).getText().trim());
+                if (q < 0) throw new NumberFormatException();
+            } catch (NumberFormatException ex) {
+                mostrarErro("Quantidade inválida na linha " + (i + 1)); return;
+            }
+            DatePicker dp = camposValidadeChegada.get(i);
+            if (!dp.isDisabled() && dp.getValue() == null) {
+                mostrarErro("Selecione a validade na linha " + (i + 1)); return;
+            }
+        }
+        double valorGuia;
+        try { valorGuia = Double.parseDouble(txtValorGuia.getText().replace(",", ".")); }
+        catch (NumberFormatException ex) { mostrarErro("Valor de guia inválido."); return; }
+
+        try {
+            List<LinhaRemessa> linhas = new ArrayList<>();
+            for (int i = 0; i < idsProdutoChegada.size(); i++) {
+                int qtd = Integer.parseInt(camposQtdChegada.get(i).getText().trim());
+                if (qtd > 0) {
+                    linhas.add(new LinhaRemessa(0, idsProdutoChegada.get(i), qtd, camposValidadeChegada.get(i).getValue()));
                 }
             }
-            try { Double.parseDouble(tfGuia.getText().replace(",", ".")); }
-            catch (NumberFormatException ex) { mostrarErro("Valor de guia inválido."); ev.consume(); }
-        });
-
-        dlg.setResultConverter(bt -> bt == ButtonType.OK);
-
-        dlg.showAndWait().ifPresent(ok -> {
-            if (!ok) return;
-            try {
-                List<LinhaRemessa> linhas = new ArrayList<>();
-                for (int i = 0; i < idsProduto.size(); i++) {
-                    int qtd = Integer.parseInt(camposQtd.get(i).getText().trim());
-                    if (qtd > 0) {
-                        linhas.add(new LinhaRemessa(0, idsProduto.get(i), qtd, camposValidade.get(i).getValue()));
-                    }
-                }
-                if (linhas.isEmpty()) { mostrarErro("Nenhuma quantidade recebida."); return; }
-                double valorGuia = Double.parseDouble(tfGuia.getText().replace(",", "."));
-                Fornecedor forn  = AppContext.getInstance().fornecedorRepo.buscarPorId(pedido.getIdFornecedor());
-                Utilizador u     = AppContext.getInstance().getUtilizadorAtual();
-                AppContext.getInstance().remessaServico.registarRemessa(u, forn, linhas, valorGuia);
-                mostrarInfo("Remessa registada com sucesso.");
-                carregarPedidos();
-            } catch (Exception ex) { mostrarErro(ex.getMessage()); }
-        });
+            if (linhas.isEmpty()) { mostrarErro("Nenhuma quantidade recebida."); return; }
+            Fornecedor forn  = AppContext.getInstance().fornecedorRepo.buscarPorId(pedidoChegada.getIdFornecedor());
+            Utilizador u     = AppContext.getInstance().getUtilizadorAtual();
+            AppContext.getInstance().remessaServico.registarRemessa(u, forn, linhas, valorGuia);
+            mostrarInfo("Remessa registada com sucesso.");
+            onCancelarRegistarChegada();
+            carregarPedidos();
+        } catch (Exception ex) { mostrarErro(ex.getMessage()); }
     }
 
     // ── Novo pedido ───────────────────────────────────────────────
