@@ -30,7 +30,8 @@ public class AutenticacaoServico implements IAutenticacaoServico {
         }
         utilizador.setEmSessao(true);
         utilizadorRepo.atualizar(utilizador);
-        auditoriaServico.registar(utilizador, TipoAcao.GESTAO_UTILIZADOR, "Utilizador", utilizador.getId());
+        auditoriaServico.registar(utilizador, TipoAcao.GESTAO_UTILIZADOR, "Utilizador", utilizador.getId(),
+                "Login de '" + utilizador.getNomeUtilizador() + "'");
         return utilizador;
     }
 

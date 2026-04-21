@@ -9,17 +9,19 @@ public class LogAuditoriaCentral {
     private TipoAcao acao;
     private LocalDateTime dataHora;
     private String nomeUtilizador;
+    private String descricao;
 
     public LogAuditoriaCentral() {}
 
     public LogAuditoriaCentral(int id, int idOriginalLoja, String idLoja, TipoAcao acao,
-                               LocalDateTime dataHora, String nomeUtilizador) {
+                               LocalDateTime dataHora, String nomeUtilizador, String descricao) {
         this.id = id;
         this.idOriginalLoja = idOriginalLoja;
         this.idLoja = idLoja;
         this.acao = acao;
         this.dataHora = dataHora;
         this.nomeUtilizador = nomeUtilizador;
+        this.descricao = descricao;
     }
 
     public int getId() { return id; }
@@ -34,4 +36,6 @@ public class LogAuditoriaCentral {
     public void setDataHora(LocalDateTime dataHora) { this.dataHora = dataHora; }
     public String getNomeUtilizador() { return nomeUtilizador; }
     public void setNomeUtilizador(String nomeUtilizador) { this.nomeUtilizador = nomeUtilizador; }
+    public String getDescricao() { return descricao; }
+    public void setDescricao(String descricao) { this.descricao = descricao; }
 }

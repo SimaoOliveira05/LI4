@@ -39,7 +39,8 @@ public class UtilizadorServico implements IUtilizadorServico {
         String hash = BCrypt.hashpw(dados.palavraPasse(), BCrypt.gensalt());
         Utilizador novo = new Utilizador(dados.nomeUtilizador(), hash, dados.perfil());
         utilizadorRepo.guardar(novo);
-        auditoriaServico.registar(gestor, TipoAcao.GESTAO_UTILIZADOR, "Utilizador", novo.getId());
+        auditoriaServico.registar(gestor, TipoAcao.GESTAO_UTILIZADOR, "Utilizador", novo.getId(),
+                "Criou utilizador '" + novo.getNomeUtilizador() + "' com perfil " + novo.getPerfil().name());
         return novo;
     }
 
@@ -59,7 +60,8 @@ public class UtilizadorServico implements IUtilizadorServico {
             }
         }
         utilizadorRepo.desativar(idAlvo);
-        auditoriaServico.registar(gestor, TipoAcao.GESTAO_UTILIZADOR, "Utilizador", idAlvo);
+        auditoriaServico.registar(gestor, TipoAcao.GESTAO_UTILIZADOR, "Utilizador", idAlvo,
+                "Desativou utilizador '" + alvo.getNomeUtilizador() + "'");
     }
 
     @Override
@@ -72,7 +74,8 @@ public class UtilizadorServico implements IUtilizadorServico {
             alvo.setHashPalavraPasse(BCrypt.hashpw(dados.palavraPasse(), BCrypt.gensalt()));
         }
         utilizadorRepo.atualizar(alvo);
-        auditoriaServico.registar(gestor, TipoAcao.GESTAO_UTILIZADOR, "Utilizador", idAlvo);
+        auditoriaServico.registar(gestor, TipoAcao.GESTAO_UTILIZADOR, "Utilizador", idAlvo,
+                "Editou utilizador '" + alvo.getNomeUtilizador() + "'");
     }
 
     @Override

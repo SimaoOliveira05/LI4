@@ -9,17 +9,19 @@ public class LogAuditoria extends RegistoSincronizavel {
     private int idUtilizador;
     private String entidade;
     private int idEntidade;
+    private String descricao;
 
     public LogAuditoria() {
         super();
     }
 
-    public LogAuditoria(String idLoja, TipoAcao acao, int idUtilizador, String entidade, int idEntidade) {
+    public LogAuditoria(String idLoja, TipoAcao acao, int idUtilizador, String entidade, int idEntidade, String descricao) {
         super(idLoja);
         this.acao = acao;
         this.idUtilizador = idUtilizador;
         this.entidade = entidade;
         this.idEntidade = idEntidade;
+        this.descricao = descricao;
         this.dataHora = LocalDateTime.now();
     }
 
@@ -37,4 +39,7 @@ public class LogAuditoria extends RegistoSincronizavel {
 
     public int getIdEntidade() { return idEntidade; }
     public void setIdEntidade(int idEntidade) { this.idEntidade = idEntidade; }
+
+    public String getDescricao() { return descricao; }
+    public void setDescricao(String descricao) { this.descricao = descricao; }
 }

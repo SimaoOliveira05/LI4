@@ -37,7 +37,8 @@ public class CatalogoServico implements ICatalogoServico {
         Produto produto = new Produto(dados.codigoBarras(), dados.nome(), dados.categoria(),
                                       dados.precoBase(), dados.stockMinimo(), dados.temValidade());
         produtoRepo.guardar(produto);
-        auditoriaServico.registar(utilizador, TipoAcao.ALTERACAO_CATALOGO, "Produto", produto.getId());
+        auditoriaServico.registar(utilizador, TipoAcao.ALTERACAO_CATALOGO, "Produto", produto.getId(),
+                "Criou produto '" + produto.getNome() + "' (cód. " + produto.getCodigoBarras() + ")");
         return produto;
     }
 
@@ -55,7 +56,10 @@ public class CatalogoServico implements ICatalogoServico {
         produto.setTemValidade(dados.temValidade());
         produtoRepo.atualizar(produto);
         TipoAcao acao = precoAlterado ? TipoAcao.ALTERACAO_PRECO : TipoAcao.ALTERACAO_CATALOGO;
-        auditoriaServico.registar(utilizador, acao, "Produto", produto.getId());
+        String desc = precoAlterado
+                ? String.format("Alterou preço de '%s' para %.2f €", produto.getNome(), produto.getPrecoBase())
+                : "Editou produto '" + produto.getNome() + "'";
+        auditoriaServico.registar(utilizador, acao, "Produto", produto.getId(), desc);
     }
 
     @Override
@@ -65,7 +69,8 @@ public class CatalogoServico implements ICatalogoServico {
         if (produto == null) throw new pt.trasmum.loja.dominio.exceptions.ExcecoesCatalogo.ProdutoNaoEncontradoException("Produto não encontrado: " + id);
         produto.setAtivo(false);
         produtoRepo.atualizar(produto);
-        auditoriaServico.registar(utilizador, TipoAcao.ALTERACAO_CATALOGO, "Produto", id);
+        auditoriaServico.registar(utilizador, TipoAcao.ALTERACAO_CATALOGO, "Produto", id,
+                "Desativou produto '" + produto.getNome() + "'");
     }
 
     @Override
@@ -73,7 +78,8 @@ public class CatalogoServico implements ICatalogoServico {
         autorizacaoServico.exigirPerfil(utilizador, PerfilUtilizador.GESTOR, PerfilUtilizador.CEO);
         Desconto desconto = new Desconto(idLote, percentagem, LocalDate.now(), utilizador.getId());
         loteRepo.guardarDesconto(desconto, idLote);
-        auditoriaServico.registar(utilizador, TipoAcao.APLICACAO_DESCONTO, "Lote", idLote);
+        auditoriaServico.registar(utilizador, TipoAcao.APLICACAO_DESCONTO, "Lote", idLote,
+                String.format("Aplicou desconto de %.0f%% ao lote #%d", percentagem, idLote));
         return desconto;
     }
 

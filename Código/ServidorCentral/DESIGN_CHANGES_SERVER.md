@@ -2,6 +2,15 @@
 
 Entradas em ordem cronológica inversa (mais recente no topo).
 
+## 2026-04-21 — Logs de auditoria com descrição textual
+
+**Área**: Backend + Frontend  
+**O quê**: O campo `descricao` foi adicionado a `LogAuditoriaCentral` e à tabela correspondente. O `PacoteFechoDTO` enviado pela Loja passa a incluir este campo por log. O dashboard de loja no frontend passou a exibir a descrição textual no lugar do enum `TipoAcao`, tornando os logs legíveis sem necessidade de interpretação técnica.  
+**Porquê**: Os logs recebidos anteriormente mostravam apenas o tipo de ação (ex.: `GESTAO_UTILIZADOR`), sem contexto sobre o que foi feito. A descrição livre permite auditoria real pelo CEO/gestor.  
+**Impacto no design**: Acrescenta coluna `descricao VARCHAR(255)` à tabela `LogAuditoriaCentral`; altera `LogAuditoriaCentralRepositorioImpl` (INSERT e mapear); o DTO `LogAuditoriaDTO` dentro do `PacoteFechoDTO` recebe o campo `descricao`; o tipo frontend `DashboardLoja.logsAuditoria` recebe o campo.
+
+---
+
 ## 2026-04-21 — Cálculo de despesas e lucro líquido no dashboard
 
 **Área**: Backend + Frontend  

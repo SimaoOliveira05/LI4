@@ -68,5 +68,6 @@ public class PacoteFechoDTO {
         public String acao;
         public String dataHora;
         public String nomeUtilizador;
+        public String descricao;
     }
 }

@@ -4,6 +4,25 @@ Registo de desvios relativamente aos artefactos de design originais (UML, diagra
 
 ---
 
+## 2026-04-21 — Logs de auditoria com descrição textual
+
+**Área:** `dominio/core/LogAuditoria`, `repositorio/LogAuditoriaRepositorio`, `servico/IAuditoriaServico`, todos os call sites de `registar()`
+
+**O que mudou:**
+
+- `LogAuditoria` recebeu um campo `descricao` (`String`) que contém uma mensagem legível do que foi feito (ex.: `"Criou utilizador 'joao.silva'"`, `"Alterou preço de 'Leite UHT' de 1,20€ para 1,35€"`).
+- A tabela `LogAuditoria` no schema recebeu a coluna `descricao VARCHAR(255)`.
+- `IAuditoriaServico.registar()` passou a aceitar `descricao` como parâmetro adicional.
+- Todos os call sites nos serviços foram atualizados para passar uma mensagem descritiva contextual.
+- O ecrã de logs na Loja foi atualizado para mostrar a descrição em vez do nome do enum `TipoAcao`.
+- O campo é incluído no `PacoteFechoDTO` e enviado ao servidor central, que o apresenta no dashboard de loja.
+
+**Porquê:**
+
+Os logs existentes apenas registavam o tipo de ação (`GESTAO_UTILIZADOR`, `ALTERACAO_CATALOGO`, etc.) sem indicar o que concretamente foi feito, tornando-os pouco úteis para auditoria real. O design original não especificava o nível de detalhe do log.
+
+---
+
 ## 2026-04-21 — Fatura PDF: dados da loja, agrupamento por categoria e logótipo
 
 **Área:** `apresentacao/GeradorFaturaPdf`, `dominio/core/ConfiguracaoTerminal`, `config.properties`

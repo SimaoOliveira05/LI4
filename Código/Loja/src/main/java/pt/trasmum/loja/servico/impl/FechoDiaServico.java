@@ -122,7 +122,8 @@ public class FechoDiaServico implements IFechoDiaServico {
         fecho.marcarConfirmado();
         fechoDiaRepo.guardar(fecho);
 
-        auditoriaServico.registar(utilizador, TipoAcao.FECHO_DIA, "FechoDia", fecho.getId());
+        auditoriaServico.registar(utilizador, TipoAcao.FECHO_DIA, "FechoDia", fecho.getId(),
+                "Fecho de dia executado para " + fecho.getDataFecho());
 
         return fecho;
     }
@@ -273,6 +274,7 @@ public class FechoDiaServico implements IFechoDiaServico {
             dto.dataHora = l.getDataHora() != null ? l.getDataHora().toString() : null;
             Utilizador u = userCache.computeIfAbsent(l.getIdUtilizador(), utilizadorRepo::buscarPorId);
             dto.nomeUtilizador = u != null ? u.getNomeUtilizador() : "Desconhecido";
+            dto.descricao = l.getDescricao();
             dtos.add(dto);
         }
         return dtos;

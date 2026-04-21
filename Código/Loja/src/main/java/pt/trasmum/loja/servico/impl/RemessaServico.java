@@ -72,7 +72,8 @@ public class RemessaServico implements IRemessaServico {
                 remessa.getId(), valorTotalGuia);
         pagamentoRepo.guardar(pagamento);
 
-        auditoriaServico.registar(utilizador, TipoAcao.ALTERACAO_CATALOGO, "Remessa", remessa.getId());
+        auditoriaServico.registar(utilizador, TipoAcao.ALTERACAO_CATALOGO, "Remessa", remessa.getId(),
+                String.format("Recebeu remessa do fornecedor '%s' (%.2f €, %d linhas)", fornecedor.getNome(), valorTotalGuia, linhas.size()));
         return remessa;
     }
 

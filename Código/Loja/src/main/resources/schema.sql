@@ -27,6 +27,7 @@ CREATE TABLE LogAuditoria (
     idUtilizador            INT             NOT NULL,
     entidade                VARCHAR(100)    NOT NULL,
     idEntidade              INT             NOT NULL,
+    descricao               VARCHAR(255)    NULL,
     PRIMARY KEY (id),
     CONSTRAINT fk_logauditoria_utilizador FOREIGN KEY (idUtilizador) REFERENCES Utilizador(id)
 );

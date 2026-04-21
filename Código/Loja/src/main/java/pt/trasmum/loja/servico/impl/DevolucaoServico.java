@@ -103,7 +103,8 @@ public class DevolucaoServico implements IDevolucaoServico {
                 dataValidadeEmbalagem,
                 valorRestituido);
         devolucaoRepo.guardar(devolucao);
-        auditoriaServico.registar(utilizador, TipoAcao.DEVOLUCAO, "Devolucao", devolucao.getId());
+        auditoriaServico.registar(utilizador, TipoAcao.DEVOLUCAO, "Devolucao", devolucao.getId(),
+                String.format("Devolveu %d unidade(s) da fatura #%s (%.2f €)", quantidade, numeroFatura, valorRestituido));
         return devolucao;
     }
 

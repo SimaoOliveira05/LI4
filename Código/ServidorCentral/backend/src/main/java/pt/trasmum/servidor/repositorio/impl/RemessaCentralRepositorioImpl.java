@@ -39,6 +39,17 @@ public class RemessaCentralRepositorioImpl implements RemessaCentralRepositorio 
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
 
+    @Override
+    public void atualizarEstadoPagamento(Connection conn, String idLoja, int idOriginalRemessa, EstadoPagamentoRemessa estado) {
+        String sql = "UPDATE RemessaCentral SET estadoPagamento = ? WHERE idLoja = ? AND idOriginalLoja = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, estado.name());
+            ps.setString(2, idLoja);
+            ps.setInt(3, idOriginalRemessa);
+            ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
     private RemessaCentral mapear(ResultSet rs) throws SQLException {
         return new RemessaCentral(
                 rs.getInt("id"),

@@ -5,4 +5,5 @@ public class LogAuditoriaDTO {
     public String acao;
     public String dataHora;
     public String nomeUtilizador;
+    public String descricao;
 }

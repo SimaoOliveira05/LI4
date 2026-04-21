@@ -20,8 +20,8 @@ public class AuditoriaServico implements IAuditoriaServico {
     }
 
     @Override
-    public void registar(Utilizador utilizador, TipoAcao acao, String entidade, int idEntidade) {
-        LogAuditoria log = new LogAuditoria(idLoja, acao, utilizador.getId(), entidade, idEntidade);
+    public void registar(Utilizador utilizador, TipoAcao acao, String entidade, int idEntidade, String descricao) {
+        LogAuditoria log = new LogAuditoria(idLoja, acao, utilizador.getId(), entidade, idEntidade, descricao);
         logRepo.guardar(log);
     }
 

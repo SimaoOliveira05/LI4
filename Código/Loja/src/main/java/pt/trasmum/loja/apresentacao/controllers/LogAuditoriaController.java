@@ -41,7 +41,7 @@ public class LogAuditoriaController {
         colTipo.setCellValueFactory(c -> new SimpleStringProperty(
                 c.getValue().getAcao() != null ? c.getValue().getAcao().toString() : "—"));
         colEntidade.setCellValueFactory(c -> new SimpleStringProperty(
-                c.getValue().getEntidade() != null ? c.getValue().getEntidade() : "—"));
+                c.getValue().getDescricao() != null ? c.getValue().getDescricao() : "—"));
         colUtilizador.setCellValueFactory(c -> new SimpleStringProperty(
                 nomeUtilizador(c.getValue().getIdUtilizador())));
         colEstado.setCellValueFactory(c -> new SimpleStringProperty(

@@ -23,15 +23,16 @@ public class LogAuditoriaCentralRepositorioImpl implements LogAuditoriaCentralRe
 
     @Override
     public void guardar(Connection conn, LogAuditoriaCentral l) {
-        String sql = "INSERT INTO LogAuditoriaCentral (idOriginalLoja, idLoja, acao, dataHora, nomeUtilizador) " +
-                "VALUES (?, ?, ?, ?, ?) " +
-                "ON DUPLICATE KEY UPDATE acao = VALUES(acao), dataHora = VALUES(dataHora), nomeUtilizador = VALUES(nomeUtilizador)";
+        String sql = "INSERT INTO LogAuditoriaCentral (idOriginalLoja, idLoja, acao, dataHora, nomeUtilizador, descricao) " +
+                "VALUES (?, ?, ?, ?, ?, ?) " +
+                "ON DUPLICATE KEY UPDATE acao = VALUES(acao), dataHora = VALUES(dataHora), nomeUtilizador = VALUES(nomeUtilizador), descricao = VALUES(descricao)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, l.getIdOriginalLoja());
             ps.setString(2, l.getIdLoja());
             ps.setString(3, l.getAcao().name());
             ps.setTimestamp(4, Timestamp.valueOf(l.getDataHora()));
             ps.setString(5, l.getNomeUtilizador());
+            ps.setString(6, l.getDescricao());
             ps.executeUpdate();
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
@@ -43,7 +44,8 @@ public class LogAuditoriaCentralRepositorioImpl implements LogAuditoriaCentralRe
                 rs.getString("idLoja"),
                 TipoAcao.valueOf(rs.getString("acao")),
                 rs.getTimestamp("dataHora").toLocalDateTime(),
-                rs.getString("nomeUtilizador")
+                rs.getString("nomeUtilizador"),
+                rs.getString("descricao")
         );
     }
 
@@ -52,7 +54,7 @@ public class LogAuditoriaCentralRepositorioImpl implements LogAuditoriaCentralRe
         List<LogAuditoriaCentral> out = new ArrayList<>();
         try (Connection c = db.obter();
              PreparedStatement ps = c.prepareStatement(
-                     "SELECT id, idOriginalLoja, idLoja, acao, dataHora, nomeUtilizador FROM LogAuditoriaCentral WHERE idLoja = ? ORDER BY dataHora DESC")) {
+                     "SELECT id, idOriginalLoja, idLoja, acao, dataHora, nomeUtilizador, descricao FROM LogAuditoriaCentral WHERE idLoja = ? ORDER BY dataHora DESC")) {
             ps.setString(1, idLoja);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) out.add(mapear(rs));
@@ -66,7 +68,7 @@ public class LogAuditoriaCentralRepositorioImpl implements LogAuditoriaCentralRe
         List<LogAuditoriaCentral> out = new ArrayList<>();
         try (Connection c = db.obter();
              PreparedStatement ps = c.prepareStatement(
-                     "SELECT id, idOriginalLoja, idLoja, acao, dataHora, nomeUtilizador FROM LogAuditoriaCentral WHERE idLoja = ? AND DATE(dataHora) BETWEEN ? AND ? ORDER BY dataHora DESC")) {
+                     "SELECT id, idOriginalLoja, idLoja, acao, dataHora, nomeUtilizador, descricao FROM LogAuditoriaCentral WHERE idLoja = ? AND DATE(dataHora) BETWEEN ? AND ? ORDER BY dataHora DESC")) {
             ps.setString(1, idLoja);
             ps.setDate(2, Date.valueOf(inicio));
             ps.setDate(3, Date.valueOf(fim));

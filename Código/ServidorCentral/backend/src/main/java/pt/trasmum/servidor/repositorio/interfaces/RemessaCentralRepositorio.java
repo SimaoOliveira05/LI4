@@ -10,6 +10,7 @@ import java.util.List;
 public interface RemessaCentralRepositorio {
     void guardar(RemessaCentral remessa);
     void guardar(Connection conn, RemessaCentral remessa);
+    void atualizarEstadoPagamento(Connection conn, String idLoja, int idOriginalRemessa, EstadoPagamentoRemessa estado);
     List<RemessaCentral> listarTodas();
     List<RemessaCentral> buscarPorLoja(String idLoja);
     List<RemessaCentral> buscarPorEstado(EstadoPagamentoRemessa estado);

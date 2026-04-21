@@ -71,7 +71,12 @@ public class IngestaoServico implements IIngestaoServico {
             if (pacote.vendas != null) for (VendaDTO v : pacote.vendas) vendaRepo.guardar(conn, mapearVenda(pacote.idLoja, v));
             if (pacote.devolucoes != null) for (DevolucaoDTO d : pacote.devolucoes) devolucaoRepo.guardar(conn, mapearDevolucao(pacote.idLoja, d));
             if (pacote.remessas != null) for (RemessaDTO r : pacote.remessas) remessaRepo.guardar(conn, mapearRemessa(pacote.idLoja, r));
-            if (pacote.pagamentos != null) for (PagamentoDTO p : pacote.pagamentos) pagamentoRepo.guardar(conn, mapearPagamento(pacote.idLoja, p));
+            if (pacote.pagamentos != null) for (PagamentoDTO p : pacote.pagamentos) {
+                pagamentoRepo.guardar(conn, mapearPagamento(pacote.idLoja, p));
+                if (p.dataPagamento != null) {
+                    remessaRepo.atualizarEstadoPagamento(conn, pacote.idLoja, p.idOriginalRemessa, EstadoPagamentoRemessa.PAGA);
+                }
+            }
             if (pacote.sessoesCaixa != null) for (SessaoCaixaDTO s : pacote.sessoesCaixa) sessaoRepo.guardar(conn, mapearSessao(pacote.idLoja, s));
             if (pacote.logs != null) for (LogAuditoriaDTO l : pacote.logs) logRepo.guardar(conn, mapearLog(pacote.idLoja, l));
 
@@ -167,7 +172,7 @@ public class IngestaoServico implements IIngestaoServico {
         return new SessaoCaixaCentral(
                 0, s.idOriginalLoja, idLoja, s.idUtilizador, s.saldoFinal,
                 LocalDateTime.parse(s.dataAbertura),
-                LocalDateTime.parse(s.dataEncerramento)
+                s.dataEncerramento != null ? LocalDateTime.parse(s.dataEncerramento) : null
         );
     }
 
@@ -176,7 +181,8 @@ public class IngestaoServico implements IIngestaoServico {
                 0, l.idOriginalLoja, idLoja,
                 TipoAcao.valueOf(l.acao),
                 LocalDateTime.parse(l.dataHora),
-                l.nomeUtilizador
+                l.nomeUtilizador,
+                l.descricao
         );
     }
 }

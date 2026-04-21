@@ -19,7 +19,7 @@ public class LogAuditoriaRepositorioImpl implements LogAuditoriaRepositorio {
 
     @Override
     public void guardar(LogAuditoria log) {
-        String sql = "INSERT INTO LogAuditoria (idLoja, estadoSincronizacao, acao, dataHora, idUtilizador, entidade, idEntidade) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO LogAuditoria (idLoja, estadoSincronizacao, acao, dataHora, idUtilizador, entidade, idEntidade, descricao) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, log.getIdLoja());
             ps.setString(2, log.getEstadoSincronizacao().name());
@@ -28,6 +28,7 @@ public class LogAuditoriaRepositorioImpl implements LogAuditoriaRepositorio {
             ps.setInt(5, log.getIdUtilizador());
             ps.setString(6, log.getEntidade());
             ps.setInt(7, log.getIdEntidade());
+            ps.setString(8, log.getDescricao());
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) log.setId(keys.getInt(1));
@@ -110,6 +111,7 @@ public class LogAuditoriaRepositorioImpl implements LogAuditoriaRepositorio {
         log.setIdUtilizador(rs.getInt("idUtilizador"));
         log.setEntidade(rs.getString("entidade"));
         log.setIdEntidade(rs.getInt("idEntidade"));
+        log.setDescricao(rs.getString("descricao"));
         return log;
     }
 }

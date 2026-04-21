@@ -112,7 +112,8 @@ public class VendaServico implements IVendaServico {
 
         auditoriaServico.registar(
                 new UtilizadorPlaceholder(venda.getIdUtilizador()),
-                TipoAcao.VENDA, "Venda", venda.getId());
+                TipoAcao.VENDA, "Venda", venda.getId(),
+                String.format("Venda de %.2f € via %s (%d artigo(s))", total, metodo.name(), venda.getLinhas().size()));
         return venda.getFatura();
     }
 
@@ -130,7 +131,8 @@ public class VendaServico implements IVendaServico {
         vendaRepo.guardar(venda);
         auditoriaServico.registar(
                 new UtilizadorPlaceholder(venda.getIdUtilizador()),
-                TipoAcao.VENDA, "Venda", venda.getId());
+                TipoAcao.VENDA, "Venda", venda.getId(),
+                "Anulou venda #" + venda.getId());
     }
 
     @Override

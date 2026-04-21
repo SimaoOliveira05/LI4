@@ -186,6 +186,7 @@ CREATE TABLE LogAuditoriaCentral (
                     )               NOT NULL,
     dataHora        DATETIME        NOT NULL,
     nomeUtilizador  VARCHAR(100)    NOT NULL,
+    descricao       VARCHAR(255)    NULL,
     PRIMARY KEY (id),
     CONSTRAINT uq_logauditoriacentral
         UNIQUE (idLoja, idOriginalLoja),

@@ -41,7 +41,8 @@ public class FornecedorServico implements IFornecedorServico {
     public Fornecedor criarFornecedor(Utilizador utilizador, Fornecedor fornecedor) {
         autorizacaoServico.exigirPerfil(utilizador, PerfilUtilizador.GESTOR, PerfilUtilizador.CEO);
         fornecedorRepo.guardar(fornecedor);
-        auditoriaServico.registar(utilizador, TipoAcao.ALTERACAO_CATALOGO, "Fornecedor", fornecedor.getId());
+        auditoriaServico.registar(utilizador, TipoAcao.ALTERACAO_CATALOGO, "Fornecedor", fornecedor.getId(),
+                "Criou fornecedor '" + fornecedor.getNome() + "'");
         return fornecedor;
     }
 
@@ -49,7 +50,8 @@ public class FornecedorServico implements IFornecedorServico {
     public void editarFornecedor(Utilizador utilizador, Fornecedor fornecedor) {
         autorizacaoServico.exigirPerfil(utilizador, PerfilUtilizador.GESTOR, PerfilUtilizador.CEO);
         fornecedorRepo.atualizar(fornecedor);
-        auditoriaServico.registar(utilizador, TipoAcao.ALTERACAO_CATALOGO, "Fornecedor", fornecedor.getId());
+        auditoriaServico.registar(utilizador, TipoAcao.ALTERACAO_CATALOGO, "Fornecedor", fornecedor.getId(),
+                "Editou fornecedor '" + fornecedor.getNome() + "'");
     }
 
     @Override
@@ -72,14 +74,16 @@ public class FornecedorServico implements IFornecedorServico {
         if (fornecedorRepo.buscarPorId(idFornecedor) == null)
             throw new IllegalArgumentException("Fornecedor não encontrado: " + idFornecedor);
         fornecedorProdutoRepo.associar(idFornecedor, idProduto, precoFornecedor);
-        auditoriaServico.registar(utilizador, TipoAcao.ALTERACAO_CATALOGO, "FornecedorProduto", idFornecedor);
+        auditoriaServico.registar(utilizador, TipoAcao.ALTERACAO_CATALOGO, "FornecedorProduto", idFornecedor,
+                String.format("Associou produto #%d ao fornecedor #%d (preço: %.2f €)", idProduto, idFornecedor, precoFornecedor));
     }
 
     @Override
     public void desassociarProduto(Utilizador utilizador, int idFornecedor, int idProduto) {
         autorizacaoServico.exigirPerfil(utilizador, PerfilUtilizador.GESTOR, PerfilUtilizador.CEO);
         fornecedorProdutoRepo.desassociar(idFornecedor, idProduto);
-        auditoriaServico.registar(utilizador, TipoAcao.ALTERACAO_CATALOGO, "FornecedorProduto", idFornecedor);
+        auditoriaServico.registar(utilizador, TipoAcao.ALTERACAO_CATALOGO, "FornecedorProduto", idFornecedor,
+                String.format("Removeu produto #%d do fornecedor #%d", idProduto, idFornecedor));
     }
 
     @Override
@@ -87,7 +91,8 @@ public class FornecedorServico implements IFornecedorServico {
         autorizacaoServico.exigirPerfil(utilizador, PerfilUtilizador.GESTOR, PerfilUtilizador.CEO);
         if (novoPreco < 0) throw new IllegalArgumentException("Preço do fornecedor não pode ser negativo.");
         fornecedorProdutoRepo.atualizarPreco(idFornecedor, idProduto, novoPreco);
-        auditoriaServico.registar(utilizador, TipoAcao.ALTERACAO_PRECO, "FornecedorProduto", idFornecedor);
+        auditoriaServico.registar(utilizador, TipoAcao.ALTERACAO_PRECO, "FornecedorProduto", idFornecedor,
+                String.format("Atualizou preço do produto #%d no fornecedor #%d para %.2f €", idProduto, idFornecedor, novoPreco));
     }
 
     @Override

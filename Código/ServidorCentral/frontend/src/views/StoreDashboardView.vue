@@ -211,11 +211,7 @@ const categorias = computed(() => topCategorias(dados.value?.vendasPorCategoria)
                 >
                   <TableCell class="text-sm font-medium text-[#0f172a]">{{ formatDataHora(log.dataHora) }}</TableCell>
                   <TableCell class="text-sm font-medium text-[#0f172a]">{{ log.nomeUtilizador }}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" class="bg-slate-50 text-slate-600 text-[11px] font-medium border-slate-200">
-                      {{ log.acao }}
-                    </Badge>
-                  </TableCell>
+                  <TableCell class="text-sm font-medium text-[#0f172a]">{{ log.descricao ?? log.acao }}</TableCell>
                 </TableRow>
                 <TableRow v-if="dados.logsAuditoria.length === 0">
                   <TableCell colspan="3" class="text-sm text-slate-400 text-center py-6">Sem logs</TableCell>
