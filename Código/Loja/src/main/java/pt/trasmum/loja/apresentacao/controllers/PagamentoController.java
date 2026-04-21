@@ -57,7 +57,7 @@ public class PagamentoController {
     public void onRefrescar() { carregar(); }
 
     private void carregar() {
-        pagamentos.setAll(AppContext.getInstance().pagamentoServico.listarPendentes());
+        pagamentos.setAll(AppContext.getInstance().pagamentoServico.listarNaoPagos());
     }
 
     private void mostrarErro(String m) { DialogoUtil.erro(m); }

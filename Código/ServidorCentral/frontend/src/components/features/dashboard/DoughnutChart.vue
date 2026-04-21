@@ -21,8 +21,8 @@ const PALETA = ['#2563eb', '#60a5fa', '#93c5fd', '#bfdbfe', '#dbeafe']
 const chartData = computed(() => {
   const total = props.data.reduce((a, b) => a + b, 0) || 1
   const labels = props.labels.length === props.data.length
-    ? props.labels.map((l, i) => `${l} (${Math.round((props.data[i] / total) * 100)}%)`)
-    : props.data.map((v, i) => `Categoria ${i + 1} (${Math.round((v / total) * 100)}%)`)
+    ? props.labels.map((l, i) => [l, `${Math.round((props.data[i] / total) * 100)}%`])
+    : props.data.map((_, i) => [`Categoria ${i + 1}`, `${Math.round((props.data[i] / total) * 100)}%`])
   return {
     labels,
     datasets: [
@@ -44,10 +44,11 @@ const chartOptions = {
       position: 'right' as const,
       labels: {
         usePointStyle: true,
-        boxWidth: 8,
-        padding: 20,
+        pointStyle: 'circle' as const,
+        boxWidth: 7,
+        padding: 16,
         font: {
-          size: 12,
+          size: 11,
           weight: 'bold' as const
         }
       }

@@ -50,15 +50,17 @@ public class LogAuditoriaRepositorioImpl implements LogAuditoriaRepositorio {
     }
 
     @Override
-    public List<LogAuditoria> buscarPendentes() {
-        // Reverte EM_TRANSITO para PENDENTE (recuperação após falha)
-        String revert = "UPDATE LogAuditoria SET estadoSincronizacao = 'PENDENTE' WHERE estadoSincronizacao = 'EM_TRANSITO'";
-        try (PreparedStatement ps = connection.prepareStatement(revert)) {
+    public void reverterEmTransito() {
+        String sql = "UPDATE LogAuditoria SET estadoSincronizacao = 'PENDENTE' WHERE estadoSincronizacao = 'EM_TRANSITO'";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao reverter logs em trânsito", e);
         }
+    }
 
+    @Override
+    public List<LogAuditoria> buscarPendentes() {
         String sql = "SELECT * FROM LogAuditoria WHERE estadoSincronizacao = 'PENDENTE'";
         List<LogAuditoria> lista = new ArrayList<>();
         try (PreparedStatement ps = connection.prepareStatement(sql);

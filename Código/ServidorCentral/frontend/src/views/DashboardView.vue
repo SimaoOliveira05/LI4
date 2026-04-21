@@ -102,7 +102,7 @@ const nomeLoja2 = computed(() => decomposicao.value[1]?.nomeLoja ?? 'Loja 2')
           </Card>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card class="shadow-none border-slate-200 bg-white">
             <CardHeader class="pb-2">
               <CardTitle class="text-[13px] font-medium text-[#64748b]">Total Devoluções</CardTitle>
@@ -112,6 +112,30 @@ const nomeLoja2 = computed(() => decomposicao.value[1]?.nomeLoja ?? 'Loja 2')
             </CardContent>
           </Card>
 
+          <Card class="shadow-none border-slate-200 bg-white">
+            <CardHeader class="pb-2">
+              <CardTitle class="text-[13px] font-medium text-[#64748b]">Despesas (Remessas)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div class="text-[28px] font-bold text-[#0f172a]">{{ formatEuro(dados.totalDespesas) }}</div>
+            </CardContent>
+          </Card>
+
+          <Card class="shadow-none border-slate-200 bg-white">
+            <CardHeader class="pb-2">
+              <CardTitle class="text-[13px] font-medium text-[#64748b]">Lucro Líquido (Rede)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div
+                class="text-[28px] font-bold"
+                :class="dados.lucroLiquido >= 0 ? 'text-[#16a34a]' : 'text-[#dc2626]'"
+              >{{ formatEuro(dados.lucroLiquido) }}</div>
+              <p class="text-[11px] text-[#94a3b8] font-medium mt-1">Vendas − Devoluções − Despesas</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-1 gap-6">
           <Card class="shadow-none border-slate-200 bg-white">
             <CardHeader class="pb-2">
               <CardTitle class="text-[13px] font-medium text-[#64748b]">Numerário vs MB</CardTitle>
@@ -163,6 +187,8 @@ const nomeLoja2 = computed(() => decomposicao.value[1]?.nomeLoja ?? 'Loja 2')
                   <TableHead class="text-[12px] font-medium text-[#64748b] h-10">Vendas</TableHead>
                   <TableHead class="text-[12px] font-medium text-[#64748b] h-10">Transações</TableHead>
                   <TableHead class="text-[12px] font-medium text-[#64748b] h-10">Devoluções</TableHead>
+                  <TableHead class="text-[12px] font-medium text-[#64748b] h-10">Despesas</TableHead>
+                  <TableHead class="text-[12px] font-medium text-[#64748b] h-10">Lucro</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -175,9 +201,11 @@ const nomeLoja2 = computed(() => decomposicao.value[1]?.nomeLoja ?? 'Loja 2')
                   <TableCell class="text-sm font-medium text-[#0f172a]">{{ formatEuro(l.vendas) }}</TableCell>
                   <TableCell class="text-sm font-medium text-[#0f172a]">{{ formatInt(l.transacoes) }}</TableCell>
                   <TableCell class="text-sm font-medium text-[#0f172a]">{{ formatEuro(l.devolucoes) }}</TableCell>
+                  <TableCell class="text-sm font-medium text-[#0f172a]">{{ formatEuro(l.despesas) }}</TableCell>
+                  <TableCell class="text-sm font-bold" :class="l.lucro >= 0 ? 'text-[#16a34a]' : 'text-[#dc2626]'">{{ formatEuro(l.lucro) }}</TableCell>
                 </TableRow>
                 <TableRow v-if="decomposicao.length === 0">
-                  <TableCell colspan="4" class="text-sm text-slate-400 text-center py-6">Sem dados</TableCell>
+                  <TableCell colspan="6" class="text-sm text-slate-400 text-center py-6">Sem dados</TableCell>
                 </TableRow>
               </TableBody>
             </Table>

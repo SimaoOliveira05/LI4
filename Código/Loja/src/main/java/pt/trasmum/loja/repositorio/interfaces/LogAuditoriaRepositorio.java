@@ -8,6 +8,7 @@ import java.util.List;
 public interface LogAuditoriaRepositorio {
     void guardar(LogAuditoria log);
     void atualizar(LogAuditoria log);
+    void reverterEmTransito();
     List<LogAuditoria> buscarPendentes();
     List<LogAuditoria> buscarTodos();
     List<LogAuditoria> buscarPorTipo(TipoAcao tipo);

@@ -66,14 +66,17 @@ public class DevolucaoRepositorioImpl implements DevolucaoRepositorio {
     }
 
     @Override
-    public List<Devolucao> buscarPendentes() {
-        String revert = "UPDATE Devolucao SET estadoSincronizacao = 'PENDENTE' WHERE estadoSincronizacao = 'EM_TRANSITO'";
-        try (PreparedStatement ps = connection.prepareStatement(revert)) {
+    public void reverterEmTransito() {
+        String sql = "UPDATE Devolucao SET estadoSincronizacao = 'PENDENTE' WHERE estadoSincronizacao = 'EM_TRANSITO'";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao reverter devoluções em trânsito", e);
         }
+    }
 
+    @Override
+    public List<Devolucao> buscarPendentes() {
         String sql = "SELECT * FROM Devolucao WHERE estadoSincronizacao = 'PENDENTE'";
         List<Devolucao> lista = new ArrayList<>();
         try (PreparedStatement ps = connection.prepareStatement(sql);

@@ -75,14 +75,17 @@ public class SessaoCaixaRepositorioImpl implements SessaoCaixaRepositorio {
     }
 
     @Override
-    public List<SessaoCaixa> buscarPendentes() {
-        String revert = "UPDATE SessaoCaixa SET estadoSincronizacao = 'PENDENTE' WHERE estadoSincronizacao = 'EM_TRANSITO'";
-        try (PreparedStatement ps = connection.prepareStatement(revert)) {
+    public void reverterEmTransito() {
+        String sql = "UPDATE SessaoCaixa SET estadoSincronizacao = 'PENDENTE' WHERE estadoSincronizacao = 'EM_TRANSITO'";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao reverter sessões em trânsito", e);
         }
+    }
 
+    @Override
+    public List<SessaoCaixa> buscarPendentes() {
         // Apenas sessões encerradas (dataEncerramento NOT NULL)
         String sql = "SELECT * FROM SessaoCaixa WHERE estadoSincronizacao = 'PENDENTE' AND dataEncerramento IS NOT NULL";
         List<SessaoCaixa> lista = new ArrayList<>();

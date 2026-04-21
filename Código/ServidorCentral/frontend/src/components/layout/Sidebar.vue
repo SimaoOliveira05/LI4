@@ -30,9 +30,12 @@ async function terminarSessao() {
 <template>
   <aside class="w-64 border-r border-slate-200 bg-white flex flex-col h-screen sticky top-0 z-50 shadow-[1px_0_5px_rgba(0,0,0,0.02)]">
     <!-- Brand -->
-    <div class="p-7 pb-6 flex flex-col gap-0.5">
-      <h2 class="font-black text-2xl tracking-tighter text-[#0f172a]">TrasmUM</h2>
-      <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Analítica Central</p>
+    <div class="p-7 pb-6 flex items-center gap-3">
+      <img src="/logo.png" alt="TrasmUM" class="w-20 h-20 object-contain" />
+      <div class="flex flex-col gap-0.5">
+        <h2 class="font-black text-2xl tracking-tighter text-[#0f172a]">TrasmUM</h2>
+        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Analítica Central</p>
+      </div>
     </div>
     
     <!-- Navigation -->

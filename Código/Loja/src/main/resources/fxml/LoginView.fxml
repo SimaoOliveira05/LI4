@@ -48,7 +48,7 @@
             <Label fx:id="lblErro" styleClass="label-erro" wrapText="true" maxWidth="Infinity"/>
 
             <Region prefHeight="20"/>
-            <Button text="Entrar" onAction="#onLoginSubmit"
+            <Button fx:id="btnEntrar" text="Entrar" onAction="#onLoginSubmit"
                     maxWidth="Infinity" styleClass="btn-primary,btn-login"
                     defaultButton="true"/>
         </VBox>

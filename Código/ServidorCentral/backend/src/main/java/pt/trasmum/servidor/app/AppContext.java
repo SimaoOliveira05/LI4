@@ -66,7 +66,7 @@ public class AppContext {
         this.autenticacaoServico = new AutenticacaoCEOServico(ceoRepo, config);
         this.ingestaoServico = new IngestaoServico(db, lojaRepo, fechoRepo, vendaRepo, devolucaoRepo,
                 remessaRepo, pagamentoRepo, sessaoRepo, logRepo, gson);
-        this.dashboardServico = new DashboardServico(lojaRepo, vendaRepo, devolucaoRepo, fechoRepo, logRepo);
+        this.dashboardServico = new DashboardServico(lojaRepo, vendaRepo, devolucaoRepo, fechoRepo, logRepo, remessaRepo);
         this.monitorServico = new MonitorServico(lojaRepo, fechoRepo);
         this.remessaServico = new RemessaServico(remessaRepo, lojaRepo);
         this.relatorioServico = new RelatorioServico(vendaRepo);

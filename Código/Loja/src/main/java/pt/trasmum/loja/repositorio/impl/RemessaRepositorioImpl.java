@@ -106,14 +106,17 @@ public class RemessaRepositorioImpl implements RemessaRepositorio {
     }
 
     @Override
-    public List<Remessa> buscarPendentes() {
-        String revert = "UPDATE Remessa SET estadoSincronizacao = 'PENDENTE' WHERE estadoSincronizacao = 'EM_TRANSITO'";
-        try (PreparedStatement ps = connection.prepareStatement(revert)) {
+    public void reverterEmTransito() {
+        String sql = "UPDATE Remessa SET estadoSincronizacao = 'PENDENTE' WHERE estadoSincronizacao = 'EM_TRANSITO'";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao reverter remessas em trânsito", e);
         }
+    }
 
+    @Override
+    public List<Remessa> buscarPendentes() {
         String sql = "SELECT * FROM Remessa WHERE estadoSincronizacao = 'PENDENTE'";
         List<Remessa> lista = new ArrayList<>();
         try (PreparedStatement ps = connection.prepareStatement(sql);

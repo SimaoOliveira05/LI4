@@ -6,6 +6,7 @@ import pt.trasmum.servidor.infra.DatabaseConnection;
 import pt.trasmum.servidor.repositorio.interfaces.RemessaCentralRepositorio;
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -87,6 +88,31 @@ public class RemessaCentralRepositorioImpl implements RemessaCentralRepositorio 
             }
         } catch (SQLException e) { throw new RuntimeException(e); }
         return out;
+    }
+
+    @Override
+    public double totalDespesasPorPeriodo(LocalDate inicio, LocalDate fim) {
+        String sql = "SELECT COALESCE(SUM(valorTotalGuia), 0) FROM RemessaCentral WHERE dataRecepcao BETWEEN ? AND ?";
+        try (Connection c = db.obter(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setDate(1, Date.valueOf(inicio));
+            ps.setDate(2, Date.valueOf(fim));
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getDouble(1) : 0.0;
+            }
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    @Override
+    public double totalDespesasPorLojaEPeriodo(String idLoja, LocalDate inicio, LocalDate fim) {
+        String sql = "SELECT COALESCE(SUM(valorTotalGuia), 0) FROM RemessaCentral WHERE idLoja = ? AND dataRecepcao BETWEEN ? AND ?";
+        try (Connection c = db.obter(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, idLoja);
+            ps.setDate(2, Date.valueOf(inicio));
+            ps.setDate(3, Date.valueOf(fim));
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getDouble(1) : 0.0;
+            }
+        } catch (SQLException e) { throw new RuntimeException(e); }
     }
 
     @Override

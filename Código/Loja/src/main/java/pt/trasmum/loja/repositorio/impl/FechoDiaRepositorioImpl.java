@@ -58,14 +58,17 @@ public class FechoDiaRepositorioImpl implements FechoDiaRepositorio {
     }
 
     @Override
-    public List<FechoDia> buscarPendentes() {
-        String revert = "UPDATE FechoDia SET estadoSincronizacao = 'PENDENTE' WHERE estadoSincronizacao = 'EM_TRANSITO'";
-        try (PreparedStatement ps = connection.prepareStatement(revert)) {
+    public void reverterEmTransito() {
+        String sql = "UPDATE FechoDia SET estadoSincronizacao = 'PENDENTE' WHERE estadoSincronizacao = 'EM_TRANSITO'";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao reverter fechos em trânsito", e);
         }
+    }
 
+    @Override
+    public List<FechoDia> buscarPendentes() {
         String sql = "SELECT * FROM FechoDia WHERE estadoSincronizacao = 'PENDENTE'";
         List<FechoDia> lista = new ArrayList<>();
         try (PreparedStatement ps = connection.prepareStatement(sql);

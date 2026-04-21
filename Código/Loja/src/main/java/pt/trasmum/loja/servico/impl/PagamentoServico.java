@@ -27,9 +27,14 @@ public class PagamentoServico implements IPagamentoServico {
     }
 
     @Override
+    public List<Pagamento> listarNaoPagos() {
+        return pagamentoRepo.buscarNaoPagos();
+    }
+
+    @Override
     public void liquidar(Utilizador utilizador, int idPagamento) {
         autorizacaoServico.exigirPerfil(utilizador, PerfilUtilizador.GESTOR, PerfilUtilizador.CEO);
-        List<Pagamento> pendentes = pagamentoRepo.buscarPendentes();
+        List<Pagamento> pendentes = pagamentoRepo.buscarNaoPagos();
         Pagamento pagamento = pendentes.stream()
                 .filter(p -> p.getId() == idPagamento)
                 .findFirst()
@@ -37,6 +42,7 @@ public class PagamentoServico implements IPagamentoServico {
         pagamento.setEstadoPagamento(EstadoPagamento.PAGO);
         pagamento.setIdUtilizador(utilizador.getId());
         pagamento.setDataHora(LocalDateTime.now());
+        pagamento.reverterParaPendente();
         pagamentoRepo.atualizar(pagamento);
     }
 }

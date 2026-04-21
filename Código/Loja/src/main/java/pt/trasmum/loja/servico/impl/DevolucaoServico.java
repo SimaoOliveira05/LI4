@@ -114,12 +114,6 @@ public class DevolucaoServico implements IDevolucaoServico {
 
     private LinhaVenda encontrarLinhaComProduto(List<LinhaVenda> linhas, int idProduto) {
         for (LinhaVenda linha : linhas) {
-            List<Lote> lotes = loteRepo.buscarLotesFEFO(idProduto);
-            // Verifica se o lote da linha pertence ao produto
-            // buscarLotesFEFO retorna só lotes com quantidade > 0; o lote pode estar esgotado após venda
-            // usamos uma abordagem diferente: busca todos os lotes do produto incluindo esgotados
-            // Para este fim, verificamos se o idLote pertence ao produto usando os lotes disponíveis
-            // Se não encontrar, assumimos que o lote do produto foi consumido na venda
             if (lotesPertencemAoProduto(linha.getIdLote(), idProduto)) {
                 return linha;
             }

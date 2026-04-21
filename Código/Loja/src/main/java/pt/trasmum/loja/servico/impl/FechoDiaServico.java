@@ -84,6 +84,7 @@ public class FechoDiaServico implements IFechoDiaServico {
     @Override
     public FechoDia executarFecho(Utilizador utilizador, ConfiguracaoTerminal config) {
         autorizacaoServico.exigirPerfil(utilizador, PerfilUtilizador.GESTOR, PerfilUtilizador.CEO);
+        reverterEmTransito();
 
         List<Venda> vendas = vendaServico.obterVendasPendentes();
         List<Devolucao> devolucoes = devolucaoServico.obterDevolucoesPendentes();
@@ -141,13 +142,13 @@ public class FechoDiaServico implements IFechoDiaServico {
 
     @Override
     public void reverterEmTransito() {
-        vendaRepo.buscarPendentes();
-        devolucaoRepo.buscarPendentes();
-        sessaoCaixaRepo.buscarPendentes();
-        remessaRepo.buscarPendentes();
-        pagamentoRepo.buscarPendentes();
-        logRepo.buscarPendentes();
-        fechoDiaRepo.buscarPendentes();
+        vendaRepo.reverterEmTransito();
+        devolucaoRepo.reverterEmTransito();
+        sessaoCaixaRepo.reverterEmTransito();
+        remessaRepo.reverterEmTransito();
+        pagamentoRepo.reverterEmTransito();
+        logRepo.reverterEmTransito();
+        fechoDiaRepo.reverterEmTransito();
     }
 
     private PacoteFechoDTO construirPacote(ConfiguracaoTerminal config,

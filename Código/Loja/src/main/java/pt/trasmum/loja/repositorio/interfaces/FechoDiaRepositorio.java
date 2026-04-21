@@ -8,5 +8,6 @@ public interface FechoDiaRepositorio {
     void guardar(FechoDia fecho);
     void atualizar(FechoDia fecho);
     FechoDia buscarUltimoConfirmado();
+    void reverterEmTransito();
     List<FechoDia> buscarPendentes();
 }

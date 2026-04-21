@@ -109,4 +109,5 @@ public class FechoDiaCentralRepositorioImpl implements FechoDiaCentralRepositori
         }
         return out;
     }
+
 }

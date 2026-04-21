@@ -10,6 +10,7 @@ public interface VendaRepositorio {
     void atualizarSincronizacao(int id, EstadoSincronizacao estado);
     Venda buscarPorId(int id);
     Venda buscarPorNumeroFatura(String numeroFatura);
+    void reverterEmTransito();
     List<Venda> buscarPendentes();
     void marcarConfirmadas(List<Integer> ids);
 }

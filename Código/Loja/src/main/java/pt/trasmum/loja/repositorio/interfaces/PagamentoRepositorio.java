@@ -6,6 +6,8 @@ import java.util.List;
 
 public interface PagamentoRepositorio {
     void guardar(Pagamento pagamento);
+    void reverterEmTransito();
     List<Pagamento> buscarPendentes();
+    List<Pagamento> buscarNaoPagos();
     void atualizar(Pagamento pagamento);
 }

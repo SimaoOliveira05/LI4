@@ -16,4 +16,6 @@ public class DashboardGlobalDTO {
     public Map<String, Double> vendasPorCategoria;
     public int lojasEsperadas;
     public int lojasSincronizadas;
+    public double totalDespesas;
+    public double lucroLiquido;
 }

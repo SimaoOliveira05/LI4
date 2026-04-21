@@ -10,5 +10,6 @@ public interface SessaoCaixaRepositorio {
     void atualizar(SessaoCaixa sessao);
     void guardarSangria(Sangria sangria);
     SessaoCaixa buscarSessaoAtiva(int idUtilizador);
+    void reverterEmTransito();
     List<SessaoCaixa> buscarPendentes();
 }

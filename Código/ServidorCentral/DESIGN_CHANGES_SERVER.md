@@ -2,6 +2,15 @@
 
 Entradas em ordem cronológica inversa (mais recente no topo).
 
+## 2026-04-21 — Cálculo de despesas e lucro líquido no dashboard
+
+**Área**: Backend + Frontend  
+**O quê**: O dashboard global e o dashboard por loja passaram a expor dois novos campos: `totalDespesas` (soma de `valorTotalGuia` das remessas recebidas no período) e `lucroLiquido` (= vendas totais − devoluções − despesas). A tabela de decomposição por loja foi igualmente estendida com `despesas` e `lucro` por loja. No frontend, foram adicionados cards dedicados em ambos os dashboards com coloração dinâmica (verde se ≥ 0, vermelho se negativo).  
+**Porquê**: Os dados de remessas já eram recebidos e guardados em `RemessaCentral` mas nunca eram usados analiticamente. A visibilidade do lucro é necessária para suporte à tomada de decisão pelo CEO/gestor.  
+**Impacto no design**: Acrescenta métodos de agregação a `RemessaCentralRepositorio` (`totalDespesasPorPeriodo`, `totalDespesasPorLojaEPeriodo`); altera os DTOs `DashboardGlobalDTO`, `DashboardLojaDTO` e `DecomposicaoLojaDTO`; `DashboardServico` passa a receber `RemessaCentralRepositorio` como dependência adicional.
+
+---
+
 ## 2026-04-19 — Estrutura do projeto dividida em `frontend/` e `backend/`
 **Área**: Infra
 **O quê**: A pasta `ServidorCentral/` passou a ter dois subprojectos: `frontend/` (Vue 3 + Vite existente, movido sem alterações estruturais) e `backend/` (Maven + Javalin criado de raiz). O `README.md` original do Vite foi movido para dentro de `frontend/`.

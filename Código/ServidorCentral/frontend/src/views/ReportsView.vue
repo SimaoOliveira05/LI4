@@ -4,7 +4,7 @@ import Breadcrumb from '@/components/layout/Breadcrumb.vue'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent } from '@/components/ui/card'
-import { Download, Play } from 'lucide-vue-next'
+import { Download } from 'lucide-vue-next'
 import { fetchLojas, fetchRelatorio } from '@/api/networkService'
 import type { RawLoja, RelatorioLinha } from '@/api/types'
 import { formatEuro, formatData } from '@/lib/format'
@@ -80,13 +80,6 @@ function exportarCSV() {
           >
             <Download :size="14" />
             Exportar Relatório
-          </button>
-          <button
-            @click="aplicar"
-            class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-[#0f172a] rounded-md hover:bg-slate-50 transition-colors shadow-sm text-xs font-bold"
-          >
-            <Play :size="14" />
-            Gerar Relatório
           </button>
         </div>
       </header>

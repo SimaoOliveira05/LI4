@@ -113,14 +113,17 @@ public class VendaRepositorioImpl implements VendaRepositorio {
     }
 
     @Override
-    public List<Venda> buscarPendentes() {
-        String revert = "UPDATE Venda SET estadoSincronizacao = 'PENDENTE' WHERE estadoSincronizacao = 'EM_TRANSITO'";
-        try (PreparedStatement ps = connection.prepareStatement(revert)) {
+    public void reverterEmTransito() {
+        String sql = "UPDATE Venda SET estadoSincronizacao = 'PENDENTE' WHERE estadoSincronizacao = 'EM_TRANSITO'";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao reverter vendas em trânsito", e);
         }
+    }
 
+    @Override
+    public List<Venda> buscarPendentes() {
         String sql = "SELECT * FROM Venda WHERE estadoSincronizacao = 'PENDENTE'";
         List<Venda> lista = new ArrayList<>();
         try (PreparedStatement ps = connection.prepareStatement(sql);

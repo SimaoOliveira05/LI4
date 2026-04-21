@@ -10,5 +10,6 @@ public interface DevolucaoRepositorio {
     void guardar(Devolucao devolucao);
     void atualizarSincronizacao(int id, EstadoSincronizacao estado);
     List<Devolucao> buscarPorFatura(String numeroFatura);
+    void reverterEmTransito();
     List<Devolucao> buscarPendentes();
 }

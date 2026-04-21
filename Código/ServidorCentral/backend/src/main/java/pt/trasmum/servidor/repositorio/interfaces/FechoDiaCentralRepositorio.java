@@ -13,4 +13,5 @@ public interface FechoDiaCentralRepositorio {
     FechoDiaCentral buscarPorLojaEData(String idLoja, LocalDate data);
     List<FechoDiaCentral> listarTodos();
     List<FechoDiaCentral> buscarPorLoja(String idLoja);
+
 }

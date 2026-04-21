@@ -24,8 +24,11 @@ prefix() {
     sed -u "s/^/[${tag}] /"
 }
 
-echo "==> Backend  (mvn exec:java) em ${BACKEND_DIR}"
-( cd "$BACKEND_DIR" && mvn -q exec:java 2>&1 | prefix "backend " ) &
+echo "==> A libertar porta 8080 (se ocupada)..."
+fuser -k 8080/tcp 2>/dev/null || true
+
+echo "==> Backend  (mvn compile + exec:java) em ${BACKEND_DIR}"
+( cd "$BACKEND_DIR" && mvn -q compile && mvn -q exec:java 2>&1 | prefix "backend" ) &
 PIDS+=($!)
 
 echo "==> Frontend (npm run dev) em ${FRONTEND_DIR}"

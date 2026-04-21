@@ -7,5 +7,6 @@ import java.util.List;
 
 public interface IPagamentoServico {
     List<Pagamento> listarPendentes();
+    List<Pagamento> listarNaoPagos();
     void liquidar(Utilizador utilizador, int idPagamento);
 }

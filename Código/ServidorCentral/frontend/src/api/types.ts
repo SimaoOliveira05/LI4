@@ -50,6 +50,7 @@ export interface RawRemessa {
   estadoPagamento: 'PENDENTE_PAGAMENTO' | 'PAGA';
 }
 
+
 export interface DashboardGlobal {
   vendasTotais: number;
   totalTransacoes: number;
@@ -57,12 +58,14 @@ export interface DashboardGlobal {
   totalDevolucoes: number;
   percentagemNumerario: number;
   percentagemMultibanco: number;
-  decomposicaoPorLoja: Array<{ idLoja: string; nomeLoja: string; vendas: number; transacoes: number; devolucoes: number; }>;
+  decomposicaoPorLoja: Array<{ idLoja: string; nomeLoja: string; vendas: number; transacoes: number; devolucoes: number; despesas: number; lucro: number; }>;
   vendasMensaisLoja1: Record<string, number>;
   vendasMensaisLoja2: Record<string, number>;
   vendasPorCategoria: Record<string, number>;
   lojasEsperadas: number;
   lojasSincronizadas: number;
+  totalDespesas: number;
+  lucroLiquido: number;
 }
 
 export interface DashboardLoja {
@@ -76,6 +79,8 @@ export interface DashboardLoja {
   logsAuditoria: Array<{ id: number; idLoja: string; acao: string; dataHora: string; nomeUtilizador: string; }>;
   vendasMensais: Record<string, number>;
   vendasPorCategoria: Record<string, number>;
+  totalDespesas: number;
+  lucroLiquido: number;
 }
 
 export interface RelatorioLinha {

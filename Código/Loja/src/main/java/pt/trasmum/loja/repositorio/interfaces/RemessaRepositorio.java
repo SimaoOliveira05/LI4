@@ -9,5 +9,6 @@ import pt.trasmum.loja.dominio.core.EstadoSincronizacao;
 public interface RemessaRepositorio {
     void guardar(Remessa remessa);
     void atualizarSincronizacao(int id, EstadoSincronizacao estado);
+    void reverterEmTransito();
     List<Remessa> buscarPendentes();
 }

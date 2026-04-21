@@ -17,4 +17,6 @@ public class DashboardLojaDTO {
     public List<LogAuditoriaCentral> logsAuditoria;
     public Map<String, Double> vendasMensais;
     public Map<String, Double> vendasPorCategoria;
+    public double totalDespesas;
+    public double lucroLiquido;
 }

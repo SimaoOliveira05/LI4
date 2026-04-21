@@ -41,14 +41,17 @@ public class PagamentoRepositorioImpl implements PagamentoRepositorio {
     }
 
     @Override
-    public List<Pagamento> buscarPendentes() {
-        String revert = "UPDATE Pagamento SET estadoSincronizacao = 'PENDENTE' WHERE estadoSincronizacao = 'EM_TRANSITO'";
-        try (PreparedStatement ps = connection.prepareStatement(revert)) {
+    public void reverterEmTransito() {
+        String sql = "UPDATE Pagamento SET estadoSincronizacao = 'PENDENTE' WHERE estadoSincronizacao = 'EM_TRANSITO'";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao reverter pagamentos em trânsito", e);
         }
+    }
 
+    @Override
+    public List<Pagamento> buscarPendentes() {
         String sql = "SELECT * FROM Pagamento WHERE estadoSincronizacao = 'PENDENTE'";
         List<Pagamento> lista = new ArrayList<>();
         try (PreparedStatement ps = connection.prepareStatement(sql);
@@ -56,6 +59,19 @@ public class PagamentoRepositorioImpl implements PagamentoRepositorio {
             while (rs.next()) lista.add(mapear(rs));
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao buscar pagamentos pendentes", e);
+        }
+        return lista;
+    }
+
+    @Override
+    public List<Pagamento> buscarNaoPagos() {
+        String sql = "SELECT * FROM Pagamento WHERE estadoPagamento = 'PENDENTE'";
+        List<Pagamento> lista = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) lista.add(mapear(rs));
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao buscar pagamentos não pagos", e);
         }
         return lista;
     }

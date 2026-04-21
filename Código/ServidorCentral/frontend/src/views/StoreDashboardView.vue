@@ -55,9 +55,9 @@ const categorias = computed(() => topCategorias(dados.value?.vendasPorCategoria)
           <h1 class="text-[28px] font-bold text-[#0f172a] leading-tight">Dashboard de Loja</h1>
           <p class="text-sm text-[#64748b] font-medium">Métricas detalhadas e histórico de atividade</p>
         </div>
-        <div class="w-48">
+        <div class="w-72">
           <Select v-model="selectedStore">
-            <SelectTrigger class="w-full bg-white h-10 border-slate-200">
+            <SelectTrigger class="w-full bg-white h-11 border-slate-200 text-sm font-medium">
               <SelectValue placeholder="Selecionar Loja" />
             </SelectTrigger>
             <SelectContent>
@@ -73,7 +73,7 @@ const categorias = computed(() => topCategorias(dados.value?.vendasPorCategoria)
       <p v-else-if="loading" class="text-sm text-slate-500">A carregar…</p>
 
       <template v-else-if="dados">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card class="shadow-none border-slate-200 bg-white">
             <CardHeader class="pb-2">
               <CardTitle class="text-[13px] font-medium text-[#64748b]">Vendas Totais</CardTitle>
@@ -94,6 +94,17 @@ const categorias = computed(() => topCategorias(dados.value?.vendasPorCategoria)
 
           <Card class="shadow-none border-slate-200 bg-white">
             <CardHeader class="pb-2">
+              <CardTitle class="text-[13px] font-medium text-[#64748b]">Ticket Médio</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div class="text-2xl font-bold text-[#0f172a]">{{ formatEuro(dados.ticketMedio) }}</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card class="shadow-none border-slate-200 bg-white">
+            <CardHeader class="pb-2">
               <CardTitle class="text-[13px] font-medium text-[#64748b]">Devoluções</CardTitle>
             </CardHeader>
             <CardContent>
@@ -103,10 +114,23 @@ const categorias = computed(() => topCategorias(dados.value?.vendasPorCategoria)
 
           <Card class="shadow-none border-slate-200 bg-white">
             <CardHeader class="pb-2">
-              <CardTitle class="text-[13px] font-medium text-[#64748b]">Ticket Médio</CardTitle>
+              <CardTitle class="text-[13px] font-medium text-[#64748b]">Despesas (Remessas)</CardTitle>
             </CardHeader>
             <CardContent>
-              <div class="text-2xl font-bold text-[#0f172a]">{{ formatEuro(dados.ticketMedio) }}</div>
+              <div class="text-2xl font-bold text-[#0f172a]">{{ formatEuro(dados.totalDespesas) }}</div>
+            </CardContent>
+          </Card>
+
+          <Card class="shadow-none border-slate-200 bg-white">
+            <CardHeader class="pb-2">
+              <CardTitle class="text-[13px] font-medium text-[#64748b]">Lucro Líquido</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div
+                class="text-2xl font-bold"
+                :class="dados.lucroLiquido >= 0 ? 'text-[#16a34a]' : 'text-[#dc2626]'"
+              >{{ formatEuro(dados.lucroLiquido) }}</div>
+              <p class="text-[11px] text-[#94a3b8] font-medium mt-1">Vendas − Devoluções − Despesas</p>
             </CardContent>
           </Card>
         </div>

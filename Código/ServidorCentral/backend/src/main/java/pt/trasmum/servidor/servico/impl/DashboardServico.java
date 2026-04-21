@@ -16,16 +16,19 @@ public class DashboardServico implements IDashboardServico {
     private final DevolucaoCentralRepositorio devolucaoRepo;
     private final FechoDiaCentralRepositorio fechoRepo;
     private final LogAuditoriaCentralRepositorio logRepo;
+    private final RemessaCentralRepositorio remessaRepo;
 
     public DashboardServico(LojaRepositorio lojaRepo, VendaCentralRepositorio vendaRepo,
                             DevolucaoCentralRepositorio devolucaoRepo,
                             FechoDiaCentralRepositorio fechoRepo,
-                            LogAuditoriaCentralRepositorio logRepo) {
+                            LogAuditoriaCentralRepositorio logRepo,
+                            RemessaCentralRepositorio remessaRepo) {
         this.lojaRepo = lojaRepo;
         this.vendaRepo = vendaRepo;
         this.devolucaoRepo = devolucaoRepo;
         this.fechoRepo = fechoRepo;
         this.logRepo = logRepo;
+        this.remessaRepo = remessaRepo;
     }
 
     @Override
@@ -43,6 +46,9 @@ public class DashboardServico implements IDashboardServico {
         dto.percentagemNumerario = tot > 0 ? (num / tot) * 100.0 : 0.0;
         dto.percentagemMultibanco = tot > 0 ? (mb / tot) * 100.0 : 0.0;
 
+        dto.totalDespesas = remessaRepo.totalDespesasPorPeriodo(inicio, fim);
+        dto.lucroLiquido = dto.vendasTotais - dto.totalDevolucoes - dto.totalDespesas;
+
         List<Loja> lojas = lojaRepo.listarTodas();
         List<DecomposicaoLojaDTO> decomp = new ArrayList<>();
         for (Loja l : lojas) {
@@ -50,7 +56,8 @@ public class DashboardServico implements IDashboardServico {
                     l.getIdLoja(), l.getNomeLoja(),
                     vendaRepo.totalVendasPorLojaEPeriodo(l.getIdLoja(), inicio, fim),
                     vendaRepo.totalTransacoesPorLojaEPeriodo(l.getIdLoja(), inicio, fim),
-                    devolucaoRepo.totalDevolucoesPorLojaEPeriodo(l.getIdLoja(), inicio, fim)
+                    devolucaoRepo.totalDevolucoesPorLojaEPeriodo(l.getIdLoja(), inicio, fim),
+                    remessaRepo.totalDespesasPorLojaEPeriodo(l.getIdLoja(), inicio, fim)
             ));
         }
         dto.decomposicaoPorLoja = decomp;
@@ -83,6 +90,8 @@ public class DashboardServico implements IDashboardServico {
         dto.logsAuditoria = logRepo.buscarPorLojaEPeriodo(idLoja, inicio, fim);
         dto.vendasMensais = vendaRepo.vendasMensaisPorLoja(idLoja, fim.getYear());
         dto.vendasPorCategoria = vendaRepo.vendasPorCategoriaPorLoja(idLoja, inicio, fim);
+        dto.totalDespesas = remessaRepo.totalDespesasPorLojaEPeriodo(idLoja, inicio, fim);
+        dto.lucroLiquido = dto.vendasTotais - dto.totalDevolucoes - dto.totalDespesas;
         return dto;
     }
 }
