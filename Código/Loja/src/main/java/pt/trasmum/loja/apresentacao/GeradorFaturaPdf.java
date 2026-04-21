@@ -19,6 +19,7 @@ import java.nio.file.Paths;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Gera um PDF formato A5 (recibo/fatura) para uma venda finalizada.
@@ -71,13 +72,37 @@ public class GeradorFaturaPdf {
         Font fBranco  = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, Color.WHITE);
 
         // ── Cabeçalho ──────────────────────────────────────────────
+        java.net.URL logoUrl = getClass().getClassLoader().getResource("images/logo.png");
+        if (logoUrl != null) {
+            try {
+                Image logo = Image.getInstance(logoUrl);
+                logo.scaleToFit(80, 80);
+                logo.setAlignment(Element.ALIGN_CENTER);
+                doc.add(logo);
+            } catch (Exception ignored) {}
+        }
+
         Paragraph pNomeLoja = new Paragraph(config.getNomeLoja(), fTitulo);
         pNomeLoja.setAlignment(Element.ALIGN_CENTER);
         doc.add(pNomeLoja);
 
-        Paragraph pIdLoja = new Paragraph("ID Loja: " + config.getIdLoja(), fPequeno);
-        pIdLoja.setAlignment(Element.ALIGN_CENTER);
-        doc.add(pIdLoja);
+        if (!config.getMorada().isBlank()) {
+            Paragraph pMorada = new Paragraph(config.getMorada() + " — " + config.getLocalidade(), fPequeno);
+            pMorada.setAlignment(Element.ALIGN_CENTER);
+            doc.add(pMorada);
+        }
+
+        StringBuilder infoLinha = new StringBuilder();
+        if (!config.getNif().isBlank())   infoLinha.append("NIF: ").append(config.getNif());
+        if (!config.getEmail().isBlank()) {
+            if (infoLinha.length() > 0) infoLinha.append("  |  ");
+            infoLinha.append(config.getEmail());
+        }
+        if (infoLinha.length() > 0) {
+            Paragraph pInfo = new Paragraph(infoLinha.toString(), fPequeno);
+            pInfo.setAlignment(Element.ALIGN_CENTER);
+            doc.add(pInfo);
+        }
 
         doc.add(Chunk.NEWLINE);
         doc.add(separador());
@@ -95,7 +120,27 @@ public class GeradorFaturaPdf {
         }
         doc.add(tblInfo);
 
-        // ── Tabela de artigos ──────────────────────────────────────
+        // ── Tabela de artigos agrupada por categoria ───────────────
+        Font fCategoria = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, COR_PRIMARIA);
+
+        record Chave(String nome, double preco) {}
+        // categoria → { Chave → [qtd, subtotal] }
+        Map<String, Map<Chave, double[]>> porCategoria = new TreeMap<>();
+        for (LinhaVenda l : venda.getLinhas()) {
+            String[] info  = resolverNomeProdutoECategoria(l.getIdLote());
+            String nome     = info[0];
+            String cat      = info[1];
+            double preco    = round2(l.getPrecoUnitario());
+            porCategoria
+                .computeIfAbsent(cat, k -> new LinkedHashMap<>())
+                .compute(new Chave(nome, preco), (k, v) -> {
+                    if (v == null) return new double[]{l.getQuantidade(), round2(l.calcularSubtotal())};
+                    v[0] += l.getQuantidade();
+                    v[1]  = round2(v[1] + round2(l.calcularSubtotal()));
+                    return v;
+                });
+        }
+
         PdfPTable tblArtigos = new PdfPTable(4);
         tblArtigos.setWidthPercentage(100);
         tblArtigos.setWidths(new float[]{4f, 1f, 1.6f, 1.6f});
@@ -109,36 +154,33 @@ public class GeradorFaturaPdf {
             tblArtigos.addCell(c);
         }
 
-        // Agrega por (produto, preço unitário) — igual à lógica do controlador.
-        // Linhas do mesmo produto a preços diferentes (lote em desconto vs. normal)
-        // ficam em linhas separadas; linhas com o mesmo preço colapsam.
-        record Chave(String nome, double preco) {}
-        Map<Chave, double[]> mapa = new LinkedHashMap<>(); // [qtd, subtotal]
-        for (LinhaVenda l : venda.getLinhas()) {
-            String nome  = resolverNomeProduto(l.getIdLote());
-            double preco = round2(l.getPrecoUnitario());
-            mapa.compute(new Chave(nome, preco), (k, v) -> {
-                if (v == null) return new double[]{l.getQuantidade(), round2(l.calcularSubtotal())};
-                v[0] += l.getQuantidade();
-                v[1]  = round2(v[1] + round2(l.calcularSubtotal()));
-                return v;
-            });
-        }
+        for (Map.Entry<String, Map<Chave, double[]>> catEntry : porCategoria.entrySet()) {
+            // linha de separação de categoria
+            PdfPCell cCat = new PdfPCell(new Phrase(catEntry.getKey(), fCategoria));
+            cCat.setColspan(4);
+            cCat.setBackgroundColor(COR_LINHA_ALT);
+            cCat.setPadding(4);
+            cCat.setBorderColor(new Color(229, 231, 235));
+            cCat.setBorderWidth(0.5f);
+            tblArtigos.addCell(cCat);
 
-        boolean par = false;
-        for (Map.Entry<Chave, double[]> e : mapa.entrySet()) {
-            Color bg = par ? COR_LINHA_ALT : Color.WHITE;
-            double[] v = e.getValue();
-            celulaArtigo(tblArtigos, e.getKey().nome,                          Element.ALIGN_LEFT,   fNormal, bg);
-            celulaArtigo(tblArtigos, String.valueOf((int) v[0]),                Element.ALIGN_CENTER, fNormal, bg);
-            celulaArtigo(tblArtigos, String.format("%.2f €", e.getKey().preco), Element.ALIGN_RIGHT,  fNormal, bg);
-            celulaArtigo(tblArtigos, String.format("%.2f €", v[1]),             Element.ALIGN_RIGHT,  fNormal, bg);
-            par = !par;
+            boolean par = false;
+            for (Map.Entry<Chave, double[]> e : catEntry.getValue().entrySet()) {
+                Color bg = par ? new Color(240, 242, 245) : Color.WHITE;
+                double[] v = e.getValue();
+                celulaArtigo(tblArtigos, e.getKey().nome,                           Element.ALIGN_LEFT,   fNormal, bg);
+                celulaArtigo(tblArtigos, String.valueOf((int) v[0]),                 Element.ALIGN_CENTER, fNormal, bg);
+                celulaArtigo(tblArtigos, String.format("%.2f €", e.getKey().preco),  Element.ALIGN_RIGHT,  fNormal, bg);
+                celulaArtigo(tblArtigos, String.format("%.2f €", v[1]),              Element.ALIGN_RIGHT,  fNormal, bg);
+                par = !par;
+            }
         }
         doc.add(tblArtigos);
 
         // ── Totais e pagamento ─────────────────────────────────────
-        double total = round2(mapa.values().stream().mapToDouble(v -> v[1]).sum());
+        double total = round2(porCategoria.values().stream()
+                .flatMap(m -> m.values().stream())
+                .mapToDouble(v -> v[1]).sum());
 
         PdfPTable tblTotais = new PdfPTable(2);
         tblTotais.setWidthPercentage(50);
@@ -169,11 +211,14 @@ public class GeradorFaturaPdf {
         return Math.round(v * 100.0) / 100.0;
     }
 
-    private String resolverNomeProduto(int idLote) {
+    /** Devolve [nome, categoria] do produto associado ao lote. */
+    private String[] resolverNomeProdutoECategoria(int idLote) {
         Lote lote = AppContext.getInstance().loteRepo.buscarPorId(idLote);
-        if (lote == null) return "Artigo";
+        if (lote == null) return new String[]{"Artigo", "Outros"};
         Produto p = AppContext.getInstance().produtoRepo.buscarPorId(lote.getIdProduto());
-        return p != null ? p.getNome() : "Artigo";
+        if (p == null) return new String[]{"Artigo", "Outros"};
+        String cat = (p.getCategoria() != null && !p.getCategoria().isBlank()) ? p.getCategoria() : "Outros";
+        return new String[]{p.getNome(), cat};
     }
 
     private Chunk separador() {
