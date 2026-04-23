@@ -131,7 +131,8 @@ public class LoteRepositorioImpl implements LoteRepositorio {
 
     @Override
     public void guardarDesconto(Desconto desconto, int idLote) {
-        String sql = "INSERT INTO Desconto (idLote, percentagem, dataAplicacao, idUtilizadorAplicou) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO Desconto (idLote, percentagem, dataAplicacao, idUtilizadorAplicou) VALUES (?, ?, ?, ?) " +
+                     "ON DUPLICATE KEY UPDATE percentagem = VALUES(percentagem), dataAplicacao = VALUES(dataAplicacao), idUtilizadorAplicou = VALUES(idUtilizadorAplicou)";
         try (PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, idLote);
             ps.setDouble(2, desconto.getPercentagem());

@@ -50,9 +50,11 @@ public final class DialogoUtil {
     }
 
     private static void preparar(Dialog<?> dlg) {
-        dlg.initOwner(Navigator.getStage());
+        javafx.stage.Stage stage = Navigator.getStage();
+        dlg.initOwner(stage);
         dlg.initModality(Modality.WINDOW_MODAL);
-        dlg.getDialogPane().setMinWidth(320);
-        dlg.getDialogPane().setMinHeight(150);
+        dlg.setResizable(true);
+        dlg.getDialogPane().setMinWidth(480);
+        dlg.getDialogPane().setMinHeight(220);
     }
 }

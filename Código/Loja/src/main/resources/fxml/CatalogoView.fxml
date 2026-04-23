@@ -59,8 +59,9 @@
             <!-- Alertas — ocupa todo o espaço disponível -->
             <VBox VBox.vgrow="ALWAYS" spacing="4">
                 <Label text="Alertas" styleClass="section-title"/>
-                <TextArea fx:id="txtAlertas" editable="false" wrapText="true"
-                          VBox.vgrow="ALWAYS" styleClass="alertas-area"/>
+                <ScrollPane VBox.vgrow="ALWAYS" fitToWidth="true" styleClass="alertas-area">
+                    <VBox fx:id="vboxAlertas" spacing="4" style="-fx-padding: 4;"/>
+                </ScrollPane>
             </VBox>
         </VBox>
     </right>

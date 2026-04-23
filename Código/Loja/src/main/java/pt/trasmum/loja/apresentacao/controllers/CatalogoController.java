@@ -7,7 +7,10 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import pt.trasmum.loja.apresentacao.DialogoUtil;
 import pt.trasmum.loja.app.AppContext;
@@ -34,7 +37,7 @@ public class CatalogoController {
     @FXML private TableColumn<Produto, Double>  colPreco;
     @FXML private TableColumn<Produto, Integer> colStock;
     @FXML private TableColumn<Produto, Boolean> colAtivo;
-    @FXML private TextArea txtAlertas;
+    @FXML private VBox vboxAlertas;
 
     @FXML private VBox detalhesSection;
     @FXML private TableView<Lote> tblLotes;
@@ -236,12 +239,12 @@ public class CatalogoController {
     }
 
     private void carregarAlertas() {
-        StringBuilder sb = new StringBuilder();
+        vboxAlertas.getChildren().clear();
 
         List<Produto> semStock = AppContext.getInstance().catalogoServico.gerarAlertasStockMinimo();
         if (!semStock.isEmpty()) {
-            sb.append("⚠ Stock mínimo:\n");
-            semStock.forEach(p -> sb.append("  • ").append(p.getNome()).append("\n"));
+            vboxAlertas.getChildren().add(labelSecao("⚠ Stock mínimo:"));
+            semStock.forEach(p -> vboxAlertas.getChildren().add(labelItem("  • " + p.getNome())));
         }
 
         int dias = AppContext.getInstance().configuracao.getDiasAlertaValidade();
@@ -252,29 +255,108 @@ public class CatalogoController {
         List<Lote> aVencer   = janela.stream().filter(l -> !l.getDataValidade().isBefore(hoje)).toList();
 
         if (!expirados.isEmpty()) {
-            sb.append("\n🚨 Fora de validade (remover do stock):\n");
-            expirados.forEach(l -> {
-                Produto p = AppContext.getInstance().produtoRepo.buscarPorId(l.getIdProduto());
-                String nome = p != null ? p.getNome() : "Lote " + l.getId();
-                sb.append("  • ").append(nome)
-                  .append(" — expirou ").append(l.getDataValidade())
-                  .append(" (").append(l.getQuantidade()).append(" un.)\n");
-            });
+            vboxAlertas.getChildren().add(labelSecao("🚨 Fora de validade:"));
+            expirados.forEach(l -> vboxAlertas.getChildren().add(linhaLoteAlerta(l, true)));
         }
-
         if (!aVencer.isEmpty()) {
-            sb.append("\n⚠ A vencer (").append(dias).append(" dias):\n");
-            aVencer.forEach(l -> {
-                Produto p = AppContext.getInstance().produtoRepo.buscarPorId(l.getIdProduto());
-                String nome = p != null ? p.getNome() : "Lote " + l.getId();
-                sb.append("  • ").append(nome)
-                  .append(" — val. ").append(l.getDataValidade())
-                  .append(" (").append(l.getQuantidade()).append(" un.)\n");
-            });
+            vboxAlertas.getChildren().add(labelSecao("⚠ A vencer (" + dias + " dias):"));
+            aVencer.forEach(l -> vboxAlertas.getChildren().add(linhaLoteAlerta(l, false)));
         }
+        if (semStock.isEmpty() && expirados.isEmpty() && aVencer.isEmpty()) {
+            vboxAlertas.getChildren().add(labelItem("Sem alertas activos."));
+        }
+    }
 
-        if (sb.isEmpty()) sb.append("Sem alertas activos.");
-        txtAlertas.setText(sb.toString());
+    private Label labelSecao(String texto) {
+        Label l = new Label(texto);
+        l.setStyle("-fx-font-weight: bold; -fx-font-size: 11px; -fx-padding: 4 0 0 0;");
+        l.setWrapText(true);
+        return l;
+    }
+
+    private Label labelItem(String texto) {
+        Label l = new Label(texto);
+        l.setStyle("-fx-font-size: 11px;");
+        l.setWrapText(true);
+        return l;
+    }
+
+    private HBox linhaLoteAlerta(Lote lote, boolean expirado) {
+        Produto p = AppContext.getInstance().produtoRepo.buscarPorId(lote.getIdProduto());
+        String nome = p != null ? p.getNome() : "Lote " + lote.getId();
+        String detalhe = expirado
+                ? " — expirou " + lote.getDataValidade()
+                : " — val. " + lote.getDataValidade();
+
+        Label lbl = new Label("  • " + nome + detalhe + " (" + lote.getQuantidade() + " un.)");
+        lbl.setStyle("-fx-font-size: 11px;");
+        lbl.setWrapText(true);
+        HBox.setHgrow(lbl, Priority.ALWAYS);
+
+        Button btn;
+        if (expirado) {
+            btn = new Button("Abater");
+            btn.getStyleClass().add("btn-danger");
+            btn.setOnAction(e -> abaterLoteTodo(lote));
+        } else {
+            btn = new Button("Desconto");
+            btn.getStyleClass().add("btn-primary");
+            btn.setOnAction(e -> aplicarDescontoNoLote(lote));
+        }
+        btn.setStyle("-fx-font-size: 9px; -fx-padding: 2 5 2 5;");
+
+        HBox row = new HBox(6, lbl, btn);
+        row.setAlignment(Pos.CENTER_LEFT);
+        return row;
+    }
+
+    private void abaterLoteTodo(Lote lote) {
+        Produto p = AppContext.getInstance().produtoRepo.buscarPorId(lote.getIdProduto());
+        String nome = p != null ? p.getNome() : "Lote " + lote.getId();
+        Alert confirm = DialogoUtil.comOwner(new Alert(Alert.AlertType.CONFIRMATION));
+        confirm.setTitle("Abater Lote");
+        confirm.setHeaderText(nome + " — val. " + lote.getDataValidade());
+        confirm.setContentText("Abater todo o lote (" + lote.getQuantidade() + " un.)?");
+        confirm.showAndWait().ifPresent(bt -> {
+            if (bt == ButtonType.OK) {
+                try {
+                    Utilizador u = AppContext.getInstance().getUtilizadorAtual();
+                    AppContext.getInstance().catalogoServico.abaterLote(u, lote.getId(), lote.getQuantidade());
+                    carregarProdutos();
+                    atualizarDetalhes(tblProdutos.getSelectionModel().getSelectedItem());
+                    carregarAlertas();
+                    mostrarInfo("Lote #" + lote.getId() + " abatido (" + lote.getQuantidade() + " un.).");
+                } catch (Exception e) {
+                    mostrarErro(e.getMessage());
+                }
+            }
+        });
+    }
+
+    private void aplicarDescontoNoLote(Lote lote) {
+        Produto p = AppContext.getInstance().produtoRepo.buscarPorId(lote.getIdProduto());
+        String nome = p != null ? p.getNome() : "Lote " + lote.getId();
+        String valorInicial = lote.temDesconto()
+                ? String.valueOf((int) lote.getDesconto().getPercentagem())
+                : "10";
+        TextInputDialog dlg = DialogoUtil.comOwner(new TextInputDialog(valorInicial));
+        dlg.setTitle("Aplicar Desconto");
+        dlg.setHeaderText(nome + " — val. " + lote.getDataValidade());
+        dlg.setContentText("Percentagem (%):");
+        dlg.showAndWait().ifPresent(pctStr -> {
+            try {
+                double pct = Double.parseDouble(pctStr.replace(",", "."));
+                Utilizador u = AppContext.getInstance().getUtilizadorAtual();
+                AppContext.getInstance().catalogoServico.aplicarDesconto(u, lote.getId(), pct);
+                mostrarInfo("Desconto de " + pct + "% aplicado ao lote #" + lote.getId() + ".");
+                carregarAlertas();
+                atualizarDetalhes(tblProdutos.getSelectionModel().getSelectedItem());
+            } catch (NumberFormatException e) {
+                mostrarErro("Percentagem inválida.");
+            } catch (Exception e) {
+                mostrarErro(e.getMessage());
+            }
+        });
     }
 
     private Optional<ProdutoDTO> mostrarDialogoProduto(Produto existente) {
