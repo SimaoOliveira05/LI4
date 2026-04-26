@@ -24,13 +24,10 @@ public class CaixaController {
 
     @FXML private Label lblEstadoSessao;
     @FXML private Label lblSaldo;
+    @FXML private Label lblFundoInicial;
     @FXML private Button btnAbrirSessao;
     @FXML private Button btnRegistarSangria;
     @FXML private Button btnFecharSessao;
-    @FXML private TableView<DetalheNumerario> tblFundo;
-    @FXML private TableColumn<DetalheNumerario, String>  colDenominacao;
-    @FXML private TableColumn<DetalheNumerario, Integer> colQuantidade;
-    @FXML private TableColumn<DetalheNumerario, Double>  colSubtotal;
 
     @FXML private VBox formNumerario;
     @FXML private Label lblFormTitulo;
@@ -41,8 +38,7 @@ public class CaixaController {
     @FXML private Label lblFormTotal;
 
     private SessaoCaixa sessaoAtual;
-    private boolean modoFundo = true;
-    private final ObservableList<DetalheNumerario> detalhes = FXCollections.observableArrayList();
+    private boolean modoFecho = false;
     private final ObservableList<LinhaForm> linhasForm = FXCollections.observableArrayList();
 
     public static class LinhaForm {
@@ -56,13 +52,6 @@ public class CaixaController {
 
     @FXML
     public void initialize() {
-        // Tabela de fundo da sessão
-        colDenominacao.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getDenominacao().getLabel()));
-        colQuantidade.setCellValueFactory(c -> new SimpleIntegerProperty(c.getValue().getQuantidade()).asObject());
-        colSubtotal.setCellValueFactory(c -> new SimpleDoubleProperty(c.getValue().getSubtotal()).asObject());
-        tblFundo.setItems(detalhes);
-
-        // Tabela do formulário inline
         colFormDenom.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().denominacao.getLabel()));
         colFormQtd.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter() {
             @Override public Integer fromString(String s) {
@@ -83,15 +72,30 @@ public class CaixaController {
 
     @FXML
     public void onAbrirSessao() {
-        modoFundo = true;
-        lblFormTitulo.setText("Fundo Inicial de Caixa");
-        abrirFormNumerario();
+        TextInputDialog dialog = new TextInputDialog("50.00");
+        dialog.setTitle("Abrir Sessão de Caixa");
+        dialog.setHeaderText("Fundo Inicial");
+        dialog.setContentText("Valor do fundo (€):");
+        dialog.showAndWait().ifPresent(input -> {
+            try {
+                double fundo = Double.parseDouble(input.replace(",", ".").trim());
+                if (fundo < 0) throw new NumberFormatException();
+                Utilizador u = AppContext.getInstance().getUtilizadorAtual();
+                ConfiguracaoTerminal config = AppContext.getInstance().configuracao;
+                sessaoAtual = AppContext.getInstance().caixaServico.abrirSessao(u, fundo, config);
+                mostrarInfo("Sessão de caixa aberta. Saldo inicial: " + String.format("%.2f €", sessaoAtual.getSaldoAtual()));
+                atualizarEstado();
+            } catch (NumberFormatException e) {
+                mostrarErro("Valor inválido. Introduza um número positivo.");
+            } catch (Exception e) {
+                mostrarErro(e.getMessage());
+            }
+        });
     }
 
     @FXML
     public void onRegistarSangria() {
         if (sessaoAtual == null) { mostrarErro("Não existe sessão de caixa aberta."); return; }
-        modoFundo = false;
         lblFormTitulo.setText("Sangria de Caixa");
         abrirFormNumerario();
     }
@@ -99,16 +103,9 @@ public class CaixaController {
     @FXML
     public void onFecharSessao() {
         if (sessaoAtual == null) { mostrarErro("Não existe sessão de caixa aberta."); return; }
-        DialogoUtil.confirmar("Fechar sessão de caixa?").ifPresent(bt -> {
-            if (bt == ButtonType.YES) {
-                try {
-                    AppContext.getInstance().caixaServico.fecharSessao(sessaoAtual);
-                    sessaoAtual = null;
-                    atualizarEstado();
-                    mostrarInfo("Sessão de caixa encerrada.");
-                } catch (Exception e) { mostrarErro(e.getMessage()); }
-            }
-        });
+        modoFecho = true;
+        lblFormTitulo.setText("Contagem Final de Caixa");
+        abrirFormNumerario();
     }
 
     @FXML
@@ -120,20 +117,28 @@ public class CaixaController {
         fecharFormNumerario();
         Utilizador u = AppContext.getInstance().getUtilizadorAtual();
         try {
-            if (modoFundo) {
-                ConfiguracaoTerminal config = AppContext.getInstance().configuracao;
-                sessaoAtual = AppContext.getInstance().caixaServico.abrirSessao(u, lista, config);
-                mostrarInfo("Sessão de caixa aberta. Saldo inicial: " + String.format("%.2f €", sessaoAtual.getSaldoAtual()));
+            if (modoFecho) {
+                double contado = lista.stream().mapToDouble(d -> d.getSubtotal()).sum();
+                double esperado = sessaoAtual.getSaldoAtual();
+                double diferenca = contado - esperado;
+                AppContext.getInstance().caixaServico.fecharSessao(sessaoAtual, u, lista);
+                sessaoAtual = null;
+                mostrarInfo(String.format(
+                        "Sessão encerrada.%n%nEsperado:  %.2f €%nContado:   %.2f €%nDiferença: %+.2f €%s",
+                        esperado, contado, diferenca,
+                        Math.abs(diferenca) > 0.01 ? "\n\n⚠ Diferença detectada — registe a ocorrência." : ""));
             } else {
                 AppContext.getInstance().caixaServico.registarSangria(sessaoAtual, u, lista);
                 mostrarInfo("Sangria registada.");
             }
+            modoFecho = false;
             atualizarEstado();
         } catch (Exception e) { mostrarErro(e.getMessage()); }
     }
 
     @FXML
     public void onCancelarNumerario() {
+        modoFecho = false;
         fecharFormNumerario();
     }
 
@@ -165,14 +170,15 @@ public class CaixaController {
         if (sessaoAtual != null) {
             lblEstadoSessao.setText("Sessão: ABERTA — desde " + sessaoAtual.getDataAbertura().toLocalDate());
             lblSaldo.setText(String.format("Saldo actual: %.2f €", sessaoAtual.getSaldoAtual()));
-            detalhes.setAll(sessaoAtual.getFundoInicial());
+            lblFundoInicial.setText(String.format("Fundo inicial: %.2f €", sessaoAtual.getSaldoAtual() +
+                    sessaoAtual.getSangrias().stream().mapToDouble(Sangria::getTotal).sum()));
             btnAbrirSessao.setDisable(true);
             btnRegistarSangria.setDisable(false);
             btnFecharSessao.setDisable(false);
         } else {
             lblEstadoSessao.setText("Sessão: FECHADA");
             lblSaldo.setText("—");
-            detalhes.clear();
+            lblFundoInicial.setText("—");
             btnAbrirSessao.setDisable(false);
             btnRegistarSangria.setDisable(true);
             btnFecharSessao.setDisable(true);

@@ -12,6 +12,8 @@ public class SessaoCaixa extends RegistoSincronizavel {
     private List<DetalheNumerario> fundoInicial;
     private List<Sangria> sangrias;
     private double saldoAtual;
+    private Double saldoContado;
+    private Double diferencaFecho;
     private LocalDateTime dataAbertura;
     private LocalDateTime dataEncerramento;
 
@@ -22,13 +24,13 @@ public class SessaoCaixa extends RegistoSincronizavel {
         this.dataAbertura = LocalDateTime.now();
     }
 
-    public SessaoCaixa(String idLoja, int idUtilizador, List<DetalheNumerario> fundoInicial) {
+    public SessaoCaixa(String idLoja, int idUtilizador, double fundo) {
         super(idLoja);
         this.idUtilizador = idUtilizador;
-        this.fundoInicial = fundoInicial != null ? fundoInicial : new ArrayList<>();
+        this.fundoInicial = new ArrayList<>();
         this.sangrias = new ArrayList<>();
         this.dataAbertura = LocalDateTime.now();
-        this.saldoAtual = this.fundoInicial.stream().mapToDouble(DetalheNumerario::getSubtotal).sum();
+        this.saldoAtual = fundo;
     }
 
     public void registarSangria(Sangria sangria) {
@@ -51,6 +53,12 @@ public class SessaoCaixa extends RegistoSincronizavel {
 
     public double getSaldoAtual() { return saldoAtual; }
     public void setSaldoAtual(double saldoAtual) { this.saldoAtual = saldoAtual; }
+
+    public Double getSaldoContado() { return saldoContado; }
+    public void setSaldoContado(Double saldoContado) { this.saldoContado = saldoContado; }
+
+    public Double getDiferencaFecho() { return diferencaFecho; }
+    public void setDiferencaFecho(Double diferencaFecho) { this.diferencaFecho = diferencaFecho; }
 
     public LocalDateTime getDataAbertura() { return dataAbertura; }
     public void setDataAbertura(LocalDateTime dataAbertura) { this.dataAbertura = dataAbertura; }

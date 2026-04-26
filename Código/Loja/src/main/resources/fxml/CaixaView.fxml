@@ -37,12 +37,5 @@
         </HBox>
     </VBox>
 
-    <Label text="Fundo inicial:" styleClass="section-title"/>
-    <TableView fx:id="tblFundo" VBox.vgrow="ALWAYS">
-        <columns>
-            <TableColumn fx:id="colDenominacao" text="Denominação"  prefWidth="220"/>
-            <TableColumn fx:id="colQuantidade"  text="Qtd."         prefWidth="80"/>
-            <TableColumn fx:id="colSubtotal"    text="Subtotal (€)" prefWidth="110"/>
-        </columns>
-    </TableView>
+    <Label fx:id="lblFundoInicial" styleClass="saldo-label"/>
 </VBox>

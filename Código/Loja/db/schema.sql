@@ -225,6 +225,8 @@ CREATE TABLE SessaoCaixa (
     estadoSincronizacao ENUM('PENDENTE','EM_TRANSITO','CONFIRMADO') NOT NULL DEFAULT 'PENDENTE',
     idUtilizador        INT             NOT NULL,
     saldoAtual          DECIMAL(10,2)   NOT NULL DEFAULT 0,
+    saldoContado        DECIMAL(10,2)   NULL,
+    diferencaFecho      DECIMAL(10,2)   NULL,
     dataAbertura        DATETIME        NOT NULL,
     dataEncerramento    DATETIME        NULL,
     PRIMARY KEY (id),

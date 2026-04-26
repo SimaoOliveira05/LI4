@@ -101,7 +101,7 @@ public class AppContext {
         this.autorizacaoServico  = new AutorizacaoServico();
         this.auditoriaServico    = new AuditoriaServico(logAuditoriaRepo, configuracao);
         this.autenticacaoServico = new AutenticacaoServico(utilizadorRepo, auditoriaServico);
-        this.caixaServico        = new CaixaServico(sessaoCaixaRepo);
+        this.caixaServico        = new CaixaServico(sessaoCaixaRepo, auditoriaServico);
         this.catalogoServico     = new CatalogoServico(produtoRepo, loteRepo, autorizacaoServico, auditoriaServico);
         this.vendaServico        = new VendaServico(vendaRepo, produtoRepo, loteRepo, sessaoCaixaRepo, auditoriaServico, configuracao);
         this.devolucaoServico    = new DevolucaoServico(vendaRepo, devolucaoRepo, loteRepo, produtoRepo, auditoriaServico, configuracao);

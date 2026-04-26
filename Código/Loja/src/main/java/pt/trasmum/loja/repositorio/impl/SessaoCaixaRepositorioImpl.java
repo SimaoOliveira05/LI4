@@ -47,13 +47,17 @@ public class SessaoCaixaRepositorioImpl implements SessaoCaixaRepositorio {
 
     @Override
     public void atualizar(SessaoCaixa sessao) {
-        String sql = "UPDATE SessaoCaixa SET estadoSincronizacao=?, saldoAtual=?, dataEncerramento=? WHERE id=?";
+        String sql = "UPDATE SessaoCaixa SET estadoSincronizacao=?, saldoAtual=?, saldoContado=?, diferencaFecho=?, dataEncerramento=? WHERE id=?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, sessao.getEstadoSincronizacao().name());
             ps.setDouble(2, sessao.getSaldoAtual());
-            if (sessao.getDataEncerramento() == null) ps.setNull(3, Types.TIMESTAMP);
-            else ps.setTimestamp(3, Timestamp.valueOf(sessao.getDataEncerramento()));
-            ps.setInt(4, sessao.getId());
+            if (sessao.getSaldoContado() == null) ps.setNull(3, Types.DECIMAL);
+            else ps.setDouble(3, sessao.getSaldoContado());
+            if (sessao.getDiferencaFecho() == null) ps.setNull(4, Types.DECIMAL);
+            else ps.setDouble(4, sessao.getDiferencaFecho());
+            if (sessao.getDataEncerramento() == null) ps.setNull(5, Types.TIMESTAMP);
+            else ps.setTimestamp(5, Timestamp.valueOf(sessao.getDataEncerramento()));
+            ps.setInt(6, sessao.getId());
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao atualizar sessão de caixa", e);
@@ -72,6 +76,19 @@ public class SessaoCaixaRepositorioImpl implements SessaoCaixaRepositorio {
             throw new RuntimeException("Erro ao buscar sessão ativa", e);
         }
         return null;
+    }
+
+    @Override
+    public List<SessaoCaixa> buscarTodasAbertas() {
+        String sql = "SELECT * FROM SessaoCaixa WHERE dataEncerramento IS NULL";
+        List<SessaoCaixa> lista = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) lista.add(mapearComDetalhes(rs));
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao buscar sessões abertas", e);
+        }
+        return lista;
     }
 
     @Override
@@ -144,6 +161,10 @@ public class SessaoCaixaRepositorioImpl implements SessaoCaixaRepositorio {
         s.setEstadoSincronizacao(EstadoSincronizacao.valueOf(rs.getString("estadoSincronizacao")));
         s.setIdUtilizador(rs.getInt("idUtilizador"));
         s.setSaldoAtual(rs.getDouble("saldoAtual"));
+        double sc = rs.getDouble("saldoContado");
+        if (!rs.wasNull()) s.setSaldoContado(sc);
+        double df = rs.getDouble("diferencaFecho");
+        if (!rs.wasNull()) s.setDiferencaFecho(df);
         s.setDataAbertura(rs.getTimestamp("dataAbertura").toLocalDateTime());
         Timestamp enc = rs.getTimestamp("dataEncerramento");
         if (enc != null) s.setDataEncerramento(enc.toLocalDateTime());

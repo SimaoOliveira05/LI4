@@ -8,11 +8,13 @@ import pt.trasmum.loja.dominio.tesouraria.SessaoCaixa;
 
 import java.util.List;
 
+
 public interface ICaixaServico {
-    SessaoCaixa abrirSessao(Utilizador utilizador, List<DetalheNumerario> fundo, ConfiguracaoTerminal configuracao);
+    SessaoCaixa abrirSessao(Utilizador utilizador, double fundo, ConfiguracaoTerminal configuracao);
     Sangria registarSangria(SessaoCaixa sessao, Utilizador utilizador, List<DetalheNumerario> valor);
-    void fecharSessao(SessaoCaixa sessao);
+    void fecharSessao(SessaoCaixa sessao, Utilizador utilizador, List<DetalheNumerario> contagemFinal);
     boolean verificarLimite(SessaoCaixa sessao, ConfiguracaoTerminal configuracao);
     SessaoCaixa buscarSessaoAtiva(int idUtilizador);
+    List<SessaoCaixa> obterSessoesAbertas();
     List<SessaoCaixa> obterSessoesPendentes();
 }

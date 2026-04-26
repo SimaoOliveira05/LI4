@@ -33,6 +33,11 @@ public class FechoDiaController {
         Utilizador u = AppContext.getInstance().getUtilizadorAtual();
         ConfiguracaoTerminal config = AppContext.getInstance().configuracao;
 
+        if (!AppContext.getInstance().caixaServico.obterSessoesAbertas().isEmpty()) {
+            mostrarErro("Existem sessões de caixa abertas. Todos os funcionários devem fechar a caixa antes de encerrar o dia.");
+            return;
+        }
+
         lblEstado.setText("A processar fecho de dia...");
         progressIndicador.setVisible(true);
         btnIniciarFecho.setDisable(true);

@@ -10,4 +10,8 @@ public final class ExcecoesCaixa {
     public static class SessaoCaixaNaoEncontradaException extends RuntimeException {
         public SessaoCaixaNaoEncontradaException(String message) { super(message); }
     }
+
+    public static class SangriaInvalidaException extends RuntimeException {
+        public SangriaInvalidaException(String message) { super(message); }
+    }
 }

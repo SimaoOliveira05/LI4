@@ -6,6 +6,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
+import pt.trasmum.loja.apresentacao.DialogoUtil;
 import pt.trasmum.loja.app.AppContext;
 import pt.trasmum.loja.app.GestorEscala;
 import pt.trasmum.loja.app.Navigator;
@@ -70,6 +71,10 @@ public class MainController {
     public void onLogout() {
         Utilizador u = AppContext.getInstance().getUtilizadorAtual();
         if (u != null) {
+            if (AppContext.getInstance().caixaServico.buscarSessaoAtiva(u.getId()) != null) {
+                DialogoUtil.erro("Não é possível terminar sessão com uma sessão de caixa aberta.\nFeche a caixa primeiro.");
+                return;
+            }
             AppContext.getInstance().autenticacaoServico.encerrarSessao(u);
             AppContext.getInstance().setUtilizadorAtual(null);
         }
