@@ -14,9 +14,9 @@ public class ConfiguracaoTerminal {
     private final String localidade;
     private final String nif;
     private final String email;
-    private final double limiteMaximoCaixa;
+    private double limiteMaximoCaixa;
     private final String urlServidor;
-    private final int diasAlertaValidade;
+    private int diasAlertaValidade;
 
     private ConfiguracaoTerminal(String idLoja, String nomeLoja, String morada, String localidade,
                                   String nif, String email, double limiteMaximoCaixa,
@@ -65,4 +65,7 @@ public class ConfiguracaoTerminal {
     public double getLimiteMaximoCaixa() { return limiteMaximoCaixa; }
     public String getUrlServidor() { return urlServidor; }
     public int getDiasAlertaValidade() { return diasAlertaValidade; }
+
+    public void setLimiteMaximoCaixa(double limiteMaximoCaixa) { this.limiteMaximoCaixa = limiteMaximoCaixa; }
+    public void setDiasAlertaValidade(int diasAlertaValidade) { this.diasAlertaValidade = diasAlertaValidade; }
 }

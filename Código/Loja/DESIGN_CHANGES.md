@@ -39,3 +39,23 @@ Os logs existentes apenas registavam o tipo de ação (`GESTAO_UTILIZADOR`, `ALT
 **Porquê:**
 
 O levantamento de requisitos identificou que a fatura real da TrasmUM inclui morada, localidade, NIF e e-mail da loja, bem como logótipo, e que os artigos devem ser apresentados divididos por secção/categoria (ex.: Mercearia, Talho). O design original não contemplava estes campos nem este agrupamento.
+
+---
+
+## 2026-04-26 — Entidade Loja persistida em base de dados local
+
+**Área:** `dominio/core/Loja`, `repositorio/LojaRepositorio`, `servico/ILojaServico`, `AppContext`, `AdministracaoView`, `schema.sql`
+
+**O que mudou:**
+
+- Nova entidade de domínio `Loja` (`id`, `nome`, `morada`, `localidade`, `nif`, `email`, `limiteMaximoCaixa`, `diasAlertaValidade`) adicionada ao pacote `dominio/core`.
+- Nova tabela `ConfiguracaoLoja` no schema local (`schema.sql`) que persiste os dados de identidade e os parâmetros operacionais da loja (`limiteMaximoCaixa`, `diasAlertaValidade`).
+- Nova interface `LojaRepositorio` e implementação JDBC `LojaRepositorioImpl`.
+- Novo serviço `ILojaServico` / `LojaServico` com operações `obter()` e `atualizar()` (requer perfil GESTOR ou CEO); registos de auditoria gerados em cada alteração.
+- `AppContext` instancia o repositório e serviço; na primeira execução efetua bootstrap da tabela a partir dos valores de `config.properties` (se a linha ainda não existir); em arranques seguintes, os valores de `limiteMaximoCaixa` e `diasAlertaValidade` provenientes da BD sobrepõem-se aos de `config.properties` na instância em memória de `ConfiguracaoTerminal`.
+- `ConfiguracaoTerminal` tornou-se parcialmente mutável: `limiteMaximoCaixa` e `diasAlertaValidade` deixaram de ser `final` e receberam setters, para que alterações via UI tomem efeito imediato sem reiniciar a aplicação.
+- Ecrã de Administração ganhou um separador "Loja" com `LojaView.fxml` / `LojaController`, que apresenta os dados atuais e permite guardá-los.
+
+**Porquê:**
+
+Os dados de identidade da loja (nome, morada, NIF, e-mail) e os parâmetros operacionais (limite de caixa, dias de alerta de validade) estavam apenas em `config.properties`, ficheiro de texto sem interface de edição. Criar uma entidade em BD permite editá-los via UI, auditá-los, e garantir que as alterações tomam efeito imediatamente (sem reiniciar a aplicação) e se mantêm entre sessões.

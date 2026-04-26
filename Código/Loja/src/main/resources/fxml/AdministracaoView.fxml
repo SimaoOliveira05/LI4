@@ -16,6 +16,11 @@
                     <fx:include source="LogAuditoriaView.fxml"/>
                 </content>
             </Tab>
+            <Tab text="Loja">
+                <content>
+                    <fx:include source="LojaView.fxml"/>
+                </content>
+            </Tab>
         </tabs>
     </TabPane>
 </StackPane>

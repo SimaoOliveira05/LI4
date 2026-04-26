@@ -21,7 +21,7 @@ public class RemessaRepositorioImpl implements RemessaRepositorio {
     @Override
     public void guardar(Remessa remessa) {
         if (remessa.getLinhas() == null || remessa.getLinhas().isEmpty()) {
-            throw new pt.trasmum.loja.dominio.RemessaSemLinhasException("Uma remessa deve ter pelo menos uma linha");
+            throw new pt.trasmum.loja.dominio.exceptions.RemessaSemLinhasException("Uma remessa deve ter pelo menos uma linha");
         }
 
         boolean autoCommit = true;

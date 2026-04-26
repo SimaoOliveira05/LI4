@@ -1,4 +1,4 @@
-package pt.trasmum.loja.dominio;
+package pt.trasmum.loja.dominio.exceptions;
 
 public class RemessaSemLinhasException extends RuntimeException {
 

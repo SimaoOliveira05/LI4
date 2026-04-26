@@ -260,6 +260,19 @@ ALTER TABLE DetalheNumerario
     ADD CONSTRAINT fk_detalhe_sessaocaixa FOREIGN KEY (idSessaoCaixa) REFERENCES SessaoCaixa(id),
     ADD CONSTRAINT fk_detalhe_sangria FOREIGN KEY (idSangria) REFERENCES Sangria(id);
 
+-- CONFIGURAÇÃO DA LOJA
+CREATE TABLE ConfiguracaoLoja (
+    idLoja              VARCHAR(50)     NOT NULL,
+    nome                VARCHAR(150)    NOT NULL,
+    morada              VARCHAR(200)    NULL,
+    localidade          VARCHAR(100)    NULL,
+    nif                 VARCHAR(20)     NULL,
+    email               VARCHAR(150)    NULL,
+    limiteMaximoCaixa   DECIMAL(10,2)   NOT NULL DEFAULT 500.00,
+    diasAlertaValidade  INT             NOT NULL DEFAULT 7,
+    PRIMARY KEY (idLoja)
+);
+
 -- FECHO DE DIA
 CREATE TABLE FechoDia (
     id                  INT             NOT NULL AUTO_INCREMENT,

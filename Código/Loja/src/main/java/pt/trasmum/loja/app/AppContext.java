@@ -4,6 +4,7 @@ import org.mindrot.jbcrypt.BCrypt;
 import pt.trasmum.loja.dominio.core.ConfiguracaoTerminal;
 import pt.trasmum.loja.dominio.core.PerfilUtilizador;
 import pt.trasmum.loja.dominio.core.Utilizador;
+import pt.trasmum.loja.dominio.core.Loja;
 import pt.trasmum.loja.repositorio.impl.*;
 import pt.trasmum.loja.repositorio.interfaces.*;
 import pt.trasmum.loja.servico.impl.*;
@@ -43,6 +44,7 @@ public class AppContext {
     public final DevolucaoRepositorio devolucaoRepo;
     public final SessaoCaixaRepositorio sessaoCaixaRepo;
     public final FechoDiaRepositorio fechoDiaRepo;
+    public final LojaRepositorio lojaRepo;
 
     // Serviços
     public final IAutorizacaoServico autorizacaoServico;
@@ -57,6 +59,7 @@ public class AppContext {
     public final IPagamentoServico pagamentoServico;
     public final IUtilizadorServico utilizadorServico;
     public final IFechoDiaServico fechoDiaServico;
+    public final ILojaServico lojaServico;
 
     // Gateway
     public final SincronizacaoGateway sincronizacaoGateway;
@@ -85,6 +88,7 @@ public class AppContext {
         this.devolucaoRepo         = new DevolucaoRepositorioImpl(conexao);
         this.sessaoCaixaRepo       = new SessaoCaixaRepositorioImpl(conexao);
         this.fechoDiaRepo          = new FechoDiaRepositorioImpl(conexao);
+        this.lojaRepo              = new LojaRepositorioImpl(conexao);
 
         // Gateway
         Properties p = carregarProps();
@@ -105,6 +109,7 @@ public class AppContext {
         this.remessaServico      = new RemessaServico(remessaRepo, pedidoRemessaRepo, pagamentoRepo, produtoRepo, fornecedorProdutoRepo, autorizacaoServico, auditoriaServico, configuracao);
         this.pagamentoServico    = new PagamentoServico(pagamentoRepo, autorizacaoServico);
         this.utilizadorServico   = new UtilizadorServico(utilizadorRepo, autorizacaoServico, auditoriaServico);
+        this.lojaServico         = new LojaServico(lojaRepo, autorizacaoServico, auditoriaServico, configuracao.getIdLoja());
         this.fechoDiaServico     = new FechoDiaServico(
                 vendaServico, devolucaoServico, caixaServico, remessaServico,
                 auditoriaServico, autorizacaoServico, fechoDiaRepo,
@@ -115,6 +120,7 @@ public class AppContext {
         limparSessoesOrfas();
         garantirContaAdmin();
         reverterEstadosEmTransito();
+        bootstrapLoja();
     }
 
     public static synchronized AppContext getInstance() {
@@ -146,17 +152,14 @@ public class AppContext {
     }
 
     private void garantirContaAdmin() {
-        try {
-            boolean adminExiste = utilizadorRepo.listarAtivos().stream()
-                    .anyMatch(u -> "admin".equals(u.getNomeUtilizador()));
-            if (!adminExiste) {
-                String hash = BCrypt.hashpw("admin123", BCrypt.gensalt());
-                Utilizador admin = new Utilizador("admin", hash, PerfilUtilizador.CEO);
-                utilizadorRepo.guardar(admin);
-            }
-        } catch (Exception e) {
-            // Silencia — tabela pode ainda não existir
+        boolean adminExiste = utilizadorRepo.listarAtivos().stream()
+                .anyMatch(u -> "admin".equals(u.getNomeUtilizador()));
+        if (!adminExiste) {
+            String hash = BCrypt.hashpw("admin123", BCrypt.gensalt());
+            Utilizador admin = new Utilizador("admin", hash, PerfilUtilizador.CEO);
+            utilizadorRepo.guardar(admin);
         }
+
     }
 
     private void reverterEstadosEmTransito() {
@@ -164,6 +167,29 @@ public class AppContext {
             fechoDiaServico.reverterEmTransito();
         } catch (Exception e) {
             // Silencia — não deve bloquear o arranque
+        }
+    }
+
+    private void bootstrapLoja() {
+        try {
+            Loja loja = lojaRepo.obter(configuracao.getIdLoja());
+            if (loja == null) {
+                loja = new Loja(
+                        configuracao.getIdLoja(),
+                        configuracao.getNomeLoja(),
+                        configuracao.getMorada(),
+                        configuracao.getLocalidade(),
+                        configuracao.getNif(),
+                        configuracao.getEmail(),
+                        configuracao.getLimiteMaximoCaixa(),
+                        configuracao.getDiasAlertaValidade()
+                );
+                lojaRepo.guardar(loja);
+            }
+            configuracao.setLimiteMaximoCaixa(loja.getLimiteMaximoCaixa());
+            configuracao.setDiasAlertaValidade(loja.getDiasAlertaValidade());
+        } catch (Exception e) {
+            // Silencia — tabela pode ainda não existir em DBs antigos
         }
     }
 
