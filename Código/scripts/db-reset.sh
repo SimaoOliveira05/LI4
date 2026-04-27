@@ -24,13 +24,13 @@ reset_db() {
 
 case "$ALVO" in
     loja)
-        reset_db trasmum_loja "${ROOT}/Loja/db/schema.sql"
+        reset_db trasmum_loja "${ROOT}/Loja/src/main/resources/schema.sql"
         ;;
     servidor)
         reset_db trasmum_servidor "${ROOT}/ServidorCentral/backend/db/schema.sql"
         ;;
     ambas)
-        reset_db trasmum_loja "${ROOT}/Loja/db/schema.sql"
+        reset_db trasmum_loja "${ROOT}/Loja/src/main/resources/schema.sql"
         reset_db trasmum_servidor "${ROOT}/ServidorCentral/backend/db/schema.sql"
         ;;
     *)
