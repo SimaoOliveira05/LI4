@@ -2,7 +2,7 @@
 
 Sistema de loja de conveniência em duas pontas:
 
-- **`Loja/`** — terminal POS em JavaFX (Java 21 + Maven + MySQL). Ver `Loja/CLAUDE.md`.
+- **`Loja/`** — terminal POS em JavaFX (Java 21 + Maven + MySQL).
 - **`ServidorCentral/backend/`** — servidor central de analytics em Javalin (Java 21 + Maven + MySQL).
 - **`ServidorCentral/frontend/`** — dashboard de monitorização em Vue 3 + Vite.
 
