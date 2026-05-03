@@ -169,7 +169,6 @@ public class SessaoCaixaRepositorioImpl implements SessaoCaixaRepositorio {
         s.setDataAbertura(rs.getTimestamp("dataAbertura").toLocalDateTime());
         Timestamp enc = rs.getTimestamp("dataEncerramento");
         if (enc != null) s.setDataEncerramento(enc.toLocalDateTime());
-        s.setFundoInicial(buscarDetalhes(s.getId(), 0));
         s.setSangrias(buscarSangrias(s.getId()));
         return s;
     }
