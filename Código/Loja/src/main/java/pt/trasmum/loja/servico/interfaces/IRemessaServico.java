@@ -8,8 +8,8 @@ import java.util.List;
 
 public interface IRemessaServico {
     Remessa registarRemessa(Utilizador utilizador, Fornecedor fornecedor,
-                            List<LinhaRemessa> linhas, double valorTotalGuia);
-    void associarPedidoPendente(Remessa remessa);
+                            List<LinhaRemessa> linhas, double valorTotalGuia, int idPedidoRemessa);
+    void associarPedido(int idPedidoRemessa);
     PedidoRemessa criarPedidoRemessa(Utilizador utilizador, Fornecedor fornecedor,
                                      List<LinhaPedidoRemessa> linhas);
     List<PedidoRemessa> listarPedidos(EstadoPedido estado);

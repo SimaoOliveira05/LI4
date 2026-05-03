@@ -6,6 +6,6 @@ import pt.trasmum.loja.dominio.tesouraria.FechoDia;
 
 public interface IFechoDiaServico {
     FechoDia executarFecho(Utilizador utilizador, ConfiguracaoTerminal configuracao);
-    boolean reenviar(int idFecho);
+    boolean reenviar(int idFecho, Utilizador utilizador);
     void reverterEmTransito();
 }

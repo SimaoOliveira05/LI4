@@ -84,7 +84,6 @@ public class FechoDiaServico implements IFechoDiaServico {
     @Override
     public FechoDia executarFecho(Utilizador utilizador, ConfiguracaoTerminal config) {
         autorizacaoServico.exigirPerfil(utilizador, PerfilUtilizador.GESTOR, PerfilUtilizador.CEO);
-        reverterEmTransito();
 
         List<Venda> vendas = vendaServico.obterVendasPendentes();
         List<Devolucao> devolucoes = devolucaoServico.obterDevolucoesPendentes();
@@ -104,11 +103,8 @@ public class FechoDiaServico implements IFechoDiaServico {
 
         boolean sucesso = sincronizacaoGateway.enviarFechoDia(pacote);
 
-        FechoDia fecho = new FechoDia(config.getIdLoja(), utilizador.getId(), LocalDate.now());
-
         if (!sucesso) {
             reverterEmTransito();
-            fechoDiaRepo.guardar(fecho);
             throw new EnvioFechoFalhouException("Falha no envio do fecho de dia ao servidor central.");
         }
 
@@ -119,6 +115,7 @@ public class FechoDiaServico implements IFechoDiaServico {
         pagamentos.forEach(p -> { p.marcarConfirmado(); pagamentoRepo.atualizar(p); });
         logs.forEach(l -> { l.marcarConfirmado(); logRepo.atualizar(l); });
 
+        FechoDia fecho = new FechoDia(config.getIdLoja(), utilizador.getId(), LocalDate.now());
         fecho.marcarConfirmado();
         fechoDiaRepo.guardar(fecho);
 
@@ -129,12 +126,11 @@ public class FechoDiaServico implements IFechoDiaServico {
     }
 
     @Override
-    public boolean reenviar(int idFecho) {
+    public boolean reenviar(int idFecho, Utilizador utilizador) {
+        if (utilizador == null) return false;
         reverterEmTransito();
-        Utilizador utilizadorAtual = pt.trasmum.loja.app.AppContext.getInstance().utilizadorAtual;
-        if (utilizadorAtual == null) return false;
         try {
-            executarFecho(utilizadorAtual, configuracao);
+            executarFecho(utilizador, configuracao);
             return true;
         } catch (EnvioFechoFalhouException e) {
             return false;
@@ -244,7 +240,6 @@ public class FechoDiaServico implements IFechoDiaServico {
             dto.idOriginalRemessa = p.getIdRemessa();
             dto.valor = p.getValor();
             dto.dataPagamento = p.getDataHora() != null ? p.getDataHora().toString() : null;
-            dto.tipoPagamento = null;
             dtos.add(dto);
         }
         return dtos;

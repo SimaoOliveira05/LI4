@@ -8,8 +8,6 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 import pt.trasmum.loja.apresentacao.DialogoUtil;
 import pt.trasmum.loja.app.AppContext;
 import pt.trasmum.loja.apresentacao.GeradorFaturaPdf;
@@ -21,7 +19,8 @@ import pt.trasmum.loja.dominio.vendas.*;
 import pt.trasmum.loja.dominio.vendas.Venda.MetodoPagamento;
 
 import java.nio.file.Path;
-import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,36 +32,6 @@ public class VendaController {
     @FXML private TextField txtFiltro;
     @FXML private ComboBox<String> cmbFiltroCategoria;
     @FXML private FlowPane  painelProdutos;
-
-    // ── Devoluções ────────────────────────────────────────────────────
-    @FXML private TextField  txtNumeroFatura;
-    @FXML private HBox       secaoFatura;
-    @FXML private Label      lblInfoFatura;
-    @FXML private TableView<LinhaFaturaExibicao>            tblLinhasFatura;
-    @FXML private TableColumn<LinhaFaturaExibicao, String>  colFProduto;
-    @FXML private TableColumn<LinhaFaturaExibicao, String>  colFCodigo;
-    @FXML private TableColumn<LinhaFaturaExibicao, Integer> colFQtdVendida;
-    @FXML private TableColumn<LinhaFaturaExibicao, Double>  colFPrecoUnit;
-    @FXML private VBox       formDevolucao;
-    @FXML private DatePicker dpDataValidade;
-    @FXML private TextField  txtQtdDevolucao;
-    @FXML private Label      lblResultadoDevolucao;
-
-    private String numFaturaAtual;
-
-    static final class LinhaFaturaExibicao {
-        final String nomeProduto;
-        final String codigoBarras;
-        final int    quantidade;
-        final double precoUnitario;
-
-        LinhaFaturaExibicao(String nomeProduto, String codigoBarras, int quantidade, double precoUnitario) {
-            this.nomeProduto   = nomeProduto;
-            this.codigoBarras  = codigoBarras;
-            this.quantidade    = quantidade;
-            this.precoUnitario = precoUnitario;
-        }
-    }
 
     // ── Painel direito ────────────────────────────────────────────────
     @FXML private TextField txtCodigoBarras;
@@ -87,23 +56,23 @@ public class VendaController {
     private final ObservableList<LinhaExibicao> linhasExibicao = FXCollections.observableArrayList();
     private List<Produto> todosProdutos;
 
-    // ─────────────────────────────────────────────────────────────────
-    // Classe de apresentação: agrega LinhaVenda com o mesmo produto E
-    // mesmo preço unitário numa só linha visível na tabela.
-    // Linhas do mesmo produto mas preços diferentes (e.g. lote em
-    // desconto vs. lote a preço normal) ficam em linhas separadas.
-    // ─────────────────────────────────────────────────────────────────
+    // Agrega LinhaVenda com o mesmo produto e mesmo preço numa só linha visual.
+    // Lotes FEFO diferentes do mesmo produto colapsam se tiverem o mesmo preço;
+    // ficam em linhas separadas se os preços diferirem (ex: lote com desconto).
     static final class LinhaExibicao {
-        final String nome;
-        final int    quantidade;
-        final double precoUnitario;
-        final double subtotal;
+        final String        nome;
+        final int           quantidade;
+        final double        precoUnitario;
+        final double        subtotal;
+        final List<Integer> idLotes;
 
-        LinhaExibicao(String nome, int quantidade, double precoUnitario, double subtotal) {
+        LinhaExibicao(String nome, int quantidade, double precoUnitario,
+                      double subtotal, List<Integer> idLotes) {
             this.nome = nome;
             this.quantidade = quantidade;
             this.precoUnitario = precoUnitario;
             this.subtotal = subtotal;
+            this.idLotes = idLotes;
         }
     }
 
@@ -139,26 +108,8 @@ public class VendaController {
         rbNumerario.setSelected(true);
         txtValorEntregue.disableProperty().bind(rbMultibanco.selectedProperty());
 
-        // Devoluções
-        colFProduto.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().nomeProduto));
-        colFCodigo.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().codigoBarras));
-        colFQtdVendida.setCellValueFactory(c -> new SimpleIntegerProperty(c.getValue().quantidade).asObject());
-        colFPrecoUnit.setCellValueFactory(c -> new SimpleDoubleProperty(c.getValue().precoUnitario).asObject());
-        tblLinhasFatura.getSelectionModel().selectedItemProperty().addListener((obs, old, novo) -> {
-            if (novo != null) {
-                dpDataValidade.setValue(null);
-                txtQtdDevolucao.clear();
-                formDevolucao.setVisible(true);
-                formDevolucao.setManaged(true);
-            } else {
-                formDevolucao.setVisible(false);
-                formDevolucao.setManaged(false);
-            }
-        });
-
         todosProdutos = AppContext.getInstance().produtoRepo.listarAtivos();
-        
-        // Inicializar filtro de categorias
+
         List<String> categorias = todosProdutos.stream()
                 .map(Produto::getCategoria)
                 .filter(c -> c != null && !c.isBlank())
@@ -168,10 +119,9 @@ public class VendaController {
         cmbFiltroCategoria.getItems().add(0, "Todas");
         cmbFiltroCategoria.getItems().addAll(categorias);
         cmbFiltroCategoria.setValue("Todas");
-        
+
         atualizarPainelProdutos("");
 
-        // Restaura venda em curso se o utilizador navegou para outra vista e voltou
         vendaAtual = AppContext.getInstance().vendaEmCurso;
         if (vendaAtual != null) {
             setCarrinhoAtivo(true);
@@ -197,14 +147,14 @@ public class VendaController {
         painelProdutos.getChildren().clear();
         String f = filtro.toLowerCase();
         String categoriaSelecionada = cmbFiltroCategoria.getValue();
-        
+
         todosProdutos.stream()
-                .filter(p -> (categoriaSelecionada == null || categoriaSelecionada.equals("Todas") 
-                        || p.getCategoria().equals(categoriaSelecionada)))
+                .filter(p -> (categoriaSelecionada == null || categoriaSelecionada.equals("Todas")
+                        || categoriaSelecionada.equals(p.getCategoria())))
                 .filter(p -> f.isBlank()
                         || p.getNome().toLowerCase().contains(f)
                         || p.getCodigoBarras().toLowerCase().contains(f)
-                        || p.getCategoria().toLowerCase().contains(f))
+                        || (p.getCategoria() != null && p.getCategoria().toLowerCase().contains(f)))
                 .forEach(p -> painelProdutos.getChildren().add(criarBotaoProduto(p)));
     }
 
@@ -321,27 +271,27 @@ public class VendaController {
 
     // ── Tabela agregada ───────────────────────────────────────────────
 
-    /**
-     * Agrega as LinhaVenda por (produto, preço unitário) e actualiza a tabela.
-     * O serviço pode gerar várias LinhaVenda para o mesmo produto por FEFO
-     * (uma por lote consumido). Linhas com o mesmo produto E mesmo preço
-     * colapsam numa única linha visual; linhas com preços diferentes (p.ex.
-     * lote em desconto vs. lote a preço normal) ficam em linhas separadas.
-     */
     private void atualizarTabela() {
         record Chave(String nome, double preco) {}
-        // [0] = quantidade total, [1] = subtotal total
-        Map<Chave, double[]> mapa = new LinkedHashMap<>();
+        Map<Chave, double[]>      mapa      = new LinkedHashMap<>();
+        Map<Chave, List<Integer>> idLoteMap = new LinkedHashMap<>();
+
+        Map<Integer, String> nomeCache = new HashMap<>();
+        for (LinhaVenda l : vendaAtual.getLinhas()) {
+            nomeCache.computeIfAbsent(l.getIdLote(), this::resolverNomeProduto);
+        }
 
         for (LinhaVenda l : vendaAtual.getLinhas()) {
-            String nome  = resolverNomeProduto(l.getIdLote());
+            String nome  = nomeCache.get(l.getIdLote());
             double preco = round2(l.getPrecoUnitario());
-            mapa.compute(new Chave(nome, preco), (k, v) -> {
+            Chave chave  = new Chave(nome, preco);
+            mapa.compute(chave, (k, v) -> {
                 if (v == null) return new double[]{l.getQuantidade(), round2(l.calcularSubtotal())};
                 v[0] += l.getQuantidade();
                 v[1]  = round2(v[1] + round2(l.calcularSubtotal()));
                 return v;
             });
+            idLoteMap.computeIfAbsent(chave, k -> new ArrayList<>()).add(l.getIdLote());
         }
 
         linhasExibicao.setAll(
@@ -350,7 +300,8 @@ public class VendaController {
                         e.getKey().nome,
                         (int) e.getValue()[0],
                         e.getKey().preco,
-                        e.getValue()[1]))
+                        e.getValue()[1],
+                        idLoteMap.get(e.getKey())))
                 .toList()
         );
 
@@ -373,10 +324,8 @@ public class VendaController {
 
     private void removerLinhaExibicao(LinhaExibicao linha) {
         if (vendaAtual == null) return;
-        // Remove as LinhaVenda correspondentes e repõe o stock em cada lote
         vendaAtual.getLinhas().removeIf(lv -> {
-            if (resolverNomeProduto(lv.getIdLote()).equals(linha.nome)
-                    && round2(lv.getPrecoUnitario()) == round2(linha.precoUnitario)) {
+            if (linha.idLotes.contains(lv.getIdLote())) {
                 Lote lote = AppContext.getInstance().loteRepo.buscarPorId(lv.getIdLote());
                 if (lote != null) {
                     lote.setQuantidade(lote.getQuantidade() + lv.getQuantidade());
@@ -474,88 +423,6 @@ public class VendaController {
         }, "abrir-pdf");
         t.setDaemon(true);
         t.start();
-    }
-
-    // ── Devoluções ────────────────────────────────────────────────────
-
-    @FXML
-    public void onPesquisarFatura() {
-        String num = txtNumeroFatura.getText().trim();
-        if (num.isBlank()) { mostrarErro("Insira o número de fatura."); return; }
-
-        Venda venda = AppContext.getInstance().vendaRepo.buscarPorNumeroFatura(num);
-        if (venda == null || venda.getFatura() == null) {
-            mostrarErro("Fatura não encontrada: " + num);
-            esconderSecoesDevolucao();
-            return;
-        }
-
-        numFaturaAtual = num;
-        ObservableList<LinhaFaturaExibicao> linhas = FXCollections.observableArrayList();
-        for (LinhaVenda lv : venda.getLinhas()) {
-            Lote lote = AppContext.getInstance().loteRepo.buscarPorId(lv.getIdLote());
-            if (lote == null) continue;
-            Produto produto = AppContext.getInstance().produtoRepo.buscarPorId(lote.getIdProduto());
-            if (produto == null) continue;
-            linhas.add(new LinhaFaturaExibicao(
-                    produto.getNome(), produto.getCodigoBarras(),
-                    lv.getQuantidade(), lv.getPrecoUnitario()));
-        }
-
-        tblLinhasFatura.setItems(linhas);
-        tblLinhasFatura.getSelectionModel().clearSelection();
-        formDevolucao.setVisible(false);
-        formDevolucao.setManaged(false);
-        lblInfoFatura.setText("Fatura: " + num + "  ·  " + linhas.size() + " artigo(s)");
-        secaoFatura.setVisible(true);
-        secaoFatura.setManaged(true);
-        lblResultadoDevolucao.setText("");
-    }
-
-    @FXML
-    public void onProcessarDevolucao() {
-        LinhaFaturaExibicao sel = tblLinhasFatura.getSelectionModel().getSelectedItem();
-        if (sel == null) { mostrarErro("Selecione um produto."); return; }
-
-        LocalDate data  = dpDataValidade.getValue();
-        String qtdStr   = txtQtdDevolucao.getText().trim();
-
-        if (data == null)     { mostrarErro("Indique a validade da embalagem."); return; }
-        if (qtdStr.isBlank()) { mostrarErro("Indique a quantidade."); return; }
-
-        try {
-            int quantidade = Integer.parseInt(qtdStr);
-            Utilizador u = AppContext.getInstance().getUtilizadorAtual();
-            Devolucao d = AppContext.getInstance().devolucaoServico
-                    .processar(u, numFaturaAtual, sel.codigoBarras, data, quantidade);
-            lblResultadoDevolucao.setText(String.format(
-                    "Devolução processada. Valor restituído: %.2f €", d.getValorRestituido()));
-            dpDataValidade.setValue(null);
-            txtQtdDevolucao.clear();
-            formDevolucao.setVisible(false);
-            formDevolucao.setManaged(false);
-            tblLinhasFatura.getSelectionModel().clearSelection();
-        } catch (NumberFormatException e) {
-            mostrarErro("Quantidade inválida.");
-        } catch (Exception e) {
-            mostrarErro(e.getMessage());
-        }
-    }
-
-    @FXML
-    public void onCancelarDevolucao() {
-        dpDataValidade.setValue(null);
-        txtQtdDevolucao.clear();
-        formDevolucao.setVisible(false);
-        formDevolucao.setManaged(false);
-        tblLinhasFatura.getSelectionModel().clearSelection();
-    }
-
-    private void esconderSecoesDevolucao() {
-        secaoFatura.setVisible(false);
-        secaoFatura.setManaged(false);
-        formDevolucao.setVisible(false);
-        formDevolucao.setManaged(false);
     }
 
     private void mostrarErro(String msg)  { DialogoUtil.erro(msg); }

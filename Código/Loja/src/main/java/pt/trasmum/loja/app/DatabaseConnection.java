@@ -42,7 +42,7 @@ public class DatabaseConnection {
 
     public Connection getConnection() {
         try {
-            if (connection == null || connection.isClosed()) {
+            if (connection == null || connection.isClosed() || !connection.isValid(2)) {
                 connection = DriverManager.getConnection(url, user, password);
             }
         } catch (SQLException e) {

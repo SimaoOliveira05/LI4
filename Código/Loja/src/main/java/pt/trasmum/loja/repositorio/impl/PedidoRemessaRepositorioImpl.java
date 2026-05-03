@@ -52,6 +52,20 @@ public class PedidoRemessaRepositorioImpl implements PedidoRemessaRepositorio {
     }
 
     @Override
+    public PedidoRemessa buscarPorId(int id) {
+        String sql = "SELECT * FROM PedidoRemessa WHERE id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return mapearComLinhas(rs);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao buscar pedido de remessa por id", e);
+        }
+        return null;
+    }
+
+    @Override
     public List<PedidoRemessa> buscarPorEstado(EstadoPedido estado) {
         String sql = "SELECT * FROM PedidoRemessa WHERE estado = ?";
         List<PedidoRemessa> lista = new ArrayList<>();

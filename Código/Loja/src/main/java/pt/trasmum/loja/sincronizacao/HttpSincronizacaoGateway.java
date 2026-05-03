@@ -97,7 +97,7 @@ public class HttpSincronizacaoGateway implements SincronizacaoGateway {
                         .build();
             }
         } catch (Exception e) {
-            // Truststore não configurado — usa SSLContext permissivo para dev/teste
+            throw new RuntimeException("Falha ao carregar truststore '" + truststorePath + "': " + e.getMessage(), e);
         }
         return construirHttpClientPermissivo();
     }

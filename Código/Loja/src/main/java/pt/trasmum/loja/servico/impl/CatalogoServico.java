@@ -76,6 +76,8 @@ public class CatalogoServico implements ICatalogoServico {
     @Override
     public Desconto aplicarDesconto(Utilizador utilizador, int idLote, double percentagem) {
         autorizacaoServico.exigirPerfil(utilizador, PerfilUtilizador.GESTOR, PerfilUtilizador.CEO);
+        if (percentagem <= 0 || percentagem > 100)
+            throw new IllegalArgumentException("A percentagem de desconto deve estar entre 0 (exclusivo) e 100.");
         Desconto desconto = new Desconto(idLote, percentagem, LocalDate.now(), utilizador.getId());
         loteRepo.guardarDesconto(desconto, idLote);
         auditoriaServico.registar(utilizador, TipoAcao.APLICACAO_DESCONTO, "Lote", idLote,

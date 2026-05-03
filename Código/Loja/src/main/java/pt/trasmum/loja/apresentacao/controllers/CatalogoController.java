@@ -250,17 +250,25 @@ public class CatalogoController {
         int dias = AppContext.getInstance().configuracao.getDiasAlertaValidade();
         List<Lote> janela = AppContext.getInstance().catalogoServico.gerarAlertasValidade(dias);
 
+        Map<Integer, String> nomeProduto = new HashMap<>();
+        for (Lote l : janela) {
+            nomeProduto.computeIfAbsent(l.getIdProduto(), id -> {
+                Produto p = AppContext.getInstance().produtoRepo.buscarPorId(id);
+                return p != null ? p.getNome() : "Lote " + l.getId();
+            });
+        }
+
         LocalDate hoje = LocalDate.now();
         List<Lote> expirados = janela.stream().filter(l -> l.getDataValidade().isBefore(hoje)).toList();
         List<Lote> aVencer   = janela.stream().filter(l -> !l.getDataValidade().isBefore(hoje)).toList();
 
         if (!expirados.isEmpty()) {
             vboxAlertas.getChildren().add(labelSecao("🚨 Fora de validade:"));
-            expirados.forEach(l -> vboxAlertas.getChildren().add(linhaLoteAlerta(l, true)));
+            expirados.forEach(l -> vboxAlertas.getChildren().add(linhaLoteAlerta(l, nomeProduto.getOrDefault(l.getIdProduto(), "Lote " + l.getId()), true)));
         }
         if (!aVencer.isEmpty()) {
             vboxAlertas.getChildren().add(labelSecao("⚠ A vencer (" + dias + " dias):"));
-            aVencer.forEach(l -> vboxAlertas.getChildren().add(linhaLoteAlerta(l, false)));
+            aVencer.forEach(l -> vboxAlertas.getChildren().add(linhaLoteAlerta(l, nomeProduto.getOrDefault(l.getIdProduto(), "Lote " + l.getId()), false)));
         }
         if (semStock.isEmpty() && expirados.isEmpty() && aVencer.isEmpty()) {
             vboxAlertas.getChildren().add(labelItem("Sem alertas activos."));
@@ -281,9 +289,7 @@ public class CatalogoController {
         return l;
     }
 
-    private HBox linhaLoteAlerta(Lote lote, boolean expirado) {
-        Produto p = AppContext.getInstance().produtoRepo.buscarPorId(lote.getIdProduto());
-        String nome = p != null ? p.getNome() : "Lote " + lote.getId();
+    private HBox linhaLoteAlerta(Lote lote, String nome, boolean expirado) {
         String detalhe = expirado
                 ? " — expirou " + lote.getDataValidade()
                 : " — val. " + lote.getDataValidade();

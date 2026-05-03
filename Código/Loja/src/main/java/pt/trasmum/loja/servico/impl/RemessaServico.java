@@ -47,11 +47,10 @@ public class RemessaServico implements IRemessaServico {
 
     @Override
     public Remessa registarRemessa(Utilizador utilizador, Fornecedor fornecedor,
-                                    List<LinhaRemessa> linhas, double valorTotalGuia) {
+                                    List<LinhaRemessa> linhas, double valorTotalGuia, int idPedidoRemessa) {
         autorizacaoServico.exigirPerfil(utilizador, PerfilUtilizador.GESTOR, PerfilUtilizador.CEO);
         if (linhas == null || linhas.isEmpty()) throw new RemessaSemLinhasException("A remessa deve ter pelo menos uma linha.");
 
-        // Valida produtos
         for (LinhaRemessa linha : linhas) {
             Produto p = produtoRepo.buscarPorId(linha.getIdProduto());
             if (p == null) throw new ProdutoNaoEncontradoException("Produto não encontrado: " + linha.getIdProduto());
@@ -65,8 +64,8 @@ public class RemessaServico implements IRemessaServico {
                 utilizador.getId(), LocalDate.now(), valorTotalGuia);
         for (LinhaRemessa linha : linhas) remessa.adicionarLinha(linha);
 
-        remessaRepo.guardar(remessa); // transação: cria remessa + lotes
-        associarPedidoPendente(remessa);
+        remessaRepo.guardar(remessa);
+        associarPedido(idPedidoRemessa);
 
         Pagamento pagamento = new Pagamento(configuracao.getIdLoja(), fornecedor.getId(),
                 remessa.getId(), valorTotalGuia);
@@ -78,9 +77,9 @@ public class RemessaServico implements IRemessaServico {
     }
 
     @Override
-    public void associarPedidoPendente(Remessa remessa) {
-        List<PedidoRemessa> pendentes = pedidoRepo.buscarPendentesPorFornecedor(remessa.getIdFornecedor());
-        for (PedidoRemessa pedido : pendentes) {
+    public void associarPedido(int idPedidoRemessa) {
+        PedidoRemessa pedido = pedidoRepo.buscarPorId(idPedidoRemessa);
+        if (pedido != null && pedido.getEstado() == EstadoPedido.PENDENTE) {
             pedido.setEstado(EstadoPedido.CONCLUIDO);
             pedidoRepo.atualizar(pedido);
         }

@@ -146,6 +146,11 @@ public class VendaServico implements IVendaServico {
         return vendaRepo.buscarPendentes();
     }
 
+    @Override
+    public Venda buscarPorNumeroFatura(String numeroFatura) {
+        return vendaRepo.buscarPorNumeroFatura(numeroFatura);
+    }
+
     // Classe auxiliar para criar um Utilizador a partir apenas do id (para auditoria)
     private static class UtilizadorPlaceholder extends pt.trasmum.loja.dominio.core.Utilizador {
         UtilizadorPlaceholder(int id) { setId(id); }

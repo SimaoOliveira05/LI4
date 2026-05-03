@@ -8,6 +8,7 @@ import java.util.List;
 public interface PedidoRemessaRepositorio {
     void guardar(PedidoRemessa pedido);
     void atualizar(PedidoRemessa pedido);
+    PedidoRemessa buscarPorId(int id);
     List<PedidoRemessa> buscarPorEstado(EstadoPedido estado);
     List<PedidoRemessa> buscarPendentesPorFornecedor(int idFornecedor);
 }

@@ -52,7 +52,6 @@ public class PacoteFechoDTO {
         public int idOriginalRemessa;
         public double valor;
         public String dataPagamento;
-        public String tipoPagamento;
     }
 
     public static class SessaoCaixaDTO {

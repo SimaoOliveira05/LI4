@@ -9,7 +9,8 @@ import java.util.List;
 public class SessaoCaixa extends RegistoSincronizavel {
 
     private int idUtilizador;
-    private List<DetalheNumerario> fundoInicial;
+    private double fundoInicial;
+    private List<DetalheNumerario> detalheFundoInicial;
     private List<Sangria> sangrias;
     private double saldoAtual;
     private Double saldoContado;
@@ -19,7 +20,7 @@ public class SessaoCaixa extends RegistoSincronizavel {
 
     public SessaoCaixa() {
         super();
-        this.fundoInicial = new ArrayList<>();
+        this.detalheFundoInicial = new ArrayList<>();
         this.sangrias = new ArrayList<>();
         this.dataAbertura = LocalDateTime.now();
     }
@@ -27,7 +28,8 @@ public class SessaoCaixa extends RegistoSincronizavel {
     public SessaoCaixa(String idLoja, int idUtilizador, double fundo) {
         super(idLoja);
         this.idUtilizador = idUtilizador;
-        this.fundoInicial = new ArrayList<>();
+        this.fundoInicial = fundo;
+        this.detalheFundoInicial = new ArrayList<>();
         this.sangrias = new ArrayList<>();
         this.dataAbertura = LocalDateTime.now();
         this.saldoAtual = fundo;
@@ -45,8 +47,11 @@ public class SessaoCaixa extends RegistoSincronizavel {
     public int getIdUtilizador() { return idUtilizador; }
     public void setIdUtilizador(int idUtilizador) { this.idUtilizador = idUtilizador; }
 
-    public List<DetalheNumerario> getFundoInicial() { return fundoInicial; }
-    public void setFundoInicial(List<DetalheNumerario> fundoInicial) { this.fundoInicial = fundoInicial; }
+    public double getFundoInicial() { return fundoInicial; }
+    public void setFundoInicial(double fundoInicial) { this.fundoInicial = fundoInicial; }
+
+    public List<DetalheNumerario> getDetalheFundoInicial() { return detalheFundoInicial; }
+    public void setDetalheFundoInicial(List<DetalheNumerario> detalheFundoInicial) { this.detalheFundoInicial = detalheFundoInicial; }
 
     public List<Sangria> getSangrias() { return sangrias; }
     public void setSangrias(List<Sangria> sangrias) { this.sangrias = sangrias; }

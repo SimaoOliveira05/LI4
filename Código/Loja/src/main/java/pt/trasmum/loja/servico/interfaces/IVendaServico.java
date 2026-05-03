@@ -13,4 +13,5 @@ public interface IVendaServico {
     void anularVenda(Venda venda);
     double calcularTroco(double total, double valorEntregue);
     List<Venda> obterVendasPendentes();
+    Venda buscarPorNumeroFatura(String numeroFatura);
 }

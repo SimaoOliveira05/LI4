@@ -299,3 +299,19 @@ Os dados de identidade da loja (nome, morada, NIF, e-mail) e os parâmetros oper
 
 A contagem por denominação na abertura é trabalhosa e proporciona pouco valor para uma loja de conveniência — o que importa é o total do fundo. A contagem detalhada no fecho tem utilidade real (reconciliação física). As restrições de logout e fecho de dia garantem integridade operacional: nenhum fecho de dia pode acontecer com dinheiro "em aberto" em caixas não encerradas.
 
+---
+
+## 2026-05-03 — `SessaoCaixa.fundoInicial` como valor escalar
+
+**Área**: Domínio / Repositório / Schema
+
+**O que mudou**:
+- `SessaoCaixa.fundoInicial` passou de `List<DetalheNumerario>` para `double` (valor escalar). O requisito de registar denominações na abertura de caixa foi eliminado (ver entrada anterior).
+- Schema: adicionada coluna `fundoInicial DECIMAL(10,2) NOT NULL DEFAULT 0` à tabela `SessaoCaixa`.
+- `SessaoCaixaRepositorioImpl`: INSERT e SELECT atualizados para escrever/ler `fundoInicial`.
+- `CaixaController.atualizarEstado()`: passa a usar `sessaoAtual.getFundoInicial()` diretamente, eliminando o cálculo incorreto `saldoAtual + Σsangrias` que era uma aproximação.
+
+**Porquê**: A lista `detalheFundoInicial` ficou sempre vazia depois de a abertura deixar de exigir denominações, pelo que o fundo inicial não era persistido nem apresentado corretamente na UI.
+
+**Impacto no design**: Diagrama de classes de domínio — `SessaoCaixa.fundoInicial` passa de coleção para atributo escalar `double`. Schema — nova coluna `fundoInicial` na tabela `SessaoCaixa`.
+

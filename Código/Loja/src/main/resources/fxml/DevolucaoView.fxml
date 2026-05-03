@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="pt.trasmum.loja.apresentacao.controllers.DevolucaoController"
+      spacing="16">
+    <padding><Insets top="12" bottom="4"/></padding>
+
+    <Label text="Devolução" styleClass="view-title"/>
+
+    <!-- Pesquisa de fatura -->
+    <HBox spacing="8" alignment="CENTER_LEFT">
+        <TextField fx:id="txtNumeroFatura" promptText="Número de fatura…" prefWidth="300"
+                   onAction="#onPesquisarFatura"/>
+        <Button text="Pesquisar" onAction="#onPesquisarFatura" styleClass="btn-secondary"/>
+    </HBox>
+
+    <!-- Tabela de produtos (esquerda) + formulário (direita) -->
+    <HBox fx:id="secaoFatura" spacing="24" managed="false" visible="false" VBox.vgrow="ALWAYS">
+        <VBox spacing="8" HBox.hgrow="ALWAYS">
+            <Label fx:id="lblInfoFatura" styleClass="section-title"/>
+            <TableView fx:id="tblLinhasFatura" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colFProduto"    text="Produto"      prefWidth="195"/>
+                    <TableColumn fx:id="colFCodigo"     text="Código"       prefWidth="120"/>
+                    <TableColumn fx:id="colFQtdVendida" text="Qtd."         prefWidth="55"/>
+                    <TableColumn fx:id="colFPrecoUnit"  text="Preço Unit."  prefWidth="85"/>
+                </columns>
+            </TableView>
+        </VBox>
+
+        <!-- Formulário de devolução -->
+        <VBox fx:id="formDevolucao" spacing="10" managed="false" visible="false" HBox.hgrow="ALWAYS">
+            <Label text="Detalhes da Devolução" styleClass="section-title"/>
+            <GridPane hgap="12" vgap="10">
+                <Label text="Validade embalagem:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                <DatePicker fx:id="dpDataValidade"  GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                <Label text="Quantidade:"           GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                <TextField fx:id="txtQtdDevolucao"  GridPane.columnIndex="1" GridPane.rowIndex="1" prefWidth="80"/>
+            </GridPane>
+            <HBox spacing="8">
+                <Button text="Processar Devolução" onAction="#onProcessarDevolucao" styleClass="btn-primary"/>
+                <Button text="Cancelar"            onAction="#onCancelarDevolucao"  styleClass="btn-secondary"/>
+            </HBox>
+        </VBox>
+    </HBox>
+
+    <Label fx:id="lblResultadoDevolucao" wrapText="true" styleClass="resultado-label"/>
+</VBox>

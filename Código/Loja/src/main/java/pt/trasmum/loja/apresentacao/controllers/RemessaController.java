@@ -16,7 +16,9 @@ import pt.trasmum.loja.dominio.fornecedores.PedidoRemessa.EstadoPedido;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class RemessaController {
 
@@ -65,6 +67,8 @@ public class RemessaController {
     private final ObservableList<PedidoRemessa>   pedidos  = FXCollections.observableArrayList();
     private final ObservableList<LinhaNPExibicao> linhasNP = FXCollections.observableArrayList();
     private List<Produto> produtosFornecedor = new ArrayList<>();
+    private final Map<Integer, String> nomeFornecedorCache = new HashMap<>();
+    private final Map<Integer, String> nomeProdutoCache    = new HashMap<>();
 
     // ── Classe de apresentação para linhas do novo pedido ─────────
     static final class LinhaNPExibicao {
@@ -86,10 +90,8 @@ public class RemessaController {
         // Tabela de pedidos
         colId.setCellValueFactory(c ->
                 new SimpleIntegerProperty(c.getValue().getId()).asObject());
-        colFornecedor.setCellValueFactory(c -> {
-            Fornecedor f = AppContext.getInstance().fornecedorRepo.buscarPorId(c.getValue().getIdFornecedor());
-            return new SimpleStringProperty(f != null ? f.getNome() : "—");
-        });
+        colFornecedor.setCellValueFactory(c ->
+                new SimpleStringProperty(nomeFornecedorCache.getOrDefault(c.getValue().getIdFornecedor(), "—")));
         colData.setCellValueFactory(c ->
                 new SimpleStringProperty(c.getValue().getDataCriacao().toString()));
         colEstado.setCellValueFactory(c ->
@@ -109,10 +111,8 @@ public class RemessaController {
         });
 
         // Tabela de detalhe
-        colDetProduto.setCellValueFactory(c -> {
-            Produto p = AppContext.getInstance().produtoRepo.buscarPorId(c.getValue().getIdProduto());
-            return new SimpleStringProperty(p != null ? p.getNome() : "—");
-        });
+        colDetProduto.setCellValueFactory(c ->
+                new SimpleStringProperty(nomeProdutoCache.getOrDefault(c.getValue().getIdProduto(), "—")));
         colDetQtd.setCellValueFactory(c ->
                 new SimpleIntegerProperty(c.getValue().getQuantidadePretendida()).asObject());
 
@@ -184,6 +184,13 @@ public class RemessaController {
             lista.addAll(AppContext.getInstance().remessaServico.listarPedidos(EstadoPedido.PENDENTE));
             lista.addAll(AppContext.getInstance().remessaServico.listarPedidos(EstadoPedido.CONCLUIDO));
         }
+        nomeFornecedorCache.clear();
+        for (PedidoRemessa p : lista) {
+            nomeFornecedorCache.computeIfAbsent(p.getIdFornecedor(), id -> {
+                Fornecedor f = AppContext.getInstance().fornecedorRepo.buscarPorId(id);
+                return f != null ? f.getNome() : "—";
+            });
+        }
         pedidos.setAll(lista);
         painelDetalhe.setVisible(false);
         painelDetalhe.setManaged(false);
@@ -192,10 +199,16 @@ public class RemessaController {
     // ── Painel de detalhe ─────────────────────────────────────────
 
     private void mostrarDetalhe(PedidoRemessa pedido) {
-        Fornecedor f = AppContext.getInstance().fornecedorRepo.buscarPorId(pedido.getIdFornecedor());
-        lblDetFornecedor.setText(f != null ? f.getNome() : "—");
+        lblDetFornecedor.setText(nomeFornecedorCache.getOrDefault(pedido.getIdFornecedor(), "—"));
         lblDetData.setText(pedido.getDataCriacao().toString());
         lblDetEstado.setText(pedido.getEstado().name());
+        nomeProdutoCache.clear();
+        for (LinhaPedidoRemessa l : pedido.getLinhas()) {
+            nomeProdutoCache.computeIfAbsent(l.getIdProduto(), id -> {
+                Produto p = AppContext.getInstance().produtoRepo.buscarPorId(id);
+                return p != null ? p.getNome() : "—";
+            });
+        }
         tblLinhasDetalhe.setItems(FXCollections.observableArrayList(pedido.getLinhas()));
 
         boolean pendente = pedido.getEstado() == EstadoPedido.PENDENTE;
@@ -326,7 +339,7 @@ public class RemessaController {
             if (linhas.isEmpty()) { mostrarErro("Nenhuma quantidade recebida."); return; }
             Fornecedor forn  = AppContext.getInstance().fornecedorRepo.buscarPorId(pedidoChegada.getIdFornecedor());
             Utilizador u     = AppContext.getInstance().getUtilizadorAtual();
-            AppContext.getInstance().remessaServico.registarRemessa(u, forn, linhas, valorGuia);
+            AppContext.getInstance().remessaServico.registarRemessa(u, forn, linhas, valorGuia, pedidoChegada.getId());
             mostrarInfo("Remessa registada com sucesso.");
             onCancelarRegistarChegada();
             carregarPedidos();

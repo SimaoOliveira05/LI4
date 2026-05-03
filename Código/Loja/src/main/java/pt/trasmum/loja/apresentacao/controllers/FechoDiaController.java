@@ -81,9 +81,10 @@ public class FechoDiaController {
         progressIndicador.setVisible(true);
         btnReenviar.setDisable(true);
 
+        Utilizador u = AppContext.getInstance().getUtilizadorAtual();
         javafx.concurrent.Task<Boolean> task = new javafx.concurrent.Task<>() {
             @Override protected Boolean call() {
-                return AppContext.getInstance().fechoDiaServico.reenviar(idFechoFalhado);
+                return AppContext.getInstance().fechoDiaServico.reenviar(idFechoFalhado, u);
             }
         };
         task.setOnSucceeded(ev -> {
@@ -92,7 +93,6 @@ public class FechoDiaController {
                 lblEstado.setText("Reenvio bem-sucedido.");
                 btnReenviar.setVisible(false);
                 mostrarInfo("Fecho de dia reenviado com sucesso.");
-                Utilizador u = AppContext.getInstance().getUtilizadorAtual();
                 if (u != null) AppContext.getInstance().autenticacaoServico.encerrarSessao(u);
                 AppContext.getInstance().setUtilizadorAtual(null);
                 Navigator.navegarParaLogin();

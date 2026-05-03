@@ -21,15 +21,16 @@ public class SessaoCaixaRepositorioImpl implements SessaoCaixaRepositorio {
 
     @Override
     public void guardar(SessaoCaixa sessao) {
-        String sql = "INSERT INTO SessaoCaixa (idLoja, estadoSincronizacao, idUtilizador, saldoAtual, dataAbertura, dataEncerramento) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO SessaoCaixa (idLoja, estadoSincronizacao, idUtilizador, fundoInicial, saldoAtual, dataAbertura, dataEncerramento) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, sessao.getIdLoja());
             ps.setString(2, sessao.getEstadoSincronizacao().name());
             ps.setInt(3, sessao.getIdUtilizador());
-            ps.setDouble(4, sessao.getSaldoAtual());
-            ps.setTimestamp(5, Timestamp.valueOf(sessao.getDataAbertura()));
-            if (sessao.getDataEncerramento() == null) ps.setNull(6, Types.TIMESTAMP);
-            else ps.setTimestamp(6, Timestamp.valueOf(sessao.getDataEncerramento()));
+            ps.setDouble(4, sessao.getFundoInicial());
+            ps.setDouble(5, sessao.getSaldoAtual());
+            ps.setTimestamp(6, Timestamp.valueOf(sessao.getDataAbertura()));
+            if (sessao.getDataEncerramento() == null) ps.setNull(7, Types.TIMESTAMP);
+            else ps.setTimestamp(7, Timestamp.valueOf(sessao.getDataEncerramento()));
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) sessao.setId(keys.getInt(1));
@@ -38,8 +39,7 @@ public class SessaoCaixaRepositorioImpl implements SessaoCaixaRepositorio {
             throw new RuntimeException("Erro ao guardar sessão de caixa", e);
         }
 
-        // Persiste fundo inicial
-        for (DetalheNumerario d : sessao.getFundoInicial()) {
+        for (DetalheNumerario d : sessao.getDetalheFundoInicial()) {
             d.setIdSessaoCaixa(sessao.getId());
             guardarDetalhe(d);
         }
@@ -160,6 +160,7 @@ public class SessaoCaixaRepositorioImpl implements SessaoCaixaRepositorio {
         s.setIdLoja(rs.getString("idLoja"));
         s.setEstadoSincronizacao(EstadoSincronizacao.valueOf(rs.getString("estadoSincronizacao")));
         s.setIdUtilizador(rs.getInt("idUtilizador"));
+        s.setFundoInicial(rs.getDouble("fundoInicial"));
         s.setSaldoAtual(rs.getDouble("saldoAtual"));
         double sc = rs.getDouble("saldoContado");
         if (!rs.wasNull()) s.setSaldoContado(sc);

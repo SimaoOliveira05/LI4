@@ -170,8 +170,7 @@ public class CaixaController {
         if (sessaoAtual != null) {
             lblEstadoSessao.setText("Sessão: ABERTA — desde " + sessaoAtual.getDataAbertura().toLocalDate());
             lblSaldo.setText(String.format("Saldo actual: %.2f €", sessaoAtual.getSaldoAtual()));
-            lblFundoInicial.setText(String.format("Fundo inicial: %.2f €", sessaoAtual.getSaldoAtual() +
-                    sessaoAtual.getSangrias().stream().mapToDouble(Sangria::getTotal).sum()));
+            lblFundoInicial.setText(String.format("Fundo inicial: %.2f €", sessaoAtual.getFundoInicial()));
             btnAbrirSessao.setDisable(true);
             btnRegistarSangria.setDisable(false);
             btnFecharSessao.setDisable(false);

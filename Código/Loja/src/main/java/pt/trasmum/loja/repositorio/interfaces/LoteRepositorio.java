@@ -10,6 +10,7 @@ public interface LoteRepositorio {
     void atualizar(Lote lote);
     Lote buscarPorId(int id);
     List<Lote> buscarLotesFEFO(int idProduto);
+    List<Lote> buscarPorProduto(int idProduto);
     List<Lote> buscarLotesComDesconto();
     List<Lote> buscarAbaixoDaValidade(int diasLimite);
     void guardarDesconto(Desconto desconto, int idLote);

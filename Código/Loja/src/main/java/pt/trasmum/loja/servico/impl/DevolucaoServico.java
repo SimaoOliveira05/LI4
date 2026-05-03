@@ -123,12 +123,9 @@ public class DevolucaoServico implements IDevolucaoServico {
     }
 
     private boolean lotesPertencemAoProduto(int idLote, int idProduto) {
-        // Tenta encontrar o lote nos lotes FEFO do produto (inclui esgotados via busca diferente)
-        // Estratégia: busca todos os lotes do produto (FEFO retorna só qty>0)
-        // Para validação de devolução, usamos os lotes com ou sem stock via buscarAbaixoDaValidade(9999)
-        // Abordagem pragmática: usa buscarAbaixoDaValidade com prazo longo para obter todos os lotes
-        List<Lote> todos = loteRepo.buscarAbaixoDaValidade(36500); // 100 anos
-        return todos.stream().anyMatch(l -> l.getId() == idLote && l.getIdProduto() == idProduto);
+        return loteRepo.buscarPorProduto(idProduto)
+                       .stream()
+                       .anyMatch(l -> l.getId() == idLote);
     }
 
     private int quantidadeVendidaNaFatura(List<LinhaVenda> linhas, int idProduto) {

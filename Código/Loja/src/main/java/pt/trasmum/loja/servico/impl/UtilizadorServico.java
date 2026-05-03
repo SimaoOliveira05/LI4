@@ -67,9 +67,13 @@ public class UtilizadorServico implements IUtilizadorServico {
     @Override
     public void editar(Utilizador gestor, int idAlvo, UtilizadorDTO dados) {
         autorizacaoServico.exigirPerfil(gestor, PerfilUtilizador.GESTOR, PerfilUtilizador.CEO);
+        if (gestor.getPerfil() == PerfilUtilizador.GESTOR && dados.perfil() != PerfilUtilizador.FUNCIONARIO)
+            throw new pt.trasmum.loja.dominio.exceptions.ExcecoesSeguranca.AcessoNegadoException(
+                    "GESTOR só pode gerir utilizadores com perfil FUNCIONARIO.");
         Utilizador alvo = utilizadorRepo.buscarPorId(idAlvo);
         if (alvo == null) throw new IllegalArgumentException("Utilizador não encontrado: " + idAlvo);
         alvo.setNomeUtilizador(dados.nomeUtilizador());
+        alvo.setPerfil(dados.perfil());
         if (dados.palavraPasse() != null && !dados.palavraPasse().isBlank()) {
             alvo.setHashPalavraPasse(BCrypt.hashpw(dados.palavraPasse(), BCrypt.gensalt()));
         }
