@@ -1,6 +1,5 @@
 package pt.trasmum.loja.app;
 
-import javafx.beans.binding.Bindings;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Group;
@@ -62,12 +61,14 @@ public class Navigator {
             FXMLLoader loader = new FXMLLoader(Navigator.class.getResource(fxmlPath));
             Pane root = loader.load();
 
-            // Aplica escala. O Group impede o JavaFX de redimensionar o root para
-            // preencher a cena, preservando o layout no tamanho "virtual" correcto.
-            aplicarEscala(root);
-            Rectangle2D bounds = Screen.getPrimary().getVisualBounds();
             Group grupo = new Group(root);
+            // Tamanho inicial baseado no ecrã primário; será corrigido dinamicamente
+            // pela binding em aplicarEscala quando a stage maximizar em qualquer monitor.
+            Rectangle2D bounds = Screen.getPrimary().getVisualBounds();
             Scene scene = new Scene(grupo, bounds.getWidth(), bounds.getHeight());
+            scene.setFill(javafx.scene.paint.Color.web("#f0f2f5"));
+
+            aplicarEscala(root, scene);
 
             String css = Navigator.class.getResource("/styles/app.css") != null
                     ? Navigator.class.getResource("/styles/app.css").toExternalForm() : null;
@@ -79,16 +80,15 @@ public class Navigator {
     }
 
     /**
-     * Liga o prefWidth/prefHeight do painel ao inverso da escala e adiciona a
-     * transformação Scale. Quando a escala muda, o layout é recalculado no tamanho
-     * virtual menor e depois ampliado visualmente para preencher o ecrã.
+     * Vincula prefWidth/prefHeight do painel às dimensões reais da scene (não ao ecrã
+     * primário), de modo a que qualquer redimensionamento da janela — incluindo
+     * maximização num monitor diferente — seja reflectido correctamente.
      */
-    private static void aplicarEscala(Pane root) {
+    private static void aplicarEscala(Pane root, Scene scene) {
         GestorEscala gestor = GestorEscala.getInstance();
-        Rectangle2D bounds = Screen.getPrimary().getVisualBounds();
 
-        root.prefWidthProperty().bind(Bindings.divide(bounds.getWidth(),  gestor.escalaProperty()));
-        root.prefHeightProperty().bind(Bindings.divide(bounds.getHeight(), gestor.escalaProperty()));
+        root.prefWidthProperty().bind(scene.widthProperty().divide(gestor.escalaProperty()));
+        root.prefHeightProperty().bind(scene.heightProperty().divide(gestor.escalaProperty()));
 
         Scale s = new Scale();
         s.xProperty().bind(gestor.escalaProperty());

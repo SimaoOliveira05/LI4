@@ -56,5 +56,6 @@ public final class DialogoUtil {
         dlg.setResizable(true);
         dlg.getDialogPane().setMinWidth(480);
         dlg.getDialogPane().setMinHeight(220);
+
     }
 }
