@@ -22,15 +22,24 @@ reset_db() {
     echo "    schema carregado de ${schema}"
 }
 
+load_sql() {
+    local nome="$1"
+    local file="$2"
+    echo "==> A carregar ${file} em '${nome}'"
+    mysql -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASS" "${nome}" < "${file}"
+}
+
 case "$ALVO" in
     loja)
         reset_db trasmum_loja "${ROOT}/Loja/src/main/resources/schema.sql"
+        load_sql trasmum_loja "${ROOT}/Loja/src/main/resources/mock_data.sql"
         ;;
     servidor)
         reset_db trasmum_servidor "${ROOT}/ServidorCentral/backend/db/schema.sql"
         ;;
     ambas)
         reset_db trasmum_loja "${ROOT}/Loja/src/main/resources/schema.sql"
+        load_sql trasmum_loja "${ROOT}/Loja/src/main/resources/mock_data.sql"
         reset_db trasmum_servidor "${ROOT}/ServidorCentral/backend/db/schema.sql"
         ;;
     *)

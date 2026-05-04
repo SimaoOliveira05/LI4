@@ -82,11 +82,32 @@ public class AppContext {
         bootstrap();
     }
 
+    private static void overrideWithEnv(Properties props) {
+        override(props, "db.url", "DB_URL");
+        override(props, "db.user", "DB_USER");
+        override(props, "db.password", "DB_PASSWORD");
+
+        override(props, "frontend.origem", "FRONTEND_ORIGEM");
+
+        override(props, "servidor.porta", "SERVER_PORT");
+
+        override(props, "db.retry.maxTentativas", "DB_RETRY_MAX_TENTATIVAS");
+        override(props, "db.retry.delayMs", "DB_RETRY_DELAY_MS");
+    }
+
+    private static void override(Properties props, String key, String envKey) {
+        String value = System.getenv(envKey);
+        if (value != null && !value.isBlank()) {
+            props.setProperty(key, value);
+        }
+    }
+
     public static AppContext initialize() {
         Properties props = new Properties();
         try (InputStream in = AppContext.class.getClassLoader().getResourceAsStream("config.properties")) {
             if (in == null) throw new IllegalStateException("config.properties não encontrado");
             props.load(in);
+            overrideWithEnv(props);
         } catch (IOException e) {
             throw new RuntimeException("Erro a carregar config.properties: " + e.getMessage(), e);
         }
