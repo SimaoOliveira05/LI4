@@ -1,0 +1,107 @@
+O Swagger, atualmente designado por OpenAPI Specification, é uma ferramenta de documentação, desenho e validação de APIs REST que permite descrever de forma estruturada os contratos de comunicação entre sistemas — endpoints disponíveis, métodos HTTP suportados, estrutura dos pedidos e respostas, e códigos de estado esperados. No contexto deste projeto, o Swagger foi utilizado como instrumento de especificação antecipada da API do Servidor Central, permitindo definir e validar o contrato de comunicação antes de qualquer linha de código ser escrita. Na fase de implementação, a integração do plugin `javalin-openapi` permitirá gerar automaticamente a especificação OpenAPI a partir das anotações dos handlers e disponibilizar a interface Swagger UI em `/swagger-ui`, eliminando a necessidade de ferramentas externas para validar o comportamento dos endpoints durante o desenvolvimento. O valor do Swagger neste projeto concentra-se assim em dois momentos distintos: antes da implementação, como ferramenta de alinhamento contratual entre o Software de Loja — enquanto cliente da API — e o Servidor Central — enquanto fornecedor —; e durante o desenvolvimento, como cliente HTTP visual integrado na própria documentação.
+
+Os endpoints estão organizados em seis grupos funcionais; alguns exemplos de payloads e respostas para cada grupo encontram-se no @exemplos_api.#ref-prompt("45", descricao: "Texto das secções da especificação de API e utilização do swagger")
+
+A autenticação cobre o ciclo de vida da sessão da CEO no Servidor Central.
+
+#figure(
+  caption: "Endpoints — Autenticação",
+  kind: table,
+  table(
+    columns: (auto, 1fr, 2.5fr),
+    stroke: (dash: "densely-dotted", thickness: 0.75pt),
+    fill: (x, y) =>
+      if y == 0 { gray.lighten(30%) }
+      else if x == 0 { gray.lighten(50%) }
+      else { none },
+    table.header([*Método*], [*Endpoint*], [*Descrição*]),
+    [POST], [`/login`],  [Autenticação da CEO com validação de credenciais e controlo de bloqueio por tentativas falhadas],
+    [POST], [`/logout`], [Encerramento da sessão HTTP activa],
+  )
+)
+
+O endpoint de sincronização é o ponto de entrada do mecanismo de Delta Sync e o mais crítico da API, responsável pela receção dos pacotes de fecho de dia enviados por cada loja. Corresponde ao fluxo descrito no DS3 e DS4 e materializa os requisitos RF15 e RF16. A idempotência é garantida através de uma chave composta por `idLoja` e `idOriginalLoja` — um reenvio do mesmo pacote não produz duplicação de registos na base de dados central. A resposta inclui o campo `estadoConsolidacao`, que complementa a consulta disponível em `/consolidacao/{dataFecho}` e informa a loja sobre o estado global da rede para aquela data. Importa notar que o Servidor Central opera sempre sobre dados do dia anterior: os dados do dia em curso só ficam disponíveis após o fecho de dia da respetiva loja, limitação que deve ser comunicada visualmente nos dashboards da CEO conforme o ADR-01.
+
+#figure(
+  caption: "Endpoints — Sincronização",
+  kind: table,
+  table(
+    columns: (auto, 1fr, 2.5fr),
+    stroke: (dash: "densely-dotted", thickness: 0.75pt),
+    fill: (x, y) =>
+      if y == 0 { gray.lighten(30%) }
+      else if x == 0 { gray.lighten(50%) }
+      else { none },
+    table.header([*Método*], [*Endpoint*], [*Descrição*]),
+    [POST], [`/fecho`], [Receção, validação e persistência do pacote de fecho de dia enviado pelo Software de Loja],
+  )
+)
+
+O painel analítico da CEO é servido por dois endpoints de métricas — um global para toda a rede e um por loja —, calculados a partir dos dados consolidados recebidos via fecho de dia.
+
+#figure(
+  caption: "Endpoints — Dashboard e Métricas",
+  kind: table,
+  table(
+    columns: (auto, 1.8fr, 2.5fr),
+    stroke: (dash: "densely-dotted", thickness: 0.75pt),
+    fill: (x, y) =>
+      if y == 0 { gray.lighten(30%) }
+      else if x == 0 { gray.lighten(50%) }
+      else { none },
+    table.header([*Método*], [*Endpoint*], [*Descrição*]),
+    [GET], [`/dashboard/metricas`],          [Métricas globais da rede (total de vendas, devoluções, transações e remessas pendentes)],
+    [GET], [`/dashboard/metricas/{idLoja}`], [Métricas detalhadas para uma loja específica, com repartição por método de pagamento],
+  )
+)
+
+Os relatórios analíticos são filtráveis por loja, período temporal e categoria de produto, correspondendo ao caso de uso "Consultar Dashboards e Relatórios Analíticos".
+
+#figure(
+  caption: "Endpoints — Relatórios Analíticos",
+  kind: table,
+  table(
+    columns: (auto, 1fr, 2.5fr),
+    stroke: (dash: "densely-dotted", thickness: 0.75pt),
+    fill: (x, y) =>
+      if y == 0 { gray.lighten(30%) }
+      else if x == 0 { gray.lighten(50%) }
+      else { none },
+    table.header([*Método*], [*Endpoint*], [*Descrição*]),
+    [GET], [`/relatorios`], [Geração de relatório analítico com suporte a filtros por loja, período e categoria],
+  )
+)
+
+A consulta consolidada de remessas e pagamentos a fornecedores em toda a rede é disponibilizada com suporte a filtros por estado de pagamento e período.
+
+#figure(
+  caption: "Endpoints — Remessas da Rede",
+  kind: table,
+  table(
+    columns: (auto, 1fr, 2.5fr),
+    stroke: (dash: "densely-dotted", thickness: 0.75pt),
+    fill: (x, y) =>
+      if y == 0 { gray.lighten(30%) }
+      else if x == 0 { gray.lighten(50%) }
+      else { none },
+    table.header([*Método*], [*Endpoint*], [*Descrição*]),
+    [GET], [`/remessas`], [Consulta de remessas da rede com filtros por estado de pagamento, período e lojas],
+  )
+)
+
+O estado de consolidação da rede permite verificar quais as lojas que já enviaram o fecho de dia para uma determinada data, correspondendo ao caso de uso "Consultar Estado de Consolidação da Rede".
+
+#figure(
+  caption: "Endpoints — Estado de Consolidação",
+  kind: table,
+  table(
+    columns: (auto, 1.5fr, 2.5fr),
+    stroke: (dash: "densely-dotted", thickness: 0.75pt),
+    fill: (x, y) =>
+      if y == 0 { gray.lighten(30%) }
+      else if x == 0 { gray.lighten(50%) }
+      else { none },
+    table.header([*Método*], [*Endpoint*], [*Descrição*]),
+    [GET], [`/consolidacao/{dataFecho}`], [Estado de consolidação da rede para a data indicada, com identificação das lojas em falta],
+  )
+)

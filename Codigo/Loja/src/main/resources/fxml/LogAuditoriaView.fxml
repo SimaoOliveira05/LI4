@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="pt.trasmum.loja.apresentacao.controllers.LogAuditoriaController"
+            styleClass="view-root">
+    <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+
+    <top>
+        <VBox spacing="12">
+            <Label text="Logs de Auditoria" styleClass="view-title"/>
+            <HBox spacing="12" alignment="CENTER_LEFT">
+                <Label text="Filtrar por tipo:"/>
+                <ComboBox fx:id="cmbFiltroTipo" promptText="Todos" prefWidth="180"/>
+                <Button text="Atualizar" onAction="#onAtualizar" styleClass="btn-secondary"/>
+            </HBox>
+        </VBox>
+    </top>
+
+    <center>
+        <TableView fx:id="tblLogs">
+            <columns>
+                <TableColumn fx:id="colDataHora"    text="Data/Hora"      prefWidth="160"/>
+                <TableColumn fx:id="colTipo"        text="Tipo"           prefWidth="180"/>
+                <TableColumn fx:id="colEntidade"    text="Entidade"       prefWidth="140"/>
+                <TableColumn fx:id="colUtilizador"  text="Utilizador"     prefWidth="160"/>
+                <TableColumn fx:id="colEstado"      text="Sincronização"  prefWidth="140"/>
+            </columns>
+        </TableView>
+    </center>
+</BorderPane>
