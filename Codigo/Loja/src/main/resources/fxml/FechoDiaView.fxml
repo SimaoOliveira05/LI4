@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="pt.trasmum.loja.apresentacao.controllers.FechoDiaController"
+      spacing="24" alignment="CENTER" styleClass="view-root">
+    <padding><Insets top="40" right="40" bottom="40" left="40"/></padding>
+
+    <Label text="Fecho de Dia" styleClass="view-title"/>
+    <Label text="Esta operação sincroniza todos os dados pendentes com o Servidor Central."
+           wrapText="true" styleClass="view-desc"/>
+
+    <ProgressIndicator fx:id="progressIndicador" prefWidth="60" prefHeight="60"/>
+
+    <Label fx:id="lblEstado" wrapText="true" styleClass="estado-label"/>
+
+    <HBox spacing="16" alignment="CENTER">
+        <Button fx:id="btnIniciarFecho" text="Iniciar Fecho de Dia"
+                onAction="#onIniciarFecho" styleClass="btn-primary btn-large"/>
+        <Button fx:id="btnReenviar" text="Reenviar"
+                onAction="#onReenviar" styleClass="btn-secondary" visible="false"/>
+    </HBox>
+</VBox>
