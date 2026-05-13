@@ -2,6 +2,32 @@
 
 Entradas em ordem cronológica inversa (mais recente no topo).
 
+## 2026-05-13 — Endpoint `/api/lojas` adicional (ausente no swagger.txt)
+
+**Área**: Backend  
+**O quê**: Acrescentado `GET /api/lojas` que devolve a lista de todas as lojas registadas na rede (`List<Loja>`). Requer autenticação Bearer. Documentado na especificação OpenAPI em `openapi.yaml`.  
+**Porquê**: O frontend precisa de popular seletores de loja nos filtros do dashboard, relatórios e remessas. Sem este endpoint seria necessário codificar as lojas no cliente ou reutilizar as respostas de outros endpoints (acoplamento indesejado). Não constava do swagger.txt porque esse documento foi elaborado antes da implementação do frontend.  
+**Impacto no design**: Acrescenta um ponto de entrada à API pública. Implementado em `LojaHandler.listar()` usando `LojaRepositorio.listarTodas()`, que já existia para uso interno.
+
+---
+
+## 2026-05-13 — Divergências de URL entre o swagger.txt e a implementação
+
+**Área**: Backend  
+**O quê**: Os caminhos dos endpoints implementados divergem dos caminhos descritos no swagger.txt em três aspectos:
+
+| swagger.txt | Implementado | Motivo |
+|---|---|---|
+| `/login`, `/logout` | `/api/auth/login`, `/api/auth/logout` | Agrupamento sob `/api/auth/` para distinguir claramente da rota de ingestão `/fecho`, que não requer sessão CEO. |
+| `/dashboard/metricas` | `/api/dashboard/global` | O nome `global` é mais preciso — a rota agrega toda a rede; `metricas` era ambíguo face à rota por loja. |
+| `/dashboard/metricas/{idLoja}` | `/api/dashboard/loja/{idLoja}` | Consistência com o prefixo `/api/dashboard/` e clareza semântica. |
+| `/consolidacao/{dataFecho}` (parâmetro de caminho) | `/api/monitor?data=` (parâmetro de query) | A data é um filtro opcional com default para hoje, não um identificador de recurso; query param é mais adequado. O recurso foi renomeado para `monitor` por refletir melhor o caso de uso "monitorização da rede". |
+
+**Porquê**: O swagger.txt foi escrito antes da implementação e os nomes foram revistos durante o desenvolvimento para maior consistência e clareza semântica.  
+**Impacto no design**: O Software de Loja usa apenas `/fecho` e `/ping` (não afetados). O frontend já consome os caminhos implementados. A especificação `openapi.yaml` documenta os caminhos reais.
+
+---
+
 ## 2026-04-21 — Logs de auditoria com descrição textual
 
 **Área**: Backend + Frontend  

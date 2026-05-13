@@ -3,7 +3,7 @@
 In order to run this project you have to run:
 
 ```bash
-docker compose up --build
+docker compose up -d --build
 ```
 
 Open a browser and test via:

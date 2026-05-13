@@ -7,7 +7,9 @@ import pt.trasmum.servidor.dominio.ContaBloqueadaException;
 import pt.trasmum.servidor.dominio.CredenciaisInvalidasException;
 import pt.trasmum.servidor.dominio.IntegridadeInvalidaException;
 
+import java.io.InputStream;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 public class ServerMain {
@@ -38,6 +40,17 @@ public class ServerMain {
 
         app.before("/api/*", ctx.authHandler::verificarToken);
 
+        // ── Swagger / OpenAPI ───────────────────────────────────────────────
+        app.get("/openapi.yaml", c -> {
+            try (InputStream is = ServerMain.class.getClassLoader()
+                    .getResourceAsStream("openapi.yaml")) {
+                if (is == null) { c.status(404).result("openapi.yaml não encontrado"); return; }
+                c.contentType("application/yaml").result(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+            }
+        });
+        app.get("/swagger-ui", c -> c.contentType("text/html").result(swaggerUiHtml()));
+
+        // ── Sincronização (Software de Loja) ────────────────────────────────
         app.post("/fecho", ctx.ingestaoHandler::receberPacote);
         app.get("/ping", c -> c.json(Map.of("ok", true)));
 
@@ -66,5 +79,33 @@ public class ServerMain {
 
         int porta = Integer.parseInt(ctx.config.getProperty("servidor.porta", "8080"));
         app.start(porta);
+    }
+
+    private static String swaggerUiHtml() {
+        return """
+                <!DOCTYPE html>
+                <html lang="pt">
+                <head>
+                  <meta charset="UTF-8">
+                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                  <title>Servidor Central — API Docs</title>
+                  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css">
+                </head>
+                <body>
+                  <div id="swagger-ui"></div>
+                  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+                  <script>
+                    SwaggerUIBundle({
+                      url: "/openapi.yaml",
+                      dom_id: "#swagger-ui",
+                      presets: [SwaggerUIBundle.presets.apis, SwaggerUIBundle.SwaggerUIStandalonePreset],
+                      layout: "BaseLayout",
+                      deepLinking: true,
+                      persistAuthorization: true
+                    });
+                  </script>
+                </body>
+                </html>
+                """;
     }
 }
