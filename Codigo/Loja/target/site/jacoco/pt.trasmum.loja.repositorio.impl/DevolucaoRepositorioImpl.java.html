@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DevolucaoRepositorioImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">TrasmUM — Software de Loja</a> &gt; <a href="index.source.html" class="el_package">pt.trasmum.loja.repositorio.impl</a> &gt; <span class="el_source">DevolucaoRepositorioImpl.java</span></div><h1>DevolucaoRepositorioImpl.java</h1><pre class="source lang-java linenums">package pt.trasmum.loja.repositorio.impl;
+
+import pt.trasmum.loja.dominio.core.EstadoSincronizacao;
+import pt.trasmum.loja.dominio.vendas.Devolucao;
+import pt.trasmum.loja.repositorio.interfaces.DevolucaoRepositorio;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class DevolucaoRepositorioImpl implements DevolucaoRepositorio {
+
+    private final Connection connection;
+
+<span class="nc" id="L15">    public DevolucaoRepositorioImpl(Connection connection) {</span>
+<span class="nc" id="L16">        this.connection = connection;</span>
+<span class="nc" id="L17">    }</span>
+
+    @Override
+    public void guardar(Devolucao devolucao) {
+<span class="nc" id="L21">        String sql = &quot;INSERT INTO Devolucao (idLoja, estadoSincronizacao, idFatura, idUtilizador, idLote, dataHora, quantidade, dataValidadeEmbalagem, valorRestituido) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)&quot;;</span>
+<span class="nc" id="L22">        try (PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {</span>
+<span class="nc" id="L23">            ps.setString(1, devolucao.getIdLoja());</span>
+<span class="nc" id="L24">            ps.setString(2, devolucao.getEstadoSincronizacao().name());</span>
+<span class="nc" id="L25">            ps.setInt(3, devolucao.getIdFatura());</span>
+<span class="nc" id="L26">            ps.setInt(4, devolucao.getIdUtilizador());</span>
+<span class="nc" id="L27">            ps.setInt(5, devolucao.getIdLote());</span>
+<span class="nc" id="L28">            ps.setTimestamp(6, Timestamp.valueOf(devolucao.getDataHora()));</span>
+<span class="nc" id="L29">            ps.setInt(7, devolucao.getQuantidade());</span>
+<span class="nc" id="L30">            ps.setDate(8, Date.valueOf(devolucao.getDataValidadeEmbalagem()));</span>
+<span class="nc" id="L31">            ps.setDouble(9, devolucao.getValorRestituido());</span>
+<span class="nc" id="L32">            ps.executeUpdate();</span>
+<span class="nc" id="L33">            try (ResultSet keys = ps.getGeneratedKeys()) {</span>
+<span class="nc bnc" id="L34" title="All 2 branches missed.">                if (keys.next()) devolucao.setId(keys.getInt(1));</span>
+            }
+<span class="nc" id="L36">        } catch (SQLException e) {</span>
+<span class="nc" id="L37">            throw new RuntimeException(&quot;Erro ao guardar devolução&quot;, e);</span>
+<span class="nc" id="L38">        }</span>
+<span class="nc" id="L39">    }</span>
+
+    @Override
+    public void atualizarSincronizacao(int id, EstadoSincronizacao estado) {
+<span class="nc" id="L43">        String sql = &quot;UPDATE Devolucao SET estadoSincronizacao = ? WHERE id = ?&quot;;</span>
+<span class="nc" id="L44">        try (PreparedStatement ps = connection.prepareStatement(sql)) {</span>
+<span class="nc" id="L45">            ps.setString(1, estado.name());</span>
+<span class="nc" id="L46">            ps.setInt(2, id);</span>
+<span class="nc" id="L47">            ps.executeUpdate();</span>
+<span class="nc" id="L48">        } catch (SQLException e) {</span>
+<span class="nc" id="L49">            throw new RuntimeException(&quot;Erro ao atualizar sincronização de devolução&quot;, e);</span>
+<span class="nc" id="L50">        }</span>
+<span class="nc" id="L51">    }</span>
+
+    @Override
+    public List&lt;Devolucao&gt; buscarPorFatura(String numeroFatura) {
+<span class="nc" id="L55">        String sql = &quot;SELECT d.* FROM Devolucao d INNER JOIN Fatura f ON f.id = d.idFatura WHERE f.numeroFatura = ?&quot;;</span>
+<span class="nc" id="L56">        List&lt;Devolucao&gt; lista = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L57">        try (PreparedStatement ps = connection.prepareStatement(sql)) {</span>
+<span class="nc" id="L58">            ps.setString(1, numeroFatura);</span>
+<span class="nc" id="L59">            try (ResultSet rs = ps.executeQuery()) {</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">                while (rs.next()) lista.add(mapear(rs));</span>
+            }
+<span class="nc" id="L62">        } catch (SQLException e) {</span>
+<span class="nc" id="L63">            throw new RuntimeException(&quot;Erro ao buscar devoluções por fatura&quot;, e);</span>
+<span class="nc" id="L64">        }</span>
+<span class="nc" id="L65">        return lista;</span>
+    }
+
+    @Override
+    public void reverterEmTransito() {
+<span class="nc" id="L70">        String sql = &quot;UPDATE Devolucao SET estadoSincronizacao = 'PENDENTE' WHERE estadoSincronizacao = 'EM_TRANSITO'&quot;;</span>
+<span class="nc" id="L71">        try (PreparedStatement ps = connection.prepareStatement(sql)) {</span>
+<span class="nc" id="L72">            ps.executeUpdate();</span>
+<span class="nc" id="L73">        } catch (SQLException e) {</span>
+<span class="nc" id="L74">            throw new RuntimeException(&quot;Erro ao reverter devoluções em trânsito&quot;, e);</span>
+<span class="nc" id="L75">        }</span>
+<span class="nc" id="L76">    }</span>
+
+    @Override
+    public List&lt;Devolucao&gt; buscarPendentes() {
+<span class="nc" id="L80">        String sql = &quot;SELECT * FROM Devolucao WHERE estadoSincronizacao = 'PENDENTE'&quot;;</span>
+<span class="nc" id="L81">        List&lt;Devolucao&gt; lista = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L82">        try (PreparedStatement ps = connection.prepareStatement(sql);</span>
+<span class="nc" id="L83">             ResultSet rs = ps.executeQuery()) {</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">            while (rs.next()) lista.add(mapear(rs));</span>
+<span class="nc" id="L85">        } catch (SQLException e) {</span>
+<span class="nc" id="L86">            throw new RuntimeException(&quot;Erro ao buscar devoluções pendentes&quot;, e);</span>
+<span class="nc" id="L87">        }</span>
+<span class="nc" id="L88">        return lista;</span>
+    }
+
+    private Devolucao mapear(ResultSet rs) throws SQLException {
+<span class="nc" id="L92">        Devolucao d = new Devolucao();</span>
+<span class="nc" id="L93">        d.setId(rs.getInt(&quot;id&quot;));</span>
+<span class="nc" id="L94">        d.setIdLoja(rs.getString(&quot;idLoja&quot;));</span>
+<span class="nc" id="L95">        d.setEstadoSincronizacao(EstadoSincronizacao.valueOf(rs.getString(&quot;estadoSincronizacao&quot;)));</span>
+<span class="nc" id="L96">        d.setIdFatura(rs.getInt(&quot;idFatura&quot;));</span>
+<span class="nc" id="L97">        d.setIdUtilizador(rs.getInt(&quot;idUtilizador&quot;));</span>
+<span class="nc" id="L98">        d.setIdLote(rs.getInt(&quot;idLote&quot;));</span>
+<span class="nc" id="L99">        d.setDataHora(rs.getTimestamp(&quot;dataHora&quot;).toLocalDateTime());</span>
+<span class="nc" id="L100">        d.setQuantidade(rs.getInt(&quot;quantidade&quot;));</span>
+<span class="nc" id="L101">        d.setDataValidadeEmbalagem(rs.getDate(&quot;dataValidadeEmbalagem&quot;).toLocalDate());</span>
+<span class="nc" id="L102">        d.setValorRestituido(rs.getDouble(&quot;valorRestituido&quot;));</span>
+<span class="nc" id="L103">        return d;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

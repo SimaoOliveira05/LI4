@@ -1,0 +1,129 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.core,LogAuditoria,33,34,0,0,10,12,9,5,9,5
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.core,Utilizador,29,34,0,0,8,12,8,6,8,6
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.core,ConfiguracaoTerminal,131,0,2,0,40,0,14,0,13,0
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.core,PerfilUtilizador,0,21,0,0,0,4,0,1,0,1
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.core,EstadoSincronizacao,6,32,0,0,2,7,2,2,2,2
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.core,TipoAcao,6,60,0,0,2,11,2,2,2,2
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.core,RegistoSincronizavel,15,33,0,0,7,15,4,7,4,7
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.core,Loja,79,0,0,0,25,0,16,0,16,0
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.fornecedores,LinhaRemessa,60,0,0,0,19,0,14,0,14,0
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.fornecedores,Pagamento.EstadoPagamento,0,15,0,0,0,1,0,1,0,1
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.fornecedores,Remessa,40,30,0,0,12,10,9,4,9,4
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.fornecedores,PedidoRemessa.EstadoPedido,15,0,0,0,1,0,1,0,1,0
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.fornecedores,FornecedorProduto,36,0,0,0,12,0,8,0,8,0
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.fornecedores,LinhaPedidoRemessa,43,0,0,0,14,0,10,0,10,0
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.fornecedores,PedidoRemessa,87,0,2,0,26,0,17,0,16,0
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.fornecedores,Fornecedor,49,12,0,0,14,5,14,2,14,2
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.fornecedores,Pagamento,32,32,0,0,10,11,8,6,8,6
+TrasmUM — Software de Loja,pt.trasmum.loja.apresentacao.controllers,DevolucaoController,338,0,20,0,77,0,22,0,12,0
+TrasmUM — Software de Loja,pt.trasmum.loja.apresentacao.controllers,DevolucaoController.LinhaFaturaExibicao,15,0,0,0,6,0,1,0,1,0
+TrasmUM — Software de Loja,pt.trasmum.loja.apresentacao.controllers,RemessaController.LinhaNPExibicao,12,0,0,0,5,0,1,0,1,0
+TrasmUM — Software de Loja,pt.trasmum.loja.apresentacao.controllers,VendaController.new TableCell() {...},51,0,2,0,9,0,4,0,3,0
+TrasmUM — Software de Loja,pt.trasmum.loja.apresentacao.controllers,FornecedorController.new ListCell() {...},18,0,4,0,3,0,4,0,2,0
+TrasmUM — Software de Loja,pt.trasmum.loja.apresentacao.controllers,FornecedorController.new ListCell() {...},18,0,4,0,3,0,4,0,2,0
+TrasmUM — Software de Loja,pt.trasmum.loja.apresentacao.controllers,FornecedorController.new TableCell() {...},101,0,2,0,14,0,5,0,4,0
+TrasmUM — Software de Loja,pt.trasmum.loja.apresentacao.controllers,CaixaController,501,0,22,0,102,0,30,0,19,0
+TrasmUM — Software de Loja,pt.trasmum.loja.apresentacao.controllers,CatalogoController,1395,0,80,0,259,0,91,0,51,0
+TrasmUM — Software de Loja,pt.trasmum.loja.apresentacao.controllers,FechoDiaController,244,0,8,0,65,0,14,0,10,0
+TrasmUM — Software de Loja,pt.trasmum.loja.apresentacao.controllers,CaixaController.LinhaForm,21,0,0,0,3,0,2,0,2,0
+TrasmUM — Software de Loja,pt.trasmum.loja.apresentacao.controllers,LoginController,236,0,18,0,64,0,19,0,10,0
+TrasmUM — Software de Loja,pt.trasmum.loja.apresentacao.controllers,MainController,164,0,12,0,37,0,20,0,14,0
+TrasmUM — Software de Loja,pt.trasmum.loja.apresentacao.controllers,VendaController.new Record() {...},9,0,0,0,1,0,1,0,1,0
+TrasmUM — Software de Loja,pt.trasmum.loja.apresentacao.controllers,RemessaController.new ListCell() {...},18,0,4,0,3,0,4,0,2,0
+TrasmUM — Software de Loja,pt.trasmum.loja.apresentacao.controllers,RemessaController.new TableCell() {...},55,0,2,0,12,0,4,0,3,0
+TrasmUM — Software de Loja,pt.trasmum.loja.apresentacao.controllers,RemessaController.new ListCell() {...},18,0,4,0,3,0,4,0,2,0
+TrasmUM — Software de Loja,pt.trasmum.loja.apresentacao.controllers,CaixaController.new IntegerStringConverter() {...},12,0,0,0,2,0,2,0,2,0
+TrasmUM — Software de Loja,pt.trasmum.loja.apresentacao.controllers,PagamentoController,150,0,6,0,27,0,15,0,12,0
+TrasmUM — Software de Loja,pt.trasmum.loja.apresentacao.controllers,FechoDiaController.new Task() {...},19,0,0,0,2,0,2,0,2,0
+TrasmUM — Software de Loja,pt.trasmum.loja.apresentacao.controllers,FechoDiaController.new Task() {...},17,0,0,0,2,0,2,0,2,0
+TrasmUM — Software de Loja,pt.trasmum.loja.apresentacao.controllers,LojaController,162,0,14,0,33,0,10,0,3,0
+TrasmUM — Software de Loja,pt.trasmum.loja.apresentacao.controllers,VendaController,1107,0,88,0,240,0,86,0,42,0
+TrasmUM — Software de Loja,pt.trasmum.loja.apresentacao.controllers,RemessaController,1290,0,82,0,246,0,81,0,40,0
+TrasmUM — Software de Loja,pt.trasmum.loja.apresentacao.controllers,LogAuditoriaController.new ListCell() {...},20,0,4,0,4,0,4,0,2,0
+TrasmUM — Software de Loja,pt.trasmum.loja.apresentacao.controllers,LogAuditoriaController.new StringConverter() {...},12,0,2,0,3,0,4,0,3,0
+TrasmUM — Software de Loja,pt.trasmum.loja.apresentacao.controllers,CatalogoController.new TableCell() {...},51,0,2,0,9,0,4,0,3,0
+TrasmUM — Software de Loja,pt.trasmum.loja.apresentacao.controllers,LogAuditoriaController,246,0,14,0,49,0,22,0,15,0
+TrasmUM — Software de Loja,pt.trasmum.loja.apresentacao.controllers,VendaController.LinhaExibicao,18,0,0,0,7,0,1,0,1,0
+TrasmUM — Software de Loja,pt.trasmum.loja.apresentacao.controllers,FornecedorController,852,0,50,0,143,0,55,0,30,0
+TrasmUM — Software de Loja,pt.trasmum.loja.apresentacao.controllers,UtilizadorController,314,0,14,0,60,0,22,0,15,0
+TrasmUM — Software de Loja,pt.trasmum.loja.servico.impl,DevolucaoServico,10,265,6,20,1,58,6,17,0,10
+TrasmUM — Software de Loja,pt.trasmum.loja.servico.impl,CaixaServico,178,0,10,0,36,0,13,0,8,0
+TrasmUM — Software de Loja,pt.trasmum.loja.servico.impl,CatalogoServico,341,0,20,0,57,0,19,0,9,0
+TrasmUM — Software de Loja,pt.trasmum.loja.servico.impl,RemessaServico,312,0,28,0,52,0,21,0,7,0
+TrasmUM — Software de Loja,pt.trasmum.loja.servico.impl,FornecedorServico,297,0,10,0,45,0,17,0,12,0
+TrasmUM — Software de Loja,pt.trasmum.loja.servico.impl,AutenticacaoServico,66,0,4,0,18,0,6,0,4,0
+TrasmUM — Software de Loja,pt.trasmum.loja.servico.impl,FechoDiaServico,26,847,15,35,2,170,15,36,0,26
+TrasmUM — Software de Loja,pt.trasmum.loja.servico.impl,VendaServico.UtilizadorPlaceholder,0,6,0,0,0,1,0,1,0,1
+TrasmUM — Software de Loja,pt.trasmum.loja.servico.impl,AuditoriaServico,40,0,0,0,10,0,5,0,5,0
+TrasmUM — Software de Loja,pt.trasmum.loja.servico.impl,UtilizadorServico,246,0,26,0,46,0,20,0,7,0
+TrasmUM — Software de Loja,pt.trasmum.loja.servico.impl,VendaServico,1,320,5,25,0,70,5,18,0,8
+TrasmUM — Software de Loja,pt.trasmum.loja.servico.impl,PagamentoServico,77,0,2,0,18,0,7,0,6,0
+TrasmUM — Software de Loja,pt.trasmum.loja.servico.impl,LojaServico,50,0,0,0,12,0,3,0,3,0
+TrasmUM — Software de Loja,pt.trasmum.loja.servico.impl,AutorizacaoServico,0,40,0,6,0,6,0,6,0,3
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.vendas,Fatura,24,35,0,0,7,10,7,5,7,5
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.vendas,Venda.MetodoPagamento,0,15,0,0,0,1,0,1,0,1
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.vendas,LinhaVenda,26,31,0,0,7,10,7,6,7,6
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.vendas,Devolucao,33,54,0,0,9,19,9,9,9,9
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.vendas,Venda,8,93,0,0,2,28,2,16,2,16
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.vendas,Venda.EstadoVenda,0,21,0,0,0,1,0,1,0,1
+TrasmUM — Software de Loja,pt.trasmum.loja.repositorio.impl,DevolucaoRepositorioImpl,263,0,6,0,68,0,10,0,7,0
+TrasmUM — Software de Loja,pt.trasmum.loja.repositorio.impl,PedidoRemessaRepositorioImpl,371,0,18,0,96,0,18,0,9,0
+TrasmUM — Software de Loja,pt.trasmum.loja.repositorio.impl,VendaRepositorioImpl,644,0,44,0,154,0,33,0,11,0
+TrasmUM — Software de Loja,pt.trasmum.loja.repositorio.impl,UtilizadorRepositorioImpl,357,0,24,0,95,0,22,0,10,0
+TrasmUM — Software de Loja,pt.trasmum.loja.repositorio.impl,LoteRepositorioImpl,477,0,30,0,119,0,26,0,11,0
+TrasmUM — Software de Loja,pt.trasmum.loja.repositorio.impl,FornecedorProdutoRepositorioImpl,292,0,10,0,84,0,13,0,8,0
+TrasmUM — Software de Loja,pt.trasmum.loja.repositorio.impl,PagamentoRepositorioImpl,309,0,18,0,74,0,16,0,7,0
+TrasmUM — Software de Loja,pt.trasmum.loja.repositorio.impl,LogAuditoriaRepositorioImpl,290,0,8,0,75,0,12,0,8,0
+TrasmUM — Software de Loja,pt.trasmum.loja.repositorio.impl,SessaoCaixaRepositorioImpl,702,0,50,0,166,0,38,0,13,0
+TrasmUM — Software de Loja,pt.trasmum.loja.repositorio.impl,RemessaRepositorioImpl,450,0,22,0,108,0,18,0,7,0
+TrasmUM — Software de Loja,pt.trasmum.loja.repositorio.impl,LojaRepositorioImpl,193,0,6,0,52,0,8,0,5,0
+TrasmUM — Software de Loja,pt.trasmum.loja.repositorio.impl,ProdutoRepositorioImpl,376,0,20,0,95,0,19,0,9,0
+TrasmUM — Software de Loja,pt.trasmum.loja.repositorio.impl,FornecedorRepositorioImpl,237,0,10,0,60,0,11,0,6,0
+TrasmUM — Software de Loja,pt.trasmum.loja.repositorio.impl,FechoDiaRepositorioImpl,212,0,10,0,56,0,12,0,7,0
+TrasmUM — Software de Loja,pt.trasmum.loja.sincronizacao,HttpSincronizacaoGateway.new JsonSerializer() {...},9,0,0,0,2,0,2,0,2,0
+TrasmUM — Software de Loja,pt.trasmum.loja.sincronizacao,HttpSincronizacaoGateway.new JsonSerializer() {...},9,0,0,0,2,0,2,0,2,0
+TrasmUM — Software de Loja,pt.trasmum.loja.sincronizacao,PacoteFechoDTO.VendaDTO,0,3,0,0,0,1,0,1,0,1
+TrasmUM — Software de Loja,pt.trasmum.loja.sincronizacao,HttpSincronizacaoGateway.new X509TrustManager() {...},8,0,0,0,4,0,4,0,4,0
+TrasmUM — Software de Loja,pt.trasmum.loja.sincronizacao,HttpSincronizacaoGateway,250,0,12,0,62,0,12,0,6,0
+TrasmUM — Software de Loja,pt.trasmum.loja.sincronizacao,PacoteFechoDTO.SessaoCaixaDTO,0,3,0,0,0,1,0,1,0,1
+TrasmUM — Software de Loja,pt.trasmum.loja.sincronizacao,PacoteFechoDTO.PagamentoDTO,0,3,0,0,0,1,0,1,0,1
+TrasmUM — Software de Loja,pt.trasmum.loja.sincronizacao,PacoteFechoDTO.LogAuditoriaDTO,0,3,0,0,0,1,0,1,0,1
+TrasmUM — Software de Loja,pt.trasmum.loja.sincronizacao,PacoteFechoDTO.LinhaVendaDTO,0,3,0,0,0,1,0,1,0,1
+TrasmUM — Software de Loja,pt.trasmum.loja.sincronizacao,PacoteFechoDTO,0,3,0,0,0,1,0,1,0,1
+TrasmUM — Software de Loja,pt.trasmum.loja.sincronizacao,PacoteFechoDTO.RemessaDTO,0,3,0,0,0,1,0,1,0,1
+TrasmUM — Software de Loja,pt.trasmum.loja.sincronizacao,PacoteFechoDTO.DevolucaoDTO,0,3,0,0,0,1,0,1,0,1
+TrasmUM — Software de Loja,pt.trasmum.loja.servico,UtilizadorDTO,12,0,0,0,1,0,1,0,1,0
+TrasmUM — Software de Loja,pt.trasmum.loja.servico,ProdutoDTO,21,0,0,0,1,0,1,0,1,0
+TrasmUM — Software de Loja,pt.trasmum.loja.app,Navigator,189,0,8,0,49,0,13,0,9,0
+TrasmUM — Software de Loja,pt.trasmum.loja.app,AppContext,461,0,8,0,85,0,15,0,11,0
+TrasmUM — Software de Loja,pt.trasmum.loja.app,Main,19,0,0,0,10,0,3,0,3,0
+TrasmUM — Software de Loja,pt.trasmum.loja.app,GestorEscala,103,0,4,0,18,0,12,0,10,0
+TrasmUM — Software de Loja,pt.trasmum.loja.app,DatabaseConnection,87,0,10,0,22,0,8,0,3,0
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.tesouraria,DetalheNumerario,71,0,2,0,19,0,16,0,15,0
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.tesouraria,SessaoCaixa,69,58,2,0,17,18,16,7,15,7
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.tesouraria,FechoDia,14,13,0,0,5,5,4,2,4,2
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.tesouraria,Sangria,64,0,2,0,18,0,12,0,11,0
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.tesouraria,DetalheNumerario.Denominacao,124,0,0,0,20,0,4,0,4,0
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.exceptions,ExcecoesCatalogo.ProdutoNaoEncontradoException,0,4,0,0,0,1,0,1,0,1
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.exceptions,ExcecoesSeguranca.AcessoNegadoException,0,4,0,0,0,1,0,1,0,1
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.exceptions,ExcecoesVenda.StockInsuficienteException,0,4,0,0,0,1,0,1,0,1
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.exceptions,ExcecoesCaixa.SessaoCaixaJaAbertaException,4,0,0,0,1,0,1,0,1,0
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.exceptions,ExcecoesVenda.DevolucaoJaProcessadaException,0,4,0,0,0,1,0,1,0,1
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.exceptions,RemessaSemLinhasException,9,0,0,0,4,0,2,0,2,0
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.exceptions,ExcecoesCaixa.SangriaInvalidaException,4,0,0,0,1,0,1,0,1,0
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.exceptions,ExcecoesSeguranca.CredenciaisInvalidasException,4,0,0,0,1,0,1,0,1,0
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.exceptions,EnvioFechoFalhouException,5,4,0,0,2,2,1,1,1,1
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.exceptions,ExcecoesCatalogo.ProdutoNaoFornecidoException,4,0,0,0,1,0,1,0,1,0
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.exceptions,ExcecoesVenda.QuantidadeDevolucaoExcedidaException,0,4,0,0,0,1,0,1,0,1
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.exceptions,ExcecoesVenda.ArtigoNaoConstaNaFaturaException,0,4,0,0,0,1,0,1,0,1
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.exceptions,ExcecoesCaixa.SessaoCaixaNaoEncontradaException,0,4,0,0,0,1,0,1,0,1
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.exceptions,ExcecoesSeguranca.SessaoDuplicadaException,4,0,0,0,1,0,1,0,1,0
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.exceptions,ExcecoesVenda.FaturaNaoEncontradaException,0,4,0,0,0,1,0,1,0,1
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.exceptions,ExcecoesCatalogo.ProdutoInativoException,0,4,0,0,0,1,0,1,0,1
+TrasmUM — Software de Loja,pt.trasmum.loja.apresentacao,GeradorFaturaPdf.new Record() {...},9,0,0,0,1,0,1,0,1,0
+TrasmUM — Software de Loja,pt.trasmum.loja.apresentacao,DialogoUtil,108,0,0,0,28,0,6,0,6,0
+TrasmUM — Software de Loja,pt.trasmum.loja.apresentacao,GeradorFaturaPdf,925,0,42,0,157,0,35,0,14,0
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.catalogo,Desconto,53,0,0,0,17,0,12,0,12,0
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.catalogo,Lote,50,38,3,1,12,13,12,7,10,7
+TrasmUM — Software de Loja,pt.trasmum.loja.dominio.catalogo,Produto,39,53,0,0,11,17,11,8,11,8

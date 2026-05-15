@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PagamentoCentralRepositorioImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">servidor-central</a> &gt; <a href="index.source.html" class="el_package">pt.trasmum.servidor.repositorio.impl</a> &gt; <span class="el_source">PagamentoCentralRepositorioImpl.java</span></div><h1>PagamentoCentralRepositorioImpl.java</h1><pre class="source lang-java linenums">package pt.trasmum.servidor.repositorio.impl;
+
+import pt.trasmum.servidor.dominio.PagamentoCentral;
+import pt.trasmum.servidor.dominio.TipoPagamento;
+import pt.trasmum.servidor.infra.DatabaseConnection;
+import pt.trasmum.servidor.repositorio.interfaces.PagamentoCentralRepositorio;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class PagamentoCentralRepositorioImpl implements PagamentoCentralRepositorio {
+    private final DatabaseConnection db;
+
+<span class="nc" id="L15">    public PagamentoCentralRepositorioImpl(DatabaseConnection db) { this.db = db; }</span>
+
+    @Override
+    public void guardar(PagamentoCentral p) {
+<span class="nc" id="L19">        try (Connection c = db.obter()) { guardar(c, p); }</span>
+<span class="nc" id="L20">        catch (SQLException e) { throw new RuntimeException(e); }</span>
+<span class="nc" id="L21">    }</span>
+
+    @Override
+    public void guardar(Connection conn, PagamentoCentral p) {
+<span class="nc" id="L25">        String sql = &quot;INSERT INTO PagamentoCentral (idOriginalLoja, idOriginalRemessa, idLoja, valor, dataPagamento, tipoPagamento) &quot; +</span>
+                &quot;VALUES (?, ?, ?, ?, ?, ?) &quot; +
+                &quot;ON DUPLICATE KEY UPDATE idOriginalRemessa = VALUES(idOriginalRemessa), valor = VALUES(valor), dataPagamento = VALUES(dataPagamento), tipoPagamento = VALUES(tipoPagamento)&quot;;
+<span class="nc" id="L28">        try (PreparedStatement ps = conn.prepareStatement(sql)) {</span>
+<span class="nc" id="L29">            ps.setInt(1, p.getIdOriginalLoja());</span>
+<span class="nc" id="L30">            ps.setInt(2, p.getIdOriginalRemessa());</span>
+<span class="nc" id="L31">            ps.setString(3, p.getIdLoja());</span>
+<span class="nc" id="L32">            ps.setDouble(4, p.getValor());</span>
+<span class="nc bnc" id="L33" title="All 2 branches missed.">            if (p.getDataPagamento() != null) ps.setDate(5, Date.valueOf(p.getDataPagamento()));</span>
+<span class="nc" id="L34">            else ps.setNull(5, Types.DATE);</span>
+<span class="nc bnc" id="L35" title="All 2 branches missed.">            if (p.getTipoPagamento() != null) ps.setString(6, p.getTipoPagamento().name());</span>
+<span class="nc" id="L36">            else ps.setNull(6, Types.VARCHAR);</span>
+<span class="nc" id="L37">            ps.executeUpdate();</span>
+<span class="nc" id="L38">        } catch (SQLException e) { throw new RuntimeException(e); }</span>
+<span class="nc" id="L39">    }</span>
+
+    @Override
+    public List&lt;PagamentoCentral&gt; listarTodos() {
+<span class="nc" id="L43">        List&lt;PagamentoCentral&gt; out = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L44">        try (Connection c = db.obter();</span>
+<span class="nc" id="L45">             PreparedStatement ps = c.prepareStatement(</span>
+                     &quot;SELECT id, idOriginalLoja, idOriginalRemessa, idLoja, valor, dataPagamento, tipoPagamento FROM PagamentoCentral&quot;);
+<span class="nc" id="L47">             ResultSet rs = ps.executeQuery()) {</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">            while (rs.next()) {</span>
+<span class="nc" id="L49">                Date dp = rs.getDate(&quot;dataPagamento&quot;);</span>
+<span class="nc" id="L50">                String tp = rs.getString(&quot;tipoPagamento&quot;);</span>
+<span class="nc" id="L51">                out.add(new PagamentoCentral(</span>
+<span class="nc" id="L52">                        rs.getInt(&quot;id&quot;),</span>
+<span class="nc" id="L53">                        rs.getInt(&quot;idOriginalLoja&quot;),</span>
+<span class="nc" id="L54">                        rs.getInt(&quot;idOriginalRemessa&quot;),</span>
+<span class="nc" id="L55">                        rs.getString(&quot;idLoja&quot;),</span>
+<span class="nc" id="L56">                        rs.getDouble(&quot;valor&quot;),</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">                        dp != null ? dp.toLocalDate() : null,</span>
+<span class="nc bnc" id="L58" title="All 2 branches missed.">                        tp != null ? TipoPagamento.valueOf(tp) : null</span>
+                ));
+<span class="nc" id="L60">            }</span>
+<span class="nc" id="L61">        } catch (SQLException e) { throw new RuntimeException(e); }</span>
+<span class="nc" id="L62">        return out;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

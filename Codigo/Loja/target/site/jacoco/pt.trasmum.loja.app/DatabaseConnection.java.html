@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DatabaseConnection.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">TrasmUM — Software de Loja</a> &gt; <a href="index.source.html" class="el_package">pt.trasmum.loja.app</a> &gt; <span class="el_source">DatabaseConnection.java</span></div><h1>DatabaseConnection.java</h1><pre class="source lang-java linenums">package pt.trasmum.loja.app;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.Properties;
+
+public class DatabaseConnection {
+
+    private static DatabaseConnection instance;
+    private Connection connection;
+
+    private final String url;
+    private final String user;
+    private final String password;
+
+<span class="nc" id="L21">    private DatabaseConnection() {</span>
+<span class="nc" id="L22">        Properties props = new Properties();</span>
+<span class="nc" id="L23">        try (InputStream is = ClassLoader.getSystemResourceAsStream(&quot;config.properties&quot;)) {</span>
+<span class="nc bnc" id="L24" title="All 2 branches missed.">            if (is == null) {</span>
+<span class="nc" id="L25">                throw new RuntimeException(&quot;config.properties não encontrado no classpath&quot;);</span>
+            }
+<span class="nc" id="L27">            props.load(new InputStreamReader(is, StandardCharsets.UTF_8));</span>
+<span class="nc" id="L28">        } catch (IOException e) {</span>
+<span class="nc" id="L29">            throw new RuntimeException(&quot;Erro ao carregar config.properties&quot;, e);</span>
+<span class="nc" id="L30">        }</span>
+<span class="nc" id="L31">        this.url = props.getProperty(&quot;db.url&quot;);</span>
+<span class="nc" id="L32">        this.user = props.getProperty(&quot;db.user&quot;);</span>
+<span class="nc" id="L33">        this.password = props.getProperty(&quot;db.password&quot;);</span>
+<span class="nc" id="L34">    }</span>
+
+    public static synchronized DatabaseConnection getInstance() {
+<span class="nc bnc" id="L37" title="All 2 branches missed.">        if (instance == null) {</span>
+<span class="nc" id="L38">            instance = new DatabaseConnection();</span>
+        }
+<span class="nc" id="L40">        return instance;</span>
+    }
+
+    public Connection getConnection() {
+        try {
+<span class="nc bnc" id="L45" title="All 6 branches missed.">            if (connection == null || connection.isClosed() || !connection.isValid(2)) {</span>
+<span class="nc" id="L46">                connection = DriverManager.getConnection(url, user, password);</span>
+            }
+<span class="nc" id="L48">        } catch (SQLException e) {</span>
+<span class="nc" id="L49">            throw new RuntimeException(&quot;Erro ao obter conexão com a base de dados&quot;, e);</span>
+<span class="nc" id="L50">        }</span>
+<span class="nc" id="L51">        return connection;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

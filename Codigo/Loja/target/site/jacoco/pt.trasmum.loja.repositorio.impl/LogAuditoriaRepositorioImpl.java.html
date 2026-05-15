@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LogAuditoriaRepositorioImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">TrasmUM — Software de Loja</a> &gt; <a href="index.source.html" class="el_package">pt.trasmum.loja.repositorio.impl</a> &gt; <span class="el_source">LogAuditoriaRepositorioImpl.java</span></div><h1>LogAuditoriaRepositorioImpl.java</h1><pre class="source lang-java linenums">package pt.trasmum.loja.repositorio.impl;
+
+import pt.trasmum.loja.dominio.core.EstadoSincronizacao;
+import pt.trasmum.loja.dominio.core.LogAuditoria;
+import pt.trasmum.loja.dominio.core.TipoAcao;
+import pt.trasmum.loja.repositorio.interfaces.LogAuditoriaRepositorio;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class LogAuditoriaRepositorioImpl implements LogAuditoriaRepositorio {
+
+    private final Connection connection;
+
+<span class="nc" id="L16">    public LogAuditoriaRepositorioImpl(Connection connection) {</span>
+<span class="nc" id="L17">        this.connection = connection;</span>
+<span class="nc" id="L18">    }</span>
+
+    @Override
+    public void guardar(LogAuditoria log) {
+<span class="nc" id="L22">        String sql = &quot;INSERT INTO LogAuditoria (idLoja, estadoSincronizacao, acao, dataHora, idUtilizador, entidade, idEntidade, descricao) VALUES (?, ?, ?, ?, ?, ?, ?, ?)&quot;;</span>
+<span class="nc" id="L23">        try (PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {</span>
+<span class="nc" id="L24">            ps.setString(1, log.getIdLoja());</span>
+<span class="nc" id="L25">            ps.setString(2, log.getEstadoSincronizacao().name());</span>
+<span class="nc" id="L26">            ps.setString(3, log.getAcao().name());</span>
+<span class="nc" id="L27">            ps.setTimestamp(4, Timestamp.valueOf(log.getDataHora()));</span>
+<span class="nc" id="L28">            ps.setInt(5, log.getIdUtilizador());</span>
+<span class="nc" id="L29">            ps.setString(6, log.getEntidade());</span>
+<span class="nc" id="L30">            ps.setInt(7, log.getIdEntidade());</span>
+<span class="nc" id="L31">            ps.setString(8, log.getDescricao());</span>
+<span class="nc" id="L32">            ps.executeUpdate();</span>
+<span class="nc" id="L33">            try (ResultSet keys = ps.getGeneratedKeys()) {</span>
+<span class="nc bnc" id="L34" title="All 2 branches missed.">                if (keys.next()) log.setId(keys.getInt(1));</span>
+            }
+<span class="nc" id="L36">        } catch (SQLException e) {</span>
+<span class="nc" id="L37">            throw new RuntimeException(&quot;Erro ao guardar log de auditoria&quot;, e);</span>
+<span class="nc" id="L38">        }</span>
+<span class="nc" id="L39">    }</span>
+
+    @Override
+    public void atualizar(LogAuditoria log) {
+<span class="nc" id="L43">        String sql = &quot;UPDATE LogAuditoria SET estadoSincronizacao = ? WHERE id = ?&quot;;</span>
+<span class="nc" id="L44">        try (PreparedStatement ps = connection.prepareStatement(sql)) {</span>
+<span class="nc" id="L45">            ps.setString(1, log.getEstadoSincronizacao().name());</span>
+<span class="nc" id="L46">            ps.setInt(2, log.getId());</span>
+<span class="nc" id="L47">            ps.executeUpdate();</span>
+<span class="nc" id="L48">        } catch (SQLException e) {</span>
+<span class="nc" id="L49">            throw new RuntimeException(&quot;Erro ao atualizar log de auditoria&quot;, e);</span>
+<span class="nc" id="L50">        }</span>
+<span class="nc" id="L51">    }</span>
+
+    @Override
+    public void reverterEmTransito() {
+<span class="nc" id="L55">        String sql = &quot;UPDATE LogAuditoria SET estadoSincronizacao = 'PENDENTE' WHERE estadoSincronizacao = 'EM_TRANSITO'&quot;;</span>
+<span class="nc" id="L56">        try (PreparedStatement ps = connection.prepareStatement(sql)) {</span>
+<span class="nc" id="L57">            ps.executeUpdate();</span>
+<span class="nc" id="L58">        } catch (SQLException e) {</span>
+<span class="nc" id="L59">            throw new RuntimeException(&quot;Erro ao reverter logs em trânsito&quot;, e);</span>
+<span class="nc" id="L60">        }</span>
+<span class="nc" id="L61">    }</span>
+
+    @Override
+    public List&lt;LogAuditoria&gt; buscarPendentes() {
+<span class="nc" id="L65">        String sql = &quot;SELECT * FROM LogAuditoria WHERE estadoSincronizacao = 'PENDENTE'&quot;;</span>
+<span class="nc" id="L66">        List&lt;LogAuditoria&gt; lista = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L67">        try (PreparedStatement ps = connection.prepareStatement(sql);</span>
+<span class="nc" id="L68">             ResultSet rs = ps.executeQuery()) {</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">            while (rs.next()) lista.add(mapear(rs));</span>
+<span class="nc" id="L70">        } catch (SQLException e) {</span>
+<span class="nc" id="L71">            throw new RuntimeException(&quot;Erro ao buscar logs pendentes&quot;, e);</span>
+<span class="nc" id="L72">        }</span>
+<span class="nc" id="L73">        return lista;</span>
+    }
+
+    @Override
+    public List&lt;LogAuditoria&gt; buscarTodos() {
+<span class="nc" id="L78">        String sql = &quot;SELECT * FROM LogAuditoria ORDER BY dataHora DESC&quot;;</span>
+<span class="nc" id="L79">        List&lt;LogAuditoria&gt; lista = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L80">        try (PreparedStatement ps = connection.prepareStatement(sql);</span>
+<span class="nc" id="L81">             ResultSet rs = ps.executeQuery()) {</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">            while (rs.next()) lista.add(mapear(rs));</span>
+<span class="nc" id="L83">        } catch (SQLException e) {</span>
+<span class="nc" id="L84">            throw new RuntimeException(&quot;Erro ao buscar todos os logs&quot;, e);</span>
+<span class="nc" id="L85">        }</span>
+<span class="nc" id="L86">        return lista;</span>
+    }
+
+    @Override
+    public List&lt;LogAuditoria&gt; buscarPorTipo(TipoAcao tipo) {
+<span class="nc" id="L91">        String sql = &quot;SELECT * FROM LogAuditoria WHERE acao = ? ORDER BY dataHora DESC&quot;;</span>
+<span class="nc" id="L92">        List&lt;LogAuditoria&gt; lista = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L93">        try (PreparedStatement ps = connection.prepareStatement(sql)) {</span>
+<span class="nc" id="L94">            ps.setString(1, tipo.name());</span>
+<span class="nc" id="L95">            try (ResultSet rs = ps.executeQuery()) {</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">                while (rs.next()) lista.add(mapear(rs));</span>
+            }
+<span class="nc" id="L98">        } catch (SQLException e) {</span>
+<span class="nc" id="L99">            throw new RuntimeException(&quot;Erro ao buscar logs por tipo&quot;, e);</span>
+<span class="nc" id="L100">        }</span>
+<span class="nc" id="L101">        return lista;</span>
+    }
+
+    private LogAuditoria mapear(ResultSet rs) throws SQLException {
+<span class="nc" id="L105">        LogAuditoria log = new LogAuditoria();</span>
+<span class="nc" id="L106">        log.setId(rs.getInt(&quot;id&quot;));</span>
+<span class="nc" id="L107">        log.setIdLoja(rs.getString(&quot;idLoja&quot;));</span>
+<span class="nc" id="L108">        log.setEstadoSincronizacao(EstadoSincronizacao.valueOf(rs.getString(&quot;estadoSincronizacao&quot;)));</span>
+<span class="nc" id="L109">        log.setAcao(TipoAcao.valueOf(rs.getString(&quot;acao&quot;)));</span>
+<span class="nc" id="L110">        log.setDataHora(rs.getTimestamp(&quot;dataHora&quot;).toLocalDateTime());</span>
+<span class="nc" id="L111">        log.setIdUtilizador(rs.getInt(&quot;idUtilizador&quot;));</span>
+<span class="nc" id="L112">        log.setEntidade(rs.getString(&quot;entidade&quot;));</span>
+<span class="nc" id="L113">        log.setIdEntidade(rs.getInt(&quot;idEntidade&quot;));</span>
+<span class="nc" id="L114">        log.setDescricao(rs.getString(&quot;descricao&quot;));</span>
+<span class="nc" id="L115">        return log;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,454 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RemessaController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">TrasmUM — Software de Loja</a> &gt; <a href="index.source.html" class="el_package">pt.trasmum.loja.apresentacao.controllers</a> &gt; <span class="el_source">RemessaController.java</span></div><h1>RemessaController.java</h1><pre class="source lang-java linenums">package pt.trasmum.loja.apresentacao.controllers;
+
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import pt.trasmum.loja.apresentacao.DialogoUtil;
+import pt.trasmum.loja.app.AppContext;
+import pt.trasmum.loja.dominio.catalogo.Produto;
+import pt.trasmum.loja.dominio.core.Utilizador;
+import pt.trasmum.loja.dominio.fornecedores.*;
+import pt.trasmum.loja.dominio.fornecedores.PedidoRemessa.EstadoPedido;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+<span class="nc" id="L23">public class RemessaController {</span>
+
+    // ── Painel de gestão (lista + detalhe lateral) ─────────────────
+    @FXML private HBox  painelGestao;
+    @FXML private TableView&lt;PedidoRemessa&gt;            tblPedidos;
+    @FXML private TableColumn&lt;PedidoRemessa, Integer&gt; colId;
+    @FXML private TableColumn&lt;PedidoRemessa, String&gt;  colFornecedor;
+    @FXML private TableColumn&lt;PedidoRemessa, String&gt;  colData;
+    @FXML private TableColumn&lt;PedidoRemessa, String&gt;  colEstado;
+    @FXML private TableColumn&lt;PedidoRemessa, Integer&gt; colNrLinhas;
+    @FXML private ComboBox&lt;String&gt; cmbFiltro;
+
+    // Detalhe
+    @FXML private VBox  painelDetalhe;
+    @FXML private Label lblDetFornecedor;
+    @FXML private Label lblDetData;
+    @FXML private Label lblDetEstado;
+    @FXML private TableView&lt;LinhaPedidoRemessa&gt;            tblLinhasDetalhe;
+    @FXML private TableColumn&lt;LinhaPedidoRemessa, String&gt;  colDetProduto;
+    @FXML private TableColumn&lt;LinhaPedidoRemessa, Integer&gt; colDetQtd;
+    @FXML private Button btnRegistarChegada;
+
+    // ── Painel de novo pedido ──────────────────────────────────────
+    @FXML private HBox  painelNovoPedido;
+    @FXML private TextField txtFiltroNP;
+    @FXML private FlowPane  painelProdutosNP;
+    @FXML private ComboBox&lt;Fornecedor&gt; cmbFornecedorNP;
+    @FXML private TextField txtQtdNP;
+    @FXML private TableView&lt;LinhaNPExibicao&gt;            tblLinhasNP;
+    @FXML private TableColumn&lt;LinhaNPExibicao, String&gt;  colNPProduto;
+    @FXML private TableColumn&lt;LinhaNPExibicao, Integer&gt; colNPQtd;
+    @FXML private TableColumn&lt;LinhaNPExibicao, String&gt;  colNPRemover;
+
+    // ── Painel de registo de chegada ──────────────────────────────
+    @FXML private VBox       painelRegistarChegada;
+    @FXML private Label      lblChegadaTitulo;
+    @FXML private GridPane   gridChegada;
+    @FXML private TextField  txtValorGuia;
+    @FXML private Label      lblSugeridoChegada;
+    private PedidoRemessa     pedidoChegada;
+<span class="nc" id="L63">    private final List&lt;TextField&gt;  camposQtdChegada      = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L64">    private final List&lt;DatePicker&gt; camposValidadeChegada = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L65">    private final List&lt;Integer&gt;    idsProdutoChegada     = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L67">    private final ObservableList&lt;PedidoRemessa&gt;   pedidos  = FXCollections.observableArrayList();</span>
+<span class="nc" id="L68">    private final ObservableList&lt;LinhaNPExibicao&gt; linhasNP = FXCollections.observableArrayList();</span>
+<span class="nc" id="L69">    private List&lt;Produto&gt; produtosFornecedor = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L70">    private final Map&lt;Integer, String&gt; nomeFornecedorCache = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L71">    private final Map&lt;Integer, String&gt; nomeProdutoCache    = new HashMap&lt;&gt;();</span>
+
+    // ── Classe de apresentação para linhas do novo pedido ─────────
+    static final class LinhaNPExibicao {
+        final int    idProduto;
+        final String nome;
+        int          quantidade;
+
+<span class="nc" id="L79">        LinhaNPExibicao(int idProduto, String nome, int quantidade) {</span>
+<span class="nc" id="L80">            this.idProduto  = idProduto;</span>
+<span class="nc" id="L81">            this.nome       = nome;</span>
+<span class="nc" id="L82">            this.quantidade = quantidade;</span>
+<span class="nc" id="L83">        }</span>
+    }
+
+    // ── Inicialização ─────────────────────────────────────────────
+
+    @FXML
+    public void initialize() {
+        // Tabela de pedidos
+<span class="nc" id="L91">        colId.setCellValueFactory(c -&gt;</span>
+<span class="nc" id="L92">                new SimpleIntegerProperty(c.getValue().getId()).asObject());</span>
+<span class="nc" id="L93">        colFornecedor.setCellValueFactory(c -&gt;</span>
+<span class="nc" id="L94">                new SimpleStringProperty(nomeFornecedorCache.getOrDefault(c.getValue().getIdFornecedor(), &quot;—&quot;)));</span>
+<span class="nc" id="L95">        colData.setCellValueFactory(c -&gt;</span>
+<span class="nc" id="L96">                new SimpleStringProperty(c.getValue().getDataCriacao().toString()));</span>
+<span class="nc" id="L97">        colEstado.setCellValueFactory(c -&gt;</span>
+<span class="nc" id="L98">                new SimpleStringProperty(c.getValue().getEstado().name()));</span>
+<span class="nc" id="L99">        colNrLinhas.setCellValueFactory(c -&gt;</span>
+<span class="nc" id="L100">                new SimpleIntegerProperty(c.getValue().getLinhas().size()).asObject());</span>
+<span class="nc" id="L101">        tblPedidos.setItems(pedidos);</span>
+
+        // Selecção → painel de detalhe
+<span class="nc" id="L104">        tblPedidos.getSelectionModel().selectedItemProperty().addListener((obs, old, sel) -&gt; {</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">            if (sel == null) {</span>
+<span class="nc" id="L106">                painelDetalhe.setVisible(false);</span>
+<span class="nc" id="L107">                painelDetalhe.setManaged(false);</span>
+            } else {
+<span class="nc" id="L109">                mostrarDetalhe(sel);</span>
+            }
+<span class="nc" id="L111">        });</span>
+
+        // Tabela de detalhe
+<span class="nc" id="L114">        colDetProduto.setCellValueFactory(c -&gt;</span>
+<span class="nc" id="L115">                new SimpleStringProperty(nomeProdutoCache.getOrDefault(c.getValue().getIdProduto(), &quot;—&quot;)));</span>
+<span class="nc" id="L116">        colDetQtd.setCellValueFactory(c -&gt;</span>
+<span class="nc" id="L117">                new SimpleIntegerProperty(c.getValue().getQuantidadePretendida()).asObject());</span>
+
+        // Filtro
+<span class="nc" id="L120">        cmbFiltro.setItems(FXCollections.observableArrayList(&quot;TODOS&quot;, &quot;PENDENTE&quot;, &quot;CONCLUIDO&quot;));</span>
+<span class="nc" id="L121">        cmbFiltro.setValue(&quot;TODOS&quot;);</span>
+
+        // Tabela de novo pedido
+<span class="nc" id="L124">        colNPProduto.setCellValueFactory(c -&gt; new SimpleStringProperty(c.getValue().nome));</span>
+<span class="nc" id="L125">        colNPQtd.setCellValueFactory(c -&gt;</span>
+<span class="nc" id="L126">                new SimpleIntegerProperty(c.getValue().quantidade).asObject());</span>
+<span class="nc" id="L127">        colNPRemover.setCellFactory(tc -&gt; new TableCell&lt;&gt;() {</span>
+<span class="nc" id="L128">            private final Button btn = new Button(&quot;✕&quot;);</span>
+            {
+<span class="nc" id="L130">                btn.setOnAction(e -&gt; {</span>
+<span class="nc" id="L131">                    LinhaNPExibicao item = getTableView().getItems().get(getIndex());</span>
+<span class="nc" id="L132">                    linhasNP.remove(item);</span>
+<span class="nc" id="L133">                });</span>
+<span class="nc" id="L134">                btn.setStyle(&quot;-fx-font-size: 10px; -fx-padding: 2 6 2 6;&quot;);</span>
+<span class="nc" id="L135">                btn.getStyleClass().add(&quot;btn-danger&quot;);</span>
+<span class="nc" id="L136">            }</span>
+            @Override protected void updateItem(String s, boolean empty) {
+<span class="nc" id="L138">                super.updateItem(s, empty);</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">                setGraphic(empty ? null : btn);</span>
+<span class="nc" id="L140">            }</span>
+        });
+<span class="nc" id="L142">        tblLinhasNP.setItems(linhasNP);</span>
+
+        // Fornecedores para novo pedido
+<span class="nc" id="L145">        List&lt;Fornecedor&gt; fornecedores = AppContext.getInstance().fornecedorRepo.listarTodos();</span>
+<span class="nc" id="L146">        cmbFornecedorNP.setItems(FXCollections.observableArrayList(fornecedores));</span>
+<span class="nc" id="L147">        cmbFornecedorNP.setCellFactory(lv -&gt; new ListCell&lt;&gt;() {</span>
+            @Override protected void updateItem(Fornecedor f, boolean empty) {
+<span class="nc bnc" id="L149" title="All 4 branches missed.">                super.updateItem(f, empty); setText(empty || f == null ? null : f.getNome());</span>
+<span class="nc" id="L150">            }</span>
+        });
+<span class="nc" id="L152">        cmbFornecedorNP.setButtonCell(new ListCell&lt;&gt;() {</span>
+            @Override protected void updateItem(Fornecedor f, boolean empty) {
+<span class="nc bnc" id="L154" title="All 4 branches missed.">                super.updateItem(f, empty); setText(empty || f == null ? null : f.getNome());</span>
+<span class="nc" id="L155">            }</span>
+        });
+<span class="nc" id="L157">        cmbFornecedorNP.getSelectionModel().selectedItemProperty().addListener((obs, old, sel) -&gt; {</span>
+<span class="nc" id="L158">            linhasNP.clear();</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">            if (sel == null) {</span>
+<span class="nc" id="L160">                produtosFornecedor = new ArrayList&lt;&gt;();</span>
+            } else {
+<span class="nc" id="L162">                produtosFornecedor = AppContext.getInstance().fornecedorServico.listarProdutosFornecidos(sel.getId());</span>
+            }
+<span class="nc bnc" id="L164" title="All 2 branches missed.">            atualizarPainelProdutosNP(txtFiltroNP.getText() == null ? &quot;&quot; : txtFiltroNP.getText().trim());</span>
+<span class="nc" id="L165">        });</span>
+
+<span class="nc" id="L167">        try { carregarPedidos(); } catch (Exception e) { mostrarErro(&quot;Erro ao carregar pedidos: &quot; + e.getMessage()); }</span>
+<span class="nc" id="L168">    }</span>
+
+    // ── Lista de pedidos ──────────────────────────────────────────
+
+    @FXML
+<span class="nc" id="L173">    public void onFiltrar() { carregarPedidos(); }</span>
+
+    private void carregarPedidos() {
+<span class="nc" id="L176">        String filtro = cmbFiltro.getValue();</span>
+        List&lt;PedidoRemessa&gt; lista;
+<span class="nc bnc" id="L178" title="All 2 branches missed.">        if (&quot;PENDENTE&quot;.equals(filtro)) {</span>
+<span class="nc" id="L179">            lista = AppContext.getInstance().remessaServico.listarPedidos(EstadoPedido.PENDENTE);</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">        } else if (&quot;CONCLUIDO&quot;.equals(filtro)) {</span>
+<span class="nc" id="L181">            lista = AppContext.getInstance().remessaServico.listarPedidos(EstadoPedido.CONCLUIDO);</span>
+        } else {
+<span class="nc" id="L183">            lista = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L184">            lista.addAll(AppContext.getInstance().remessaServico.listarPedidos(EstadoPedido.PENDENTE));</span>
+<span class="nc" id="L185">            lista.addAll(AppContext.getInstance().remessaServico.listarPedidos(EstadoPedido.CONCLUIDO));</span>
+        }
+<span class="nc" id="L187">        nomeFornecedorCache.clear();</span>
+<span class="nc bnc" id="L188" title="All 2 branches missed.">        for (PedidoRemessa p : lista) {</span>
+<span class="nc" id="L189">            nomeFornecedorCache.computeIfAbsent(p.getIdFornecedor(), id -&gt; {</span>
+<span class="nc" id="L190">                Fornecedor f = AppContext.getInstance().fornecedorRepo.buscarPorId(id);</span>
+<span class="nc bnc" id="L191" title="All 2 branches missed.">                return f != null ? f.getNome() : &quot;—&quot;;</span>
+            });
+<span class="nc" id="L193">        }</span>
+<span class="nc" id="L194">        pedidos.setAll(lista);</span>
+<span class="nc" id="L195">        painelDetalhe.setVisible(false);</span>
+<span class="nc" id="L196">        painelDetalhe.setManaged(false);</span>
+<span class="nc" id="L197">    }</span>
+
+    // ── Painel de detalhe ─────────────────────────────────────────
+
+    private void mostrarDetalhe(PedidoRemessa pedido) {
+<span class="nc" id="L202">        lblDetFornecedor.setText(nomeFornecedorCache.getOrDefault(pedido.getIdFornecedor(), &quot;—&quot;));</span>
+<span class="nc" id="L203">        lblDetData.setText(pedido.getDataCriacao().toString());</span>
+<span class="nc" id="L204">        lblDetEstado.setText(pedido.getEstado().name());</span>
+<span class="nc" id="L205">        nomeProdutoCache.clear();</span>
+<span class="nc bnc" id="L206" title="All 2 branches missed.">        for (LinhaPedidoRemessa l : pedido.getLinhas()) {</span>
+<span class="nc" id="L207">            nomeProdutoCache.computeIfAbsent(l.getIdProduto(), id -&gt; {</span>
+<span class="nc" id="L208">                Produto p = AppContext.getInstance().produtoRepo.buscarPorId(id);</span>
+<span class="nc bnc" id="L209" title="All 2 branches missed.">                return p != null ? p.getNome() : &quot;—&quot;;</span>
+            });
+<span class="nc" id="L211">        }</span>
+<span class="nc" id="L212">        tblLinhasDetalhe.setItems(FXCollections.observableArrayList(pedido.getLinhas()));</span>
+
+<span class="nc bnc" id="L214" title="All 2 branches missed.">        boolean pendente = pedido.getEstado() == EstadoPedido.PENDENTE;</span>
+<span class="nc" id="L215">        btnRegistarChegada.setVisible(pendente);</span>
+<span class="nc" id="L216">        btnRegistarChegada.setManaged(pendente);</span>
+
+<span class="nc" id="L218">        painelDetalhe.setVisible(true);</span>
+<span class="nc" id="L219">        painelDetalhe.setManaged(true);</span>
+<span class="nc" id="L220">    }</span>
+
+    // ── Registar chegada ──────────────────────────────────────────
+
+    @FXML
+    public void onRegistarChegada() {
+<span class="nc" id="L226">        PedidoRemessa pedido = tblPedidos.getSelectionModel().getSelectedItem();</span>
+<span class="nc bnc" id="L227" title="All 4 branches missed.">        if (pedido == null || pedido.getEstado() != EstadoPedido.PENDENTE) return;</span>
+
+<span class="nc" id="L229">        pedidoChegada = pedido;</span>
+<span class="nc" id="L230">        camposQtdChegada.clear();</span>
+<span class="nc" id="L231">        camposValidadeChegada.clear();</span>
+<span class="nc" id="L232">        idsProdutoChegada.clear();</span>
+<span class="nc" id="L233">        gridChegada.getChildren().clear();</span>
+
+<span class="nc" id="L235">        Fornecedor forn = AppContext.getInstance().fornecedorRepo.buscarPorId(pedido.getIdFornecedor());</span>
+<span class="nc bnc" id="L236" title="All 2 branches missed.">        lblChegadaTitulo.setText(&quot;Registar Chegada — &quot; + (forn != null ? forn.getNome() : &quot;pedido #&quot; + pedido.getId()));</span>
+
+<span class="nc" id="L238">        gridChegada.add(boldLabel(&quot;Produto&quot;),       0, 0);</span>
+<span class="nc" id="L239">        gridChegada.add(boldLabel(&quot;Qtd. pedida&quot;),   1, 0);</span>
+<span class="nc" id="L240">        gridChegada.add(boldLabel(&quot;Qtd. recebida&quot;), 2, 0);</span>
+<span class="nc" id="L241">        gridChegada.add(boldLabel(&quot;Validade&quot;),      3, 0);</span>
+
+<span class="nc" id="L243">        int row = 1;</span>
+<span class="nc bnc" id="L244" title="All 2 branches missed.">        for (LinhaPedidoRemessa linha : pedido.getLinhas()) {</span>
+<span class="nc" id="L245">            Produto p = AppContext.getInstance().produtoRepo.buscarPorId(linha.getIdProduto());</span>
+<span class="nc" id="L246">            idsProdutoChegada.add(linha.getIdProduto());</span>
+
+<span class="nc" id="L248">            TextField tfQtd = new TextField(String.valueOf(linha.getQuantidadePretendida()));</span>
+<span class="nc" id="L249">            tfQtd.setPrefWidth(80);</span>
+<span class="nc" id="L250">            DatePicker dp = new DatePicker();</span>
+<span class="nc" id="L251">            dp.setPrefWidth(160);</span>
+<span class="nc bnc" id="L252" title="All 4 branches missed.">            boolean temValidade = p == null || p.isTemValidade();</span>
+<span class="nc bnc" id="L253" title="All 2 branches missed.">            if (temValidade) {</span>
+<span class="nc" id="L254">                dp.setValue(LocalDate.now().plusMonths(6));</span>
+            } else {
+<span class="nc" id="L256">                dp.setDisable(true);</span>
+<span class="nc" id="L257">                dp.setPromptText(&quot;sem validade&quot;);</span>
+            }
+
+<span class="nc bnc" id="L260" title="All 2 branches missed.">            gridChegada.add(new Label(p != null ? p.getNome() : &quot;—&quot;),                0, row);</span>
+<span class="nc" id="L261">            gridChegada.add(new Label(String.valueOf(linha.getQuantidadePretendida())), 1, row);</span>
+<span class="nc" id="L262">            gridChegada.add(tfQtd,                                                    2, row);</span>
+<span class="nc" id="L263">            gridChegada.add(dp,                                                       3, row);</span>
+
+<span class="nc" id="L265">            camposQtdChegada.add(tfQtd);</span>
+<span class="nc" id="L266">            camposValidadeChegada.add(dp);</span>
+<span class="nc" id="L267">            tfQtd.textProperty().addListener((o, a, b) -&gt; atualizarSugeridoChegada());</span>
+<span class="nc" id="L268">            row++;</span>
+<span class="nc" id="L269">        }</span>
+
+<span class="nc" id="L271">        txtValorGuia.clear();</span>
+<span class="nc" id="L272">        atualizarSugeridoChegada();</span>
+
+<span class="nc" id="L274">        painelGestao.setVisible(false);</span>
+<span class="nc" id="L275">        painelGestao.setManaged(false);</span>
+<span class="nc" id="L276">        painelRegistarChegada.setVisible(true);</span>
+<span class="nc" id="L277">        painelRegistarChegada.setManaged(true);</span>
+<span class="nc" id="L278">    }</span>
+
+    private void atualizarSugeridoChegada() {
+<span class="nc bnc" id="L281" title="All 2 branches missed.">        if (pedidoChegada == null) { lblSugeridoChegada.setText(&quot;&quot;); return; }</span>
+<span class="nc" id="L282">        double total = 0.0;</span>
+<span class="nc" id="L283">        boolean algumDesconhecido = false;</span>
+<span class="nc bnc" id="L284" title="All 2 branches missed.">        for (int i = 0; i &lt; camposQtdChegada.size(); i++) {</span>
+            int q;
+<span class="nc" id="L286">            try { q = Integer.parseInt(camposQtdChegada.get(i).getText().trim()); }</span>
+<span class="nc" id="L287">            catch (NumberFormatException ex) { continue; }</span>
+<span class="nc bnc" id="L288" title="All 2 branches missed.">            if (q &lt;= 0) continue;</span>
+<span class="nc" id="L289">            double preco = AppContext.getInstance().fornecedorServico</span>
+<span class="nc" id="L290">                    .precoDoFornecedor(pedidoChegada.getIdFornecedor(), idsProdutoChegada.get(i));</span>
+<span class="nc bnc" id="L291" title="All 2 branches missed.">            if (preco &lt; 0) algumDesconhecido = true;</span>
+<span class="nc" id="L292">            else total += preco * q;</span>
+        }
+<span class="nc" id="L294">        String txt = String.format(&quot;Sugerido: %.2f €&quot;, total);</span>
+<span class="nc bnc" id="L295" title="All 2 branches missed.">        if (algumDesconhecido) txt += &quot; (+ preços em falta)&quot;;</span>
+<span class="nc" id="L296">        lblSugeridoChegada.setText(txt);</span>
+<span class="nc" id="L297">    }</span>
+
+    @FXML
+    public void onCancelarRegistarChegada() {
+<span class="nc" id="L301">        pedidoChegada = null;</span>
+<span class="nc" id="L302">        camposQtdChegada.clear();</span>
+<span class="nc" id="L303">        camposValidadeChegada.clear();</span>
+<span class="nc" id="L304">        idsProdutoChegada.clear();</span>
+<span class="nc" id="L305">        gridChegada.getChildren().clear();</span>
+<span class="nc" id="L306">        painelRegistarChegada.setVisible(false);</span>
+<span class="nc" id="L307">        painelRegistarChegada.setManaged(false);</span>
+<span class="nc" id="L308">        painelGestao.setVisible(true);</span>
+<span class="nc" id="L309">        painelGestao.setManaged(true);</span>
+<span class="nc" id="L310">    }</span>
+
+    @FXML
+    public void onConfirmarRegistarChegada() {
+<span class="nc bnc" id="L314" title="All 2 branches missed.">        if (pedidoChegada == null) return;</span>
+<span class="nc bnc" id="L315" title="All 2 branches missed.">        for (int i = 0; i &lt; camposQtdChegada.size(); i++) {</span>
+            try {
+<span class="nc" id="L317">                int q = Integer.parseInt(camposQtdChegada.get(i).getText().trim());</span>
+<span class="nc bnc" id="L318" title="All 2 branches missed.">                if (q &lt; 0) throw new NumberFormatException();</span>
+<span class="nc" id="L319">            } catch (NumberFormatException ex) {</span>
+<span class="nc" id="L320">                mostrarErro(&quot;Quantidade inválida na linha &quot; + (i + 1)); return;</span>
+<span class="nc" id="L321">            }</span>
+<span class="nc" id="L322">            DatePicker dp = camposValidadeChegada.get(i);</span>
+<span class="nc bnc" id="L323" title="All 4 branches missed.">            if (!dp.isDisabled() &amp;&amp; dp.getValue() == null) {</span>
+<span class="nc" id="L324">                mostrarErro(&quot;Selecione a validade na linha &quot; + (i + 1)); return;</span>
+            }
+        }
+        double valorGuia;
+<span class="nc" id="L328">        try { valorGuia = Double.parseDouble(txtValorGuia.getText().replace(&quot;,&quot;, &quot;.&quot;)); }</span>
+<span class="nc" id="L329">        catch (NumberFormatException ex) { mostrarErro(&quot;Valor de guia inválido.&quot;); return; }</span>
+
+        try {
+<span class="nc" id="L332">            List&lt;LinhaRemessa&gt; linhas = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L333" title="All 2 branches missed.">            for (int i = 0; i &lt; idsProdutoChegada.size(); i++) {</span>
+<span class="nc" id="L334">                int qtd = Integer.parseInt(camposQtdChegada.get(i).getText().trim());</span>
+<span class="nc bnc" id="L335" title="All 2 branches missed.">                if (qtd &gt; 0) {</span>
+<span class="nc" id="L336">                    linhas.add(new LinhaRemessa(0, idsProdutoChegada.get(i), qtd, camposValidadeChegada.get(i).getValue()));</span>
+                }
+            }
+<span class="nc bnc" id="L339" title="All 2 branches missed.">            if (linhas.isEmpty()) { mostrarErro(&quot;Nenhuma quantidade recebida.&quot;); return; }</span>
+<span class="nc" id="L340">            Fornecedor forn  = AppContext.getInstance().fornecedorRepo.buscarPorId(pedidoChegada.getIdFornecedor());</span>
+<span class="nc" id="L341">            Utilizador u     = AppContext.getInstance().getUtilizadorAtual();</span>
+<span class="nc" id="L342">            AppContext.getInstance().remessaServico.registarRemessa(u, forn, linhas, valorGuia, pedidoChegada.getId());</span>
+<span class="nc" id="L343">            mostrarInfo(&quot;Remessa registada com sucesso.&quot;);</span>
+<span class="nc" id="L344">            onCancelarRegistarChegada();</span>
+<span class="nc" id="L345">            carregarPedidos();</span>
+<span class="nc" id="L346">        } catch (Exception ex) { mostrarErro(ex.getMessage()); }</span>
+<span class="nc" id="L347">    }</span>
+
+    // ── Novo pedido ───────────────────────────────────────────────
+
+    @FXML
+    public void onIniciarNovoPedido() {
+<span class="nc" id="L353">        linhasNP.clear();</span>
+<span class="nc" id="L354">        txtFiltroNP.clear();</span>
+<span class="nc" id="L355">        txtQtdNP.setText(&quot;1&quot;);</span>
+        // Recarrega fornecedores (pode ter havido alterações no catálogo)
+<span class="nc" id="L357">        List&lt;Fornecedor&gt; fornecedores = AppContext.getInstance().fornecedorRepo.listarTodos();</span>
+<span class="nc" id="L358">        cmbFornecedorNP.setItems(FXCollections.observableArrayList(fornecedores));</span>
+<span class="nc" id="L359">        cmbFornecedorNP.setValue(null);</span>
+<span class="nc" id="L360">        produtosFornecedor = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L361">        atualizarPainelProdutosNP(&quot;&quot;);</span>
+<span class="nc" id="L362">        painelGestao.setVisible(false);</span>
+<span class="nc" id="L363">        painelGestao.setManaged(false);</span>
+<span class="nc" id="L364">        painelNovoPedido.setVisible(true);</span>
+<span class="nc" id="L365">        painelNovoPedido.setManaged(true);</span>
+<span class="nc" id="L366">    }</span>
+
+    @FXML
+    public void onCancelarNovoPedido() {
+<span class="nc" id="L370">        painelNovoPedido.setVisible(false);</span>
+<span class="nc" id="L371">        painelNovoPedido.setManaged(false);</span>
+<span class="nc" id="L372">        painelGestao.setVisible(true);</span>
+<span class="nc" id="L373">        painelGestao.setManaged(true);</span>
+<span class="nc" id="L374">    }</span>
+
+    @FXML
+    public void onFiltrarNP() {
+<span class="nc" id="L378">        atualizarPainelProdutosNP(txtFiltroNP.getText().trim());</span>
+<span class="nc" id="L379">    }</span>
+
+    private void atualizarPainelProdutosNP(String filtro) {
+<span class="nc" id="L382">        painelProdutosNP.getChildren().clear();</span>
+<span class="nc bnc" id="L383" title="All 2 branches missed.">        if (cmbFornecedorNP.getValue() == null) {</span>
+<span class="nc" id="L384">            Label hint = new Label(&quot;Selecione primeiro um fornecedor.&quot;);</span>
+<span class="nc" id="L385">            hint.setStyle(&quot;-fx-font-style: italic; -fx-text-fill: #777;&quot;);</span>
+<span class="nc" id="L386">            painelProdutosNP.getChildren().add(hint);</span>
+<span class="nc" id="L387">            return;</span>
+        }
+<span class="nc" id="L389">        String f = filtro.toLowerCase();</span>
+<span class="nc" id="L390">        produtosFornecedor.stream()</span>
+<span class="nc bnc" id="L391" title="All 2 branches missed.">                .filter(p -&gt; f.isBlank()</span>
+<span class="nc bnc" id="L392" title="All 2 branches missed.">                        || p.getNome().toLowerCase().contains(f)</span>
+<span class="nc bnc" id="L393" title="All 2 branches missed.">                        || p.getCodigoBarras().toLowerCase().contains(f)</span>
+<span class="nc bnc" id="L394" title="All 2 branches missed.">                        || p.getCategoria().toLowerCase().contains(f))</span>
+<span class="nc" id="L395">                .forEach(p -&gt; painelProdutosNP.getChildren().add(criarBotaoProdutoNP(p)));</span>
+<span class="nc" id="L396">    }</span>
+
+    private Button criarBotaoProdutoNP(Produto produto) {
+<span class="nc" id="L399">        Button btn = new Button(produto.getNome());</span>
+<span class="nc" id="L400">        btn.getStyleClass().add(&quot;produto-btn&quot;);</span>
+<span class="nc" id="L401">        btn.setOnAction(e -&gt; adicionarLinhaOrdem(produto));</span>
+<span class="nc" id="L402">        return btn;</span>
+    }
+
+    private void adicionarLinhaOrdem(Produto produto) {
+        int qtd;
+        try {
+<span class="nc" id="L408">            qtd = Integer.parseInt(txtQtdNP.getText().trim());</span>
+<span class="nc bnc" id="L409" title="All 2 branches missed.">            if (qtd &lt;= 0) { mostrarErro(&quot;Quantidade deve ser &gt; 0.&quot;); return; }</span>
+<span class="nc" id="L410">        } catch (NumberFormatException e) { mostrarErro(&quot;Quantidade inválida.&quot;); return; }</span>
+
+<span class="nc" id="L412">        LinhaNPExibicao existente = linhasNP.stream()</span>
+<span class="nc bnc" id="L413" title="All 2 branches missed.">                .filter(l -&gt; l.idProduto == produto.getId())</span>
+<span class="nc" id="L414">                .findFirst().orElse(null);</span>
+<span class="nc bnc" id="L415" title="All 2 branches missed.">        if (existente != null) {</span>
+<span class="nc" id="L416">            existente.quantidade += qtd;</span>
+<span class="nc" id="L417">            tblLinhasNP.refresh();</span>
+        } else {
+<span class="nc" id="L419">            linhasNP.add(new LinhaNPExibicao(produto.getId(), produto.getNome(), qtd));</span>
+        }
+<span class="nc" id="L421">        txtQtdNP.setText(&quot;1&quot;);</span>
+<span class="nc" id="L422">    }</span>
+
+    @FXML
+    public void onFinalizarNovoPedido() {
+<span class="nc" id="L426">        Fornecedor forn = cmbFornecedorNP.getValue();</span>
+<span class="nc bnc" id="L427" title="All 2 branches missed.">        if (forn == null)        { mostrarErro(&quot;Selecione um fornecedor.&quot;); return; }</span>
+<span class="nc bnc" id="L428" title="All 2 branches missed.">        if (linhasNP.isEmpty())  { mostrarErro(&quot;Adicione pelo menos um produto.&quot;); return; }</span>
+
+<span class="nc" id="L430">        List&lt;LinhaPedidoRemessa&gt; linhas = linhasNP.stream()</span>
+<span class="nc" id="L431">                .map(l -&gt; new LinhaPedidoRemessa(0, l.idProduto, l.quantidade))</span>
+<span class="nc" id="L432">                .toList();</span>
+
+<span class="nc" id="L434">        Utilizador u = AppContext.getInstance().getUtilizadorAtual();</span>
+        try {
+<span class="nc" id="L436">            AppContext.getInstance().remessaServico.criarPedidoRemessa(u, forn, linhas);</span>
+<span class="nc" id="L437">            mostrarInfo(&quot;Pedido de remessa criado com sucesso.&quot;);</span>
+<span class="nc" id="L438">            onCancelarNovoPedido();</span>
+<span class="nc" id="L439">            carregarPedidos();</span>
+<span class="nc" id="L440">        } catch (Exception e) { mostrarErro(e.getMessage()); }</span>
+<span class="nc" id="L441">    }</span>
+
+    // ── Auxiliares ────────────────────────────────────────────────
+
+    private static Label boldLabel(String text) {
+<span class="nc" id="L446">        Label l = new Label(text);</span>
+<span class="nc" id="L447">        l.setStyle(&quot;-fx-font-weight: bold;&quot;);</span>
+<span class="nc" id="L448">        return l;</span>
+    }
+
+<span class="nc" id="L451">    private void mostrarErro(String m) { DialogoUtil.erro(m); }</span>
+<span class="nc" id="L452">    private void mostrarInfo(String m) { DialogoUtil.info(m); }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

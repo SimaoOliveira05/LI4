@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>VendaRepositorioImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">TrasmUM — Software de Loja</a> &gt; <a href="index.source.html" class="el_package">pt.trasmum.loja.repositorio.impl</a> &gt; <span class="el_source">VendaRepositorioImpl.java</span></div><h1>VendaRepositorioImpl.java</h1><pre class="source lang-java linenums">package pt.trasmum.loja.repositorio.impl;
+
+import pt.trasmum.loja.dominio.core.EstadoSincronizacao;
+import pt.trasmum.loja.dominio.vendas.*;
+import pt.trasmum.loja.dominio.vendas.Venda.MetodoPagamento;
+import pt.trasmum.loja.dominio.vendas.Venda.EstadoVenda;
+import pt.trasmum.loja.repositorio.interfaces.VendaRepositorio;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class VendaRepositorioImpl implements VendaRepositorio {
+
+    private final Connection connection;
+
+<span class="nc" id="L17">    public VendaRepositorioImpl(Connection connection) {</span>
+<span class="nc" id="L18">        this.connection = connection;</span>
+<span class="nc" id="L19">    }</span>
+
+    @Override
+    public void guardar(Venda venda) {
+<span class="nc" id="L23">        boolean autoCommit = true;</span>
+        try {
+<span class="nc" id="L25">            autoCommit = connection.getAutoCommit();</span>
+<span class="nc" id="L26">            connection.setAutoCommit(false);</span>
+
+            // 1. Persiste a Venda
+<span class="nc" id="L29">            String sqlVenda = &quot;INSERT INTO Venda (idLoja, estadoSincronizacao, idUtilizador, dataHora, metodoPagamento, totalFaturado, estado) VALUES (?, ?, ?, ?, ?, ?, ?)&quot;;</span>
+<span class="nc" id="L30">            try (PreparedStatement ps = connection.prepareStatement(sqlVenda, Statement.RETURN_GENERATED_KEYS)) {</span>
+<span class="nc" id="L31">                ps.setString(1, venda.getIdLoja());</span>
+<span class="nc" id="L32">                ps.setString(2, venda.getEstadoSincronizacao().name());</span>
+<span class="nc" id="L33">                ps.setInt(3, venda.getIdUtilizador());</span>
+<span class="nc" id="L34">                ps.setTimestamp(4, Timestamp.valueOf(venda.getDataHora()));</span>
+<span class="nc" id="L35">                ps.setString(5, venda.getMetodoPagamento().name());</span>
+<span class="nc" id="L36">                ps.setDouble(6, venda.getTotalFaturado());</span>
+<span class="nc" id="L37">                ps.setString(7, venda.getEstado().name());</span>
+<span class="nc" id="L38">                ps.executeUpdate();</span>
+<span class="nc" id="L39">                try (ResultSet keys = ps.getGeneratedKeys()) {</span>
+<span class="nc bnc" id="L40" title="All 2 branches missed.">                    if (keys.next()) venda.setId(keys.getInt(1));</span>
+                }
+            }
+
+            // 2. Persiste cada LinhaVenda
+<span class="nc" id="L45">            String sqlLinha = &quot;INSERT INTO LinhaVenda (idVenda, idLote, quantidade, precoUnitario) VALUES (?, ?, ?, ?)&quot;;</span>
+<span class="nc bnc" id="L46" title="All 2 branches missed.">            for (LinhaVenda linha : venda.getLinhas()) {</span>
+<span class="nc" id="L47">                linha.setIdVenda(venda.getId());</span>
+<span class="nc" id="L48">                try (PreparedStatement ps = connection.prepareStatement(sqlLinha, Statement.RETURN_GENERATED_KEYS)) {</span>
+<span class="nc" id="L49">                    ps.setInt(1, linha.getIdVenda());</span>
+<span class="nc" id="L50">                    ps.setInt(2, linha.getIdLote());</span>
+<span class="nc" id="L51">                    ps.setInt(3, linha.getQuantidade());</span>
+<span class="nc" id="L52">                    ps.setDouble(4, linha.getPrecoUnitario());</span>
+<span class="nc" id="L53">                    ps.executeUpdate();</span>
+<span class="nc" id="L54">                    try (ResultSet keys = ps.getGeneratedKeys()) {</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">                        if (keys.next()) linha.setId(keys.getInt(1));</span>
+                    }
+                }
+<span class="nc" id="L58">            }</span>
+
+            // 3. Persiste a Fatura (se existir)
+<span class="nc bnc" id="L61" title="All 2 branches missed.">            if (venda.getFatura() != null) {</span>
+<span class="nc" id="L62">                Fatura fatura = venda.getFatura();</span>
+<span class="nc" id="L63">                fatura.setIdVenda(venda.getId());</span>
+<span class="nc" id="L64">                String sqlFatura = &quot;INSERT INTO Fatura (idVenda, numeroFatura, dataEmissao, nifCliente) VALUES (?, ?, ?, ?)&quot;;</span>
+<span class="nc" id="L65">                try (PreparedStatement ps = connection.prepareStatement(sqlFatura, Statement.RETURN_GENERATED_KEYS)) {</span>
+<span class="nc" id="L66">                    ps.setInt(1, fatura.getIdVenda());</span>
+<span class="nc" id="L67">                    ps.setString(2, fatura.getNumeroFatura());</span>
+<span class="nc" id="L68">                    ps.setTimestamp(3, Timestamp.valueOf(fatura.getDataEmissao()));</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">                    if (fatura.getNifCliente() == null) ps.setNull(4, Types.VARCHAR);</span>
+<span class="nc" id="L70">                    else ps.setString(4, fatura.getNifCliente());</span>
+<span class="nc" id="L71">                    ps.executeUpdate();</span>
+<span class="nc" id="L72">                    try (ResultSet keys = ps.getGeneratedKeys()) {</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">                        if (keys.next()) fatura.setId(keys.getInt(1));</span>
+                    }
+                }
+            }
+
+<span class="nc" id="L78">            connection.commit();</span>
+<span class="nc" id="L79">        } catch (SQLException e) {</span>
+<span class="nc" id="L80">            try { connection.rollback(); } catch (SQLException ex) { /* ignorar */ }</span>
+<span class="nc" id="L81">            throw new RuntimeException(&quot;Erro ao guardar venda (transação revertida)&quot;, e);</span>
+        } finally {
+<span class="nc" id="L83">            try { connection.setAutoCommit(autoCommit); } catch (SQLException e) { /* ignorar */ }</span>
+        }
+<span class="nc" id="L85">    }</span>
+
+    @Override
+    public Venda buscarPorId(int id) {
+<span class="nc" id="L89">        String sql = &quot;SELECT * FROM Venda WHERE id = ?&quot;;</span>
+<span class="nc" id="L90">        try (PreparedStatement ps = connection.prepareStatement(sql)) {</span>
+<span class="nc" id="L91">            ps.setInt(1, id);</span>
+<span class="nc" id="L92">            try (ResultSet rs = ps.executeQuery()) {</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">                if (rs.next()) return mapearComDetalhes(rs);</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">            }</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">        } catch (SQLException e) {</span>
+<span class="nc" id="L96">            throw new RuntimeException(&quot;Erro ao buscar venda por id&quot;, e);</span>
+<span class="nc" id="L97">        }</span>
+<span class="nc" id="L98">        return null;</span>
+    }
+
+    @Override
+    public Venda buscarPorNumeroFatura(String numeroFatura) {
+<span class="nc" id="L103">        String sql = &quot;SELECT v.* FROM Venda v INNER JOIN Fatura f ON f.idVenda = v.id WHERE f.numeroFatura = ?&quot;;</span>
+<span class="nc" id="L104">        try (PreparedStatement ps = connection.prepareStatement(sql)) {</span>
+<span class="nc" id="L105">            ps.setString(1, numeroFatura);</span>
+<span class="nc" id="L106">            try (ResultSet rs = ps.executeQuery()) {</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">                if (rs.next()) return mapearComDetalhes(rs);</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">            }</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">        } catch (SQLException e) {</span>
+<span class="nc" id="L110">            throw new RuntimeException(&quot;Erro ao buscar venda por número de fatura&quot;, e);</span>
+<span class="nc" id="L111">        }</span>
+<span class="nc" id="L112">        return null;</span>
+    }
+
+    @Override
+    public void reverterEmTransito() {
+<span class="nc" id="L117">        String sql = &quot;UPDATE Venda SET estadoSincronizacao = 'PENDENTE' WHERE estadoSincronizacao = 'EM_TRANSITO'&quot;;</span>
+<span class="nc" id="L118">        try (PreparedStatement ps = connection.prepareStatement(sql)) {</span>
+<span class="nc" id="L119">            ps.executeUpdate();</span>
+<span class="nc" id="L120">        } catch (SQLException e) {</span>
+<span class="nc" id="L121">            throw new RuntimeException(&quot;Erro ao reverter vendas em trânsito&quot;, e);</span>
+<span class="nc" id="L122">        }</span>
+<span class="nc" id="L123">    }</span>
+
+    @Override
+    public List&lt;Venda&gt; buscarPendentes() {
+<span class="nc" id="L127">        String sql = &quot;SELECT * FROM Venda WHERE estadoSincronizacao = 'PENDENTE'&quot;;</span>
+<span class="nc" id="L128">        List&lt;Venda&gt; lista = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L129">        try (PreparedStatement ps = connection.prepareStatement(sql);</span>
+<span class="nc" id="L130">             ResultSet rs = ps.executeQuery()) {</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">            while (rs.next()) lista.add(mapearComDetalhes(rs));</span>
+<span class="nc" id="L132">        } catch (SQLException e) {</span>
+<span class="nc" id="L133">            throw new RuntimeException(&quot;Erro ao buscar vendas pendentes&quot;, e);</span>
+<span class="nc" id="L134">        }</span>
+<span class="nc" id="L135">        return lista;</span>
+    }
+
+    @Override
+    public void atualizarSincronizacao(int id, EstadoSincronizacao estado) {
+<span class="nc" id="L140">        String sql = &quot;UPDATE Venda SET estadoSincronizacao = ? WHERE id = ?&quot;;</span>
+<span class="nc" id="L141">        try (PreparedStatement ps = connection.prepareStatement(sql)) {</span>
+<span class="nc" id="L142">            ps.setString(1, estado.name());</span>
+<span class="nc" id="L143">            ps.setInt(2, id);</span>
+<span class="nc" id="L144">            ps.executeUpdate();</span>
+<span class="nc" id="L145">        } catch (SQLException e) {</span>
+<span class="nc" id="L146">            throw new RuntimeException(&quot;Erro ao atualizar sincronização de venda&quot;, e);</span>
+<span class="nc" id="L147">        }</span>
+<span class="nc" id="L148">    }</span>
+
+    @Override
+    public void marcarConfirmadas(List&lt;Integer&gt; ids) {
+<span class="nc bnc" id="L152" title="All 4 branches missed.">        if (ids == null || ids.isEmpty()) return;</span>
+<span class="nc" id="L153">        StringBuilder sb = new StringBuilder(&quot;UPDATE Venda SET estadoSincronizacao = 'CONFIRMADO' WHERE id IN (&quot;);</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">        for (int i = 0; i &lt; ids.size(); i++) {</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">            sb.append(i &gt; 0 ? &quot;,?&quot; : &quot;?&quot;);</span>
+        }
+<span class="nc" id="L157">        sb.append(&quot;)&quot;);</span>
+<span class="nc" id="L158">        try (PreparedStatement ps = connection.prepareStatement(sb.toString())) {</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">            for (int i = 0; i &lt; ids.size(); i++) {</span>
+<span class="nc" id="L160">                ps.setInt(i + 1, ids.get(i));</span>
+            }
+<span class="nc" id="L162">            ps.executeUpdate();</span>
+<span class="nc" id="L163">        } catch (SQLException e) {</span>
+<span class="nc" id="L164">            throw new RuntimeException(&quot;Erro ao marcar vendas como confirmadas&quot;, e);</span>
+<span class="nc" id="L165">        }</span>
+<span class="nc" id="L166">    }</span>
+
+    private Venda mapearComDetalhes(ResultSet rs) throws SQLException {
+<span class="nc" id="L169">        Venda v = new Venda();</span>
+<span class="nc" id="L170">        v.setId(rs.getInt(&quot;id&quot;));</span>
+<span class="nc" id="L171">        v.setIdLoja(rs.getString(&quot;idLoja&quot;));</span>
+<span class="nc" id="L172">        v.setEstadoSincronizacao(EstadoSincronizacao.valueOf(rs.getString(&quot;estadoSincronizacao&quot;)));</span>
+<span class="nc" id="L173">        v.setIdUtilizador(rs.getInt(&quot;idUtilizador&quot;));</span>
+<span class="nc" id="L174">        v.setDataHora(rs.getTimestamp(&quot;dataHora&quot;).toLocalDateTime());</span>
+<span class="nc" id="L175">        v.setMetodoPagamento(MetodoPagamento.valueOf(rs.getString(&quot;metodoPagamento&quot;)));</span>
+<span class="nc" id="L176">        v.setTotalFaturado(rs.getDouble(&quot;totalFaturado&quot;));</span>
+<span class="nc" id="L177">        v.setEstado(EstadoVenda.valueOf(rs.getString(&quot;estado&quot;)));</span>
+<span class="nc" id="L178">        v.setLinhas(buscarLinhas(v.getId()));</span>
+<span class="nc" id="L179">        v.setFatura(buscarFatura(v.getId()));</span>
+<span class="nc" id="L180">        return v;</span>
+    }
+
+    private List&lt;LinhaVenda&gt; buscarLinhas(int idVenda) {
+<span class="nc" id="L184">        String sql = &quot;SELECT * FROM LinhaVenda WHERE idVenda = ?&quot;;</span>
+<span class="nc" id="L185">        List&lt;LinhaVenda&gt; linhas = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L186">        try (PreparedStatement ps = connection.prepareStatement(sql)) {</span>
+<span class="nc" id="L187">            ps.setInt(1, idVenda);</span>
+<span class="nc" id="L188">            try (ResultSet rs = ps.executeQuery()) {</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">                while (rs.next()) {</span>
+<span class="nc" id="L190">                    LinhaVenda l = new LinhaVenda();</span>
+<span class="nc" id="L191">                    l.setId(rs.getInt(&quot;id&quot;));</span>
+<span class="nc" id="L192">                    l.setIdVenda(rs.getInt(&quot;idVenda&quot;));</span>
+<span class="nc" id="L193">                    l.setIdLote(rs.getInt(&quot;idLote&quot;));</span>
+<span class="nc" id="L194">                    l.setQuantidade(rs.getInt(&quot;quantidade&quot;));</span>
+<span class="nc" id="L195">                    l.setPrecoUnitario(rs.getDouble(&quot;precoUnitario&quot;));</span>
+<span class="nc" id="L196">                    linhas.add(l);</span>
+<span class="nc" id="L197">                }</span>
+            }
+<span class="nc" id="L199">        } catch (SQLException e) {</span>
+<span class="nc" id="L200">            throw new RuntimeException(&quot;Erro ao buscar linhas da venda&quot;, e);</span>
+<span class="nc" id="L201">        }</span>
+<span class="nc" id="L202">        return linhas;</span>
+    }
+
+    private Fatura buscarFatura(int idVenda) {
+<span class="nc" id="L206">        String sql = &quot;SELECT * FROM Fatura WHERE idVenda = ?&quot;;</span>
+<span class="nc" id="L207">        try (PreparedStatement ps = connection.prepareStatement(sql)) {</span>
+<span class="nc" id="L208">            ps.setInt(1, idVenda);</span>
+<span class="nc" id="L209">            try (ResultSet rs = ps.executeQuery()) {</span>
+<span class="nc bnc" id="L210" title="All 2 branches missed.">                if (rs.next()) {</span>
+<span class="nc" id="L211">                    Fatura f = new Fatura();</span>
+<span class="nc" id="L212">                    f.setId(rs.getInt(&quot;id&quot;));</span>
+<span class="nc" id="L213">                    f.setIdVenda(rs.getInt(&quot;idVenda&quot;));</span>
+<span class="nc" id="L214">                    f.setNumeroFatura(rs.getString(&quot;numeroFatura&quot;));</span>
+<span class="nc" id="L215">                    f.setDataEmissao(rs.getTimestamp(&quot;dataEmissao&quot;).toLocalDateTime());</span>
+<span class="nc" id="L216">                    f.setNifCliente(rs.getString(&quot;nifCliente&quot;));</span>
+<span class="nc" id="L217">                    return f;</span>
+                }
+<span class="nc bnc" id="L219" title="All 2 branches missed.">            }</span>
+<span class="nc bnc" id="L220" title="All 2 branches missed.">        } catch (SQLException e) {</span>
+<span class="nc" id="L221">            throw new RuntimeException(&quot;Erro ao buscar fatura&quot;, e);</span>
+<span class="nc" id="L222">        }</span>
+<span class="nc" id="L223">        return null;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

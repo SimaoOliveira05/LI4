@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FechoDiaServico.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">TrasmUM — Software de Loja</a> &gt; <a href="index.source.html" class="el_package">pt.trasmum.loja.servico.impl</a> &gt; <span class="el_source">FechoDiaServico.java</span></div><h1>FechoDiaServico.java</h1><pre class="source lang-java linenums">package pt.trasmum.loja.servico.impl;
+
+import pt.trasmum.loja.dominio.catalogo.Lote;
+import pt.trasmum.loja.dominio.catalogo.Produto;
+import pt.trasmum.loja.dominio.core.ConfiguracaoTerminal;
+import pt.trasmum.loja.dominio.core.LogAuditoria;
+import pt.trasmum.loja.dominio.core.PerfilUtilizador;
+import pt.trasmum.loja.dominio.core.TipoAcao;
+import pt.trasmum.loja.dominio.core.Utilizador;
+import pt.trasmum.loja.dominio.exceptions.EnvioFechoFalhouException;
+import pt.trasmum.loja.dominio.fornecedores.Fornecedor;
+import pt.trasmum.loja.dominio.fornecedores.Pagamento;
+import pt.trasmum.loja.dominio.fornecedores.Remessa;
+import pt.trasmum.loja.dominio.tesouraria.FechoDia;
+import pt.trasmum.loja.dominio.tesouraria.SessaoCaixa;
+import pt.trasmum.loja.dominio.vendas.Devolucao;
+import pt.trasmum.loja.dominio.vendas.Venda;
+import pt.trasmum.loja.repositorio.interfaces.*;
+import pt.trasmum.loja.servico.interfaces.*;
+import pt.trasmum.loja.sincronizacao.PacoteFechoDTO;
+import pt.trasmum.loja.sincronizacao.PacoteFechoDTO.*;
+import pt.trasmum.loja.sincronizacao.SincronizacaoGateway;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class FechoDiaServico implements IFechoDiaServico {
+
+    private final IVendaServico vendaServico;
+    private final IDevolucaoServico devolucaoServico;
+    private final ICaixaServico caixaServico;
+    private final IRemessaServico remessaServico;
+    private final IAuditoriaServico auditoriaServico;
+    private final IAutorizacaoServico autorizacaoServico;
+    private final FechoDiaRepositorio fechoDiaRepo;
+    private final VendaRepositorio vendaRepo;
+    private final DevolucaoRepositorio devolucaoRepo;
+    private final RemessaRepositorio remessaRepo;
+    private final PagamentoRepositorio pagamentoRepo;
+    private final SessaoCaixaRepositorio sessaoCaixaRepo;
+    private final LogAuditoriaRepositorio logRepo;
+    private final ProdutoRepositorio produtoRepo;
+    private final LoteRepositorio loteRepo;
+    private final FornecedorRepositorio fornecedorRepo;
+    private final UtilizadorRepositorio utilizadorRepo;
+    private final SincronizacaoGateway sincronizacaoGateway;
+    private final ConfiguracaoTerminal configuracao;
+
+    public FechoDiaServico(IVendaServico vendaServico, IDevolucaoServico devolucaoServico,
+                            ICaixaServico caixaServico, IRemessaServico remessaServico,
+                            IAuditoriaServico auditoriaServico, IAutorizacaoServico autorizacaoServico,
+                            FechoDiaRepositorio fechoDiaRepo, VendaRepositorio vendaRepo,
+                            DevolucaoRepositorio devolucaoRepo, RemessaRepositorio remessaRepo,
+                            PagamentoRepositorio pagamentoRepo, SessaoCaixaRepositorio sessaoCaixaRepo,
+                            LogAuditoriaRepositorio logRepo, ProdutoRepositorio produtoRepo,
+                            LoteRepositorio loteRepo, FornecedorRepositorio fornecedorRepo,
+                            UtilizadorRepositorio utilizadorRepo,
+                            SincronizacaoGateway sincronizacaoGateway,
+<span class="fc" id="L62">                            ConfiguracaoTerminal configuracao) {</span>
+<span class="fc" id="L63">        this.vendaServico = vendaServico;</span>
+<span class="fc" id="L64">        this.devolucaoServico = devolucaoServico;</span>
+<span class="fc" id="L65">        this.caixaServico = caixaServico;</span>
+<span class="fc" id="L66">        this.remessaServico = remessaServico;</span>
+<span class="fc" id="L67">        this.auditoriaServico = auditoriaServico;</span>
+<span class="fc" id="L68">        this.autorizacaoServico = autorizacaoServico;</span>
+<span class="fc" id="L69">        this.fechoDiaRepo = fechoDiaRepo;</span>
+<span class="fc" id="L70">        this.vendaRepo = vendaRepo;</span>
+<span class="fc" id="L71">        this.devolucaoRepo = devolucaoRepo;</span>
+<span class="fc" id="L72">        this.remessaRepo = remessaRepo;</span>
+<span class="fc" id="L73">        this.pagamentoRepo = pagamentoRepo;</span>
+<span class="fc" id="L74">        this.sessaoCaixaRepo = sessaoCaixaRepo;</span>
+<span class="fc" id="L75">        this.logRepo = logRepo;</span>
+<span class="fc" id="L76">        this.produtoRepo = produtoRepo;</span>
+<span class="fc" id="L77">        this.loteRepo = loteRepo;</span>
+<span class="fc" id="L78">        this.fornecedorRepo = fornecedorRepo;</span>
+<span class="fc" id="L79">        this.utilizadorRepo = utilizadorRepo;</span>
+<span class="fc" id="L80">        this.sincronizacaoGateway = sincronizacaoGateway;</span>
+<span class="fc" id="L81">        this.configuracao = configuracao;</span>
+<span class="fc" id="L82">    }</span>
+
+    @Override
+    public FechoDia executarFecho(Utilizador utilizador, ConfiguracaoTerminal config) {
+<span class="fc" id="L86">        autorizacaoServico.exigirPerfil(utilizador, PerfilUtilizador.GESTOR, PerfilUtilizador.CEO);</span>
+
+<span class="fc" id="L88">        List&lt;Venda&gt; vendas = vendaServico.obterVendasPendentes();</span>
+<span class="fc" id="L89">        List&lt;Devolucao&gt; devolucoes = devolucaoServico.obterDevolucoesPendentes();</span>
+<span class="fc" id="L90">        List&lt;SessaoCaixa&gt; sessoes = caixaServico.obterSessoesPendentes();</span>
+<span class="fc" id="L91">        List&lt;Remessa&gt; remessas = remessaServico.obterRemessasPendentes();</span>
+<span class="fc" id="L92">        List&lt;Pagamento&gt; pagamentos = remessaServico.obterPagamentosPendentes();</span>
+<span class="fc" id="L93">        List&lt;LogAuditoria&gt; logs = auditoriaServico.obterLogsPendentes();</span>
+
+<span class="fc" id="L95">        vendas.forEach(v -&gt; { v.marcarEmTransito(); atualizarSincVenda(v); });</span>
+<span class="fc" id="L96">        devolucoes.forEach(d -&gt; { d.marcarEmTransito(); atualizarSincDevolucao(d); });</span>
+<span class="fc" id="L97">        sessoes.forEach(s -&gt; { s.marcarEmTransito(); sessaoCaixaRepo.atualizar(s); });</span>
+<span class="fc" id="L98">        remessas.forEach(r -&gt; { r.marcarEmTransito(); atualizarSincRemessa(r); });</span>
+<span class="fc" id="L99">        pagamentos.forEach(p -&gt; { p.marcarEmTransito(); pagamentoRepo.atualizar(p); });</span>
+<span class="fc" id="L100">        logs.forEach(l -&gt; { l.marcarEmTransito(); logRepo.atualizar(l); });</span>
+
+<span class="fc" id="L102">        PacoteFechoDTO pacote = construirPacote(config, vendas, devolucoes, remessas, pagamentos, sessoes, logs);</span>
+
+<span class="fc" id="L104">        boolean sucesso = sincronizacaoGateway.enviarFechoDia(pacote);</span>
+
+<span class="fc bfc" id="L106" title="All 2 branches covered.">        if (!sucesso) {</span>
+<span class="fc" id="L107">            reverterEmTransito();</span>
+<span class="fc" id="L108">            throw new EnvioFechoFalhouException(&quot;Falha no envio do fecho de dia ao servidor central.&quot;);</span>
+        }
+
+<span class="fc" id="L111">        vendas.forEach(v -&gt; { v.marcarConfirmado(); atualizarSincVenda(v); });</span>
+<span class="fc" id="L112">        devolucoes.forEach(d -&gt; { d.marcarConfirmado(); atualizarSincDevolucao(d); });</span>
+<span class="fc" id="L113">        sessoes.forEach(s -&gt; { s.marcarConfirmado(); sessaoCaixaRepo.atualizar(s); });</span>
+<span class="fc" id="L114">        remessas.forEach(r -&gt; { r.marcarConfirmado(); atualizarSincRemessa(r); });</span>
+<span class="fc" id="L115">        pagamentos.forEach(p -&gt; { p.marcarConfirmado(); pagamentoRepo.atualizar(p); });</span>
+<span class="fc" id="L116">        logs.forEach(l -&gt; { l.marcarConfirmado(); logRepo.atualizar(l); });</span>
+
+<span class="fc" id="L118">        FechoDia fecho = new FechoDia(config.getIdLoja(), utilizador.getId(), LocalDate.now());</span>
+<span class="fc" id="L119">        fecho.marcarConfirmado();</span>
+<span class="fc" id="L120">        fechoDiaRepo.guardar(fecho);</span>
+
+<span class="fc" id="L122">        auditoriaServico.registar(utilizador, TipoAcao.FECHO_DIA, &quot;FechoDia&quot;, fecho.getId(),</span>
+<span class="fc" id="L123">                &quot;Fecho de dia executado para &quot; + fecho.getDataFecho());</span>
+
+<span class="fc" id="L125">        return fecho;</span>
+    }
+
+    @Override
+    public boolean reenviar(int idFecho, Utilizador utilizador) {
+<span class="fc bfc" id="L130" title="All 2 branches covered.">        if (utilizador == null) return false;</span>
+<span class="fc" id="L131">        reverterEmTransito();</span>
+        try {
+<span class="nc" id="L133">            executarFecho(utilizador, configuracao);</span>
+<span class="nc" id="L134">            return true;</span>
+<span class="fc" id="L135">        } catch (EnvioFechoFalhouException e) {</span>
+<span class="fc" id="L136">            return false;</span>
+        }
+    }
+
+    @Override
+    public void reverterEmTransito() {
+<span class="fc" id="L142">        vendaRepo.reverterEmTransito();</span>
+<span class="fc" id="L143">        devolucaoRepo.reverterEmTransito();</span>
+<span class="fc" id="L144">        sessaoCaixaRepo.reverterEmTransito();</span>
+<span class="fc" id="L145">        remessaRepo.reverterEmTransito();</span>
+<span class="fc" id="L146">        pagamentoRepo.reverterEmTransito();</span>
+<span class="fc" id="L147">        logRepo.reverterEmTransito();</span>
+<span class="fc" id="L148">        fechoDiaRepo.reverterEmTransito();</span>
+<span class="fc" id="L149">    }</span>
+
+    private PacoteFechoDTO construirPacote(ConfiguracaoTerminal config,
+            List&lt;Venda&gt; vendas, List&lt;Devolucao&gt; devolucoes, List&lt;Remessa&gt; remessas,
+            List&lt;Pagamento&gt; pagamentos, List&lt;SessaoCaixa&gt; sessoes, List&lt;LogAuditoria&gt; logs) {
+<span class="fc" id="L154">        PacoteFechoDTO p = new PacoteFechoDTO();</span>
+<span class="fc" id="L155">        p.idLoja = config.getIdLoja();</span>
+<span class="fc" id="L156">        p.nomeLoja = config.getNomeLoja();</span>
+<span class="fc" id="L157">        p.dataFecho = LocalDate.now().toString();</span>
+<span class="fc" id="L158">        p.vendas = mapVendas(vendas);</span>
+<span class="fc" id="L159">        p.devolucoes = mapDevolucoes(devolucoes);</span>
+<span class="fc" id="L160">        p.remessas = mapRemessas(remessas, pagamentos);</span>
+<span class="fc" id="L161">        p.pagamentos = mapPagamentos(pagamentos);</span>
+<span class="fc" id="L162">        p.sessoesCaixa = mapSessoes(sessoes);</span>
+<span class="fc" id="L163">        p.logs = mapLogs(logs);</span>
+<span class="fc" id="L164">        return p;</span>
+    }
+
+    private List&lt;VendaDTO&gt; mapVendas(List&lt;Venda&gt; vendas) {
+<span class="fc" id="L168">        Map&lt;Integer, Produto&gt; produtoCache = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L169">        Map&lt;Integer, Lote&gt; loteCache = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L170">        List&lt;VendaDTO&gt; dtos = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L171" title="All 2 branches covered.">        for (Venda v : vendas) {</span>
+<span class="fc" id="L172">            VendaDTO dto = new VendaDTO();</span>
+<span class="fc" id="L173">            dto.idOriginalLoja = v.getId();</span>
+<span class="pc bpc" id="L174" title="1 of 2 branches missed.">            dto.dataHora = v.getDataHora() != null ? v.getDataHora().toString() : null;</span>
+<span class="fc" id="L175">            dto.totalFaturado = v.getTotalFaturado();</span>
+<span class="pc bpc" id="L176" title="1 of 2 branches missed.">            dto.metodoPagamento = v.getMetodoPagamento() != null ? v.getMetodoPagamento().name() : null;</span>
+<span class="fc" id="L177">            dto.linhas = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L178" title="All 2 branches covered.">            for (var linha : v.getLinhas()) {</span>
+<span class="fc" id="L179">                LinhaVendaDTO l = new LinhaVendaDTO();</span>
+<span class="fc" id="L180">                l.idOriginalLoja = linha.getId();</span>
+<span class="fc" id="L181">                l.quantidade = linha.getQuantidade();</span>
+<span class="fc" id="L182">                l.precoUnitario = linha.getPrecoUnitario();</span>
+<span class="fc" id="L183">                l.subtotal = linha.calcularSubtotal();</span>
+<span class="fc" id="L184">                Lote lote = loteCache.computeIfAbsent(linha.getIdLote(), loteRepo::buscarPorId);</span>
+<span class="pc bpc" id="L185" title="1 of 2 branches missed.">                if (lote != null) {</span>
+<span class="fc" id="L186">                    Produto prod = produtoCache.computeIfAbsent(lote.getIdProduto(), produtoRepo::buscarPorId);</span>
+<span class="pc bpc" id="L187" title="1 of 2 branches missed.">                    if (prod != null) {</span>
+<span class="fc" id="L188">                        l.nomeProduto = prod.getNome();</span>
+<span class="fc" id="L189">                        l.categoria = prod.getCategoria();</span>
+                    }
+                }
+<span class="fc" id="L192">                dto.linhas.add(l);</span>
+<span class="fc" id="L193">            }</span>
+<span class="fc" id="L194">            dtos.add(dto);</span>
+<span class="fc" id="L195">        }</span>
+<span class="fc" id="L196">        return dtos;</span>
+    }
+
+    private List&lt;DevolucaoDTO&gt; mapDevolucoes(List&lt;Devolucao&gt; devs) {
+<span class="fc" id="L200">        List&lt;DevolucaoDTO&gt; dtos = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L201" title="All 2 branches covered.">        for (Devolucao d : devs) {</span>
+<span class="fc" id="L202">            DevolucaoDTO dto = new DevolucaoDTO();</span>
+<span class="fc" id="L203">            dto.idOriginalLoja = d.getId();</span>
+<span class="fc" id="L204">            dto.idOriginalVenda = d.getIdFatura();</span>
+<span class="pc bpc" id="L205" title="1 of 2 branches missed.">            dto.dataHora = d.getDataHora() != null ? d.getDataHora().toString() : null;</span>
+<span class="fc" id="L206">            dto.quantidade = d.getQuantidade();</span>
+<span class="fc" id="L207">            dto.valorRestituido = d.getValorRestituido();</span>
+<span class="fc" id="L208">            dtos.add(dto);</span>
+<span class="fc" id="L209">        }</span>
+<span class="fc" id="L210">        return dtos;</span>
+    }
+
+    private List&lt;RemessaDTO&gt; mapRemessas(List&lt;Remessa&gt; remessas, List&lt;Pagamento&gt; pagamentos) {
+<span class="fc" id="L214">        Map&lt;Integer, Fornecedor&gt; fornCache = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L215">        Map&lt;Integer, Boolean&gt; pagaPorRemessa = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L216" title="All 2 branches covered.">        for (Pagamento p : pagamentos) {</span>
+<span class="pc bpc" id="L217" title="1 of 2 branches missed.">            if (p.getEstadoPagamento() == Pagamento.EstadoPagamento.PAGO) {</span>
+<span class="fc" id="L218">                pagaPorRemessa.put(p.getIdRemessa(), true);</span>
+            }
+<span class="fc" id="L220">        }</span>
+<span class="fc" id="L221">        List&lt;RemessaDTO&gt; dtos = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L222" title="All 2 branches covered.">        for (Remessa r : remessas) {</span>
+<span class="fc" id="L223">            RemessaDTO dto = new RemessaDTO();</span>
+<span class="fc" id="L224">            dto.idOriginalLoja = r.getId();</span>
+<span class="fc" id="L225">            Fornecedor f = fornCache.computeIfAbsent(r.getIdFornecedor(), fornecedorRepo::buscarPorId);</span>
+<span class="pc bpc" id="L226" title="1 of 2 branches missed.">            dto.nomeFornecedor = f != null ? f.getNome() : &quot;Desconhecido&quot;;</span>
+<span class="pc bpc" id="L227" title="1 of 2 branches missed.">            dto.dataRecepcao = r.getDataRecepcao() != null ? r.getDataRecepcao().toString() : null;</span>
+<span class="fc" id="L228">            dto.valorTotalGuia = r.getValorTotalGuia();</span>
+<span class="pc bpc" id="L229" title="1 of 2 branches missed.">            dto.estadoPagamento = pagaPorRemessa.getOrDefault(r.getId(), false) ? &quot;PAGA&quot; : &quot;PENDENTE_PAGAMENTO&quot;;</span>
+<span class="fc" id="L230">            dtos.add(dto);</span>
+<span class="fc" id="L231">        }</span>
+<span class="fc" id="L232">        return dtos;</span>
+    }
+
+    private List&lt;PagamentoDTO&gt; mapPagamentos(List&lt;Pagamento&gt; pagamentos) {
+<span class="fc" id="L236">        List&lt;PagamentoDTO&gt; dtos = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L237" title="All 2 branches covered.">        for (Pagamento p : pagamentos) {</span>
+<span class="fc" id="L238">            PagamentoDTO dto = new PagamentoDTO();</span>
+<span class="fc" id="L239">            dto.idOriginalLoja = p.getId();</span>
+<span class="fc" id="L240">            dto.idOriginalRemessa = p.getIdRemessa();</span>
+<span class="fc" id="L241">            dto.valor = p.getValor();</span>
+<span class="pc bpc" id="L242" title="1 of 2 branches missed.">            dto.dataPagamento = p.getDataHora() != null ? p.getDataHora().toString() : null;</span>
+<span class="fc" id="L243">            dtos.add(dto);</span>
+<span class="fc" id="L244">        }</span>
+<span class="fc" id="L245">        return dtos;</span>
+    }
+
+    private List&lt;SessaoCaixaDTO&gt; mapSessoes(List&lt;SessaoCaixa&gt; sessoes) {
+<span class="fc" id="L249">        List&lt;SessaoCaixaDTO&gt; dtos = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L250" title="All 2 branches covered.">        for (SessaoCaixa s : sessoes) {</span>
+<span class="fc" id="L251">            SessaoCaixaDTO dto = new SessaoCaixaDTO();</span>
+<span class="fc" id="L252">            dto.idOriginalLoja = s.getId();</span>
+<span class="fc" id="L253">            dto.idUtilizador = s.getIdUtilizador();</span>
+<span class="fc" id="L254">            dto.saldoFinal = s.getSaldoAtual();</span>
+<span class="pc bpc" id="L255" title="1 of 2 branches missed.">            dto.dataAbertura = s.getDataAbertura() != null ? s.getDataAbertura().toString() : null;</span>
+<span class="pc bpc" id="L256" title="1 of 2 branches missed.">            dto.dataEncerramento = s.getDataEncerramento() != null ? s.getDataEncerramento().toString() : null;</span>
+<span class="fc" id="L257">            dtos.add(dto);</span>
+<span class="fc" id="L258">        }</span>
+<span class="fc" id="L259">        return dtos;</span>
+    }
+
+    private List&lt;LogAuditoriaDTO&gt; mapLogs(List&lt;LogAuditoria&gt; logs) {
+<span class="fc" id="L263">        Map&lt;Integer, Utilizador&gt; userCache = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L264">        List&lt;LogAuditoriaDTO&gt; dtos = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L265" title="All 2 branches covered.">        for (LogAuditoria l : logs) {</span>
+<span class="fc" id="L266">            LogAuditoriaDTO dto = new LogAuditoriaDTO();</span>
+<span class="fc" id="L267">            dto.idOriginalLoja = l.getId();</span>
+<span class="pc bpc" id="L268" title="1 of 2 branches missed.">            dto.acao = l.getAcao() != null ? l.getAcao().name() : null;</span>
+<span class="pc bpc" id="L269" title="1 of 2 branches missed.">            dto.dataHora = l.getDataHora() != null ? l.getDataHora().toString() : null;</span>
+<span class="fc" id="L270">            Utilizador u = userCache.computeIfAbsent(l.getIdUtilizador(), utilizadorRepo::buscarPorId);</span>
+<span class="pc bpc" id="L271" title="1 of 2 branches missed.">            dto.nomeUtilizador = u != null ? u.getNomeUtilizador() : &quot;Desconhecido&quot;;</span>
+<span class="fc" id="L272">            dto.descricao = l.getDescricao();</span>
+<span class="fc" id="L273">            dtos.add(dto);</span>
+<span class="fc" id="L274">        }</span>
+<span class="fc" id="L275">        return dtos;</span>
+    }
+
+    private void atualizarSincVenda(Venda v) {
+<span class="fc" id="L279">        vendaRepo.atualizarSincronizacao(v.getId(), v.getEstadoSincronizacao());</span>
+<span class="fc" id="L280">    }</span>
+
+    private void atualizarSincDevolucao(Devolucao d) {
+<span class="fc" id="L283">        devolucaoRepo.atualizarSincronizacao(d.getId(), d.getEstadoSincronizacao());</span>
+<span class="fc" id="L284">    }</span>
+
+    private void atualizarSincRemessa(Remessa r) {
+<span class="fc" id="L287">        remessaRepo.atualizarSincronizacao(r.getId(), r.getEstadoSincronizacao());</span>
+<span class="fc" id="L288">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

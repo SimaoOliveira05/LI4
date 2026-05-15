@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CatalogoController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">TrasmUM — Software de Loja</a> &gt; <a href="index.source.html" class="el_package">pt.trasmum.loja.apresentacao.controllers</a> &gt; <span class="el_source">CatalogoController.java</span></div><h1>CatalogoController.java</h1><pre class="source lang-java linenums">package pt.trasmum.loja.apresentacao.controllers;
+
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
+import javafx.geometry.Pos;
+import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
+import pt.trasmum.loja.apresentacao.DialogoUtil;
+import pt.trasmum.loja.app.AppContext;
+import pt.trasmum.loja.dominio.catalogo.Lote;
+import pt.trasmum.loja.dominio.catalogo.Produto;
+import pt.trasmum.loja.dominio.core.Utilizador;
+import pt.trasmum.loja.servico.ProdutoDTO;
+
+import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+<span class="nc" id="L29">public class CatalogoController {</span>
+
+    @FXML private TextField txtPesquisa;
+    @FXML private ComboBox&lt;String&gt; cmbFiltroCategoria;
+    @FXML private TableView&lt;Produto&gt; tblProdutos;
+    @FXML private TableColumn&lt;Produto, String&gt;  colCodigo;
+    @FXML private TableColumn&lt;Produto, String&gt;  colNome;
+    @FXML private TableColumn&lt;Produto, String&gt;  colCategoria;
+    @FXML private TableColumn&lt;Produto, Double&gt;  colPreco;
+    @FXML private TableColumn&lt;Produto, Integer&gt; colStock;
+    @FXML private TableColumn&lt;Produto, Boolean&gt; colAtivo;
+    @FXML private VBox vboxAlertas;
+
+    @FXML private VBox detalhesSection;
+    @FXML private TableView&lt;Lote&gt; tblLotes;
+    @FXML private TableColumn&lt;Lote, Number&gt; colLoteId;
+    @FXML private TableColumn&lt;Lote, Number&gt; colLoteQtd;
+    @FXML private TableColumn&lt;Lote, String&gt; colLoteValidade;
+    @FXML private TableColumn&lt;Lote, String&gt; colLotePreco;
+    @FXML private TableColumn&lt;Lote, String&gt; colLoteDesconto;
+    @FXML private TableColumn&lt;Lote, Void&gt;   colLoteAbater;
+
+<span class="nc" id="L51">    private final ObservableList&lt;Produto&gt; produtos = FXCollections.observableArrayList();</span>
+<span class="nc" id="L52">    private Map&lt;Integer, Integer&gt; stockTotais = new HashMap&lt;&gt;();</span>
+
+    @FXML
+    public void initialize() {
+<span class="nc" id="L56">        colCodigo.setCellValueFactory(c -&gt; new SimpleStringProperty(c.getValue().getCodigoBarras()));</span>
+<span class="nc" id="L57">        colNome.setCellValueFactory(c -&gt; new SimpleStringProperty(c.getValue().getNome()));</span>
+<span class="nc" id="L58">        colCategoria.setCellValueFactory(c -&gt; new SimpleStringProperty(c.getValue().getCategoria()));</span>
+<span class="nc" id="L59">        colPreco.setCellValueFactory(c -&gt; new SimpleDoubleProperty(c.getValue().getPrecoBase()).asObject());</span>
+<span class="nc" id="L60">        colStock.setCellValueFactory(c -&gt; new SimpleIntegerProperty(</span>
+<span class="nc" id="L61">                stockTotais.getOrDefault(c.getValue().getId(), 0)).asObject());</span>
+<span class="nc" id="L62">        colAtivo.setCellValueFactory(c -&gt; new SimpleBooleanProperty(c.getValue().isAtivo()).asObject());</span>
+<span class="nc" id="L63">        colLoteId.setCellValueFactory(c -&gt; new SimpleIntegerProperty(c.getValue().getId()));</span>
+<span class="nc" id="L64">        colLoteQtd.setCellValueFactory(c -&gt; new SimpleIntegerProperty(c.getValue().getQuantidade()));</span>
+<span class="nc" id="L65">        colLoteValidade.setCellValueFactory(c -&gt; new SimpleStringProperty(</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">                c.getValue().getDataValidade() != null ? c.getValue().getDataValidade().toString() : &quot;-&quot;));</span>
+<span class="nc" id="L67">        colLotePreco.setCellValueFactory(c -&gt; new SimpleStringProperty(</span>
+<span class="nc" id="L68">                String.format(&quot;%.2f €&quot;, c.getValue().getPrecoFinal())));</span>
+<span class="nc" id="L69">        colLoteDesconto.setCellValueFactory(c -&gt; new SimpleStringProperty(</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">                c.getValue().temDesconto() ? String.format(&quot;%.1f%%&quot;, c.getValue().getDesconto().getPercentagem()) : &quot;—&quot;));</span>
+<span class="nc" id="L71">        colLoteAbater.setCellFactory(tc -&gt; new TableCell&lt;&gt;() {</span>
+<span class="nc" id="L72">            private final Button btn = new Button(&quot;Abater&quot;);</span>
+            {
+<span class="nc" id="L74">                btn.getStyleClass().add(&quot;btn-danger&quot;);</span>
+<span class="nc" id="L75">                btn.setStyle(&quot;-fx-font-size: 10px; -fx-padding: 2 6 2 6;&quot;);</span>
+<span class="nc" id="L76">                btn.setOnAction(e -&gt; onAbaterLote(getTableView().getItems().get(getIndex())));</span>
+<span class="nc" id="L77">            }</span>
+            @Override protected void updateItem(Void v, boolean empty) {
+<span class="nc" id="L79">                super.updateItem(v, empty);</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">                setGraphic(empty ? null : btn);</span>
+<span class="nc" id="L81">            }</span>
+        });
+
+<span class="nc" id="L84">        tblProdutos.setItems(produtos);</span>
+<span class="nc" id="L85">        tblProdutos.getSelectionModel().selectedItemProperty().addListener(</span>
+<span class="nc" id="L86">                (obs, old, novo) -&gt; atualizarDetalhes(novo));</span>
+        
+<span class="nc" id="L88">        carregarProdutos();</span>
+<span class="nc" id="L89">        inicializarFiltroCategorias();</span>
+<span class="nc" id="L90">        carregarAlertas();</span>
+<span class="nc" id="L91">    }</span>
+
+    private void inicializarFiltroCategorias() {
+        // Extrair categorias distintas de todos os produtos ativos
+<span class="nc" id="L95">        List&lt;String&gt; categorias = AppContext.getInstance().produtoRepo.listarAtivos().stream()</span>
+<span class="nc" id="L96">                .map(Produto::getCategoria)</span>
+<span class="nc bnc" id="L97" title="All 4 branches missed.">                .filter(c -&gt; c != null &amp;&amp; !c.isBlank())</span>
+<span class="nc" id="L98">                .distinct()</span>
+<span class="nc" id="L99">                .sorted()</span>
+<span class="nc" id="L100">                .collect(Collectors.toList());</span>
+<span class="nc" id="L101">        cmbFiltroCategoria.getItems().clear();</span>
+<span class="nc" id="L102">        cmbFiltroCategoria.getItems().add(0, &quot;Todas&quot;);</span>
+<span class="nc" id="L103">        cmbFiltroCategoria.getItems().addAll(categorias);</span>
+<span class="nc" id="L104">        cmbFiltroCategoria.setValue(&quot;Todas&quot;);</span>
+<span class="nc" id="L105">    }</span>
+
+    @FXML
+    public void onFiltrarCategoria() {
+<span class="nc" id="L109">        onPesquisar();</span>
+<span class="nc" id="L110">    }</span>
+
+    @FXML
+    public void onPesquisar() {
+<span class="nc" id="L114">        String q = txtPesquisa.getText().trim();</span>
+<span class="nc" id="L115">        String categoriaSelecionada = cmbFiltroCategoria.getValue();</span>
+        
+<span class="nc bnc" id="L117" title="All 2 branches missed.">        List&lt;Produto&gt; todos = q.isBlank()</span>
+<span class="nc" id="L118">                ? AppContext.getInstance().produtoRepo.listarAtivos()</span>
+<span class="nc" id="L119">                : AppContext.getInstance().catalogoServico.pesquisarProduto(q);</span>
+        
+<span class="nc" id="L121">        List&lt;Produto&gt; resultado = todos.stream()</span>
+<span class="nc bnc" id="L122" title="All 4 branches missed.">                .filter(p -&gt; categoriaSelecionada == null || categoriaSelecionada.equals(&quot;Todas&quot;) </span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">                        || p.getCategoria().equals(categoriaSelecionada))</span>
+<span class="nc" id="L124">                .collect(Collectors.toList());</span>
+        
+<span class="nc" id="L126">        produtos.setAll(resultado);</span>
+<span class="nc" id="L127">    }</span>
+
+    @FXML
+    public void onCriarProduto() {
+<span class="nc" id="L131">        Utilizador u = AppContext.getInstance().getUtilizadorAtual();</span>
+<span class="nc" id="L132">        Optional&lt;ProdutoDTO&gt; dto = mostrarDialogoProduto(null);</span>
+<span class="nc" id="L133">        dto.ifPresent(d -&gt; {</span>
+            try {
+<span class="nc" id="L135">                AppContext.getInstance().catalogoServico.criarProduto(u, d);</span>
+<span class="nc" id="L136">                carregarProdutos();</span>
+<span class="nc" id="L137">                mostrarInfo(&quot;Produto criado com sucesso.&quot;);</span>
+<span class="nc" id="L138">            } catch (Exception e) { mostrarErro(e.getMessage()); }</span>
+<span class="nc" id="L139">        });</span>
+<span class="nc" id="L140">    }</span>
+
+    @FXML
+    public void onEditarProduto() {
+<span class="nc" id="L144">        Produto sel = tblProdutos.getSelectionModel().getSelectedItem();</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">        if (sel == null) { mostrarErro(&quot;Selecione um produto.&quot;); return; }</span>
+<span class="nc" id="L146">        Utilizador u = AppContext.getInstance().getUtilizadorAtual();</span>
+<span class="nc" id="L147">        Optional&lt;ProdutoDTO&gt; dto = mostrarDialogoProduto(sel);</span>
+<span class="nc" id="L148">        dto.ifPresent(d -&gt; {</span>
+            try {
+<span class="nc" id="L150">                AppContext.getInstance().catalogoServico.editarProduto(u, sel.getId(), d);</span>
+<span class="nc" id="L151">                carregarProdutos();</span>
+<span class="nc" id="L152">                mostrarInfo(&quot;Produto atualizado.&quot;);</span>
+<span class="nc" id="L153">            } catch (Exception e) { mostrarErro(e.getMessage()); }</span>
+<span class="nc" id="L154">        });</span>
+<span class="nc" id="L155">    }</span>
+
+    @FXML
+    public void onDesativarProduto() {
+<span class="nc" id="L159">        Produto sel = tblProdutos.getSelectionModel().getSelectedItem();</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">        if (sel == null) { mostrarErro(&quot;Selecione um produto.&quot;); return; }</span>
+<span class="nc" id="L161">        Utilizador u = AppContext.getInstance().getUtilizadorAtual();</span>
+        try {
+<span class="nc" id="L163">            AppContext.getInstance().catalogoServico.desativarProduto(u, sel.getId());</span>
+<span class="nc" id="L164">            carregarProdutos();</span>
+<span class="nc" id="L165">            mostrarInfo(&quot;Produto desativado.&quot;);</span>
+<span class="nc" id="L166">        } catch (Exception e) { mostrarErro(e.getMessage()); }</span>
+<span class="nc" id="L167">    }</span>
+
+    @FXML
+    public void onAplicarDesconto() {
+<span class="nc" id="L171">        Produto sel = tblProdutos.getSelectionModel().getSelectedItem();</span>
+<span class="nc bnc" id="L172" title="All 2 branches missed.">        if (sel == null) { mostrarErro(&quot;Selecione um produto.&quot;); return; }</span>
+
+        // Pede idLote e percentagem
+<span class="nc" id="L175">        TextInputDialog dlg = DialogoUtil.comOwner(new TextInputDialog(&quot;10&quot;));</span>
+<span class="nc" id="L176">        dlg.setTitle(&quot;Aplicar Desconto&quot;);</span>
+<span class="nc" id="L177">        dlg.setHeaderText(&quot;Percentagem de desconto para o lote mais antigo de: &quot; + sel.getNome());</span>
+<span class="nc" id="L178">        dlg.setContentText(&quot;Percentagem (%):&quot;);</span>
+<span class="nc" id="L179">        dlg.showAndWait().ifPresent(pctStr -&gt; {</span>
+            try {
+<span class="nc" id="L181">                double pct = Double.parseDouble(pctStr.replace(&quot;,&quot;, &quot;.&quot;));</span>
+<span class="nc" id="L182">                List&lt;Lote&gt; lotes = AppContext.getInstance().loteRepo.buscarLotesFEFO(sel.getId());</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">                if (lotes.isEmpty()) { mostrarErro(&quot;Sem lotes disponíveis.&quot;); return; }</span>
+<span class="nc" id="L184">                Utilizador u = AppContext.getInstance().getUtilizadorAtual();</span>
+<span class="nc" id="L185">                AppContext.getInstance().catalogoServico.aplicarDesconto(u, lotes.get(0).getId(), pct);</span>
+<span class="nc" id="L186">                mostrarInfo(&quot;Desconto de &quot; + pct + &quot;% aplicado.&quot;);</span>
+<span class="nc" id="L187">                carregarAlertas();</span>
+<span class="nc" id="L188">            } catch (NumberFormatException e) {</span>
+<span class="nc" id="L189">                mostrarErro(&quot;Percentagem inválida.&quot;);</span>
+<span class="nc" id="L190">            } catch (Exception e) {</span>
+<span class="nc" id="L191">                mostrarErro(e.getMessage());</span>
+<span class="nc" id="L192">            }</span>
+<span class="nc" id="L193">        });</span>
+<span class="nc" id="L194">    }</span>
+
+    private void onAbaterLote(Lote lote) {
+<span class="nc" id="L197">        Produto p = AppContext.getInstance().produtoRepo.buscarPorId(lote.getIdProduto());</span>
+<span class="nc bnc" id="L198" title="All 2 branches missed.">        String nomeProduto = p != null ? p.getNome() : &quot;Lote &quot; + lote.getId();</span>
+
+<span class="nc" id="L200">        TextInputDialog dlg = DialogoUtil.comOwner(new TextInputDialog(String.valueOf(lote.getQuantidade())));</span>
+<span class="nc" id="L201">        dlg.setTitle(&quot;Abater Lote&quot;);</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">        dlg.setHeaderText(nomeProduto + &quot; — val. &quot; + (lote.getDataValidade() != null ? lote.getDataValidade() : &quot;sem validade&quot;));</span>
+<span class="nc" id="L203">        dlg.setContentText(&quot;Quantidade a abater (máx. &quot; + lote.getQuantidade() + &quot;):&quot;);</span>
+<span class="nc" id="L204">        dlg.showAndWait().ifPresent(txt -&gt; {</span>
+            try {
+<span class="nc" id="L206">                int qtd = Integer.parseInt(txt.trim());</span>
+<span class="nc" id="L207">                Utilizador u = AppContext.getInstance().getUtilizadorAtual();</span>
+<span class="nc" id="L208">                AppContext.getInstance().catalogoServico.abaterLote(u, lote.getId(), qtd);</span>
+<span class="nc" id="L209">                Produto sel = tblProdutos.getSelectionModel().getSelectedItem();</span>
+<span class="nc" id="L210">                carregarProdutos();</span>
+<span class="nc bnc" id="L211" title="All 2 branches missed.">                if (sel != null) atualizarDetalhes(</span>
+<span class="nc" id="L212">                        AppContext.getInstance().produtoRepo.buscarPorId(sel.getId()));</span>
+<span class="nc" id="L213">                carregarAlertas();</span>
+<span class="nc" id="L214">                mostrarInfo(&quot;Abate registado: &quot; + qtd + &quot; un. do lote #&quot; + lote.getId() + &quot;.&quot;);</span>
+<span class="nc" id="L215">            } catch (NumberFormatException e) {</span>
+<span class="nc" id="L216">                mostrarErro(&quot;Quantidade inválida.&quot;);</span>
+<span class="nc" id="L217">            } catch (Exception e) {</span>
+<span class="nc" id="L218">                mostrarErro(e.getMessage());</span>
+<span class="nc" id="L219">            }</span>
+<span class="nc" id="L220">        });</span>
+<span class="nc" id="L221">    }</span>
+
+    private void atualizarDetalhes(Produto p) {
+<span class="nc bnc" id="L224" title="All 2 branches missed.">        if (p == null) {</span>
+<span class="nc" id="L225">            tblLotes.getItems().clear();</span>
+<span class="nc" id="L226">            detalhesSection.setVisible(false);</span>
+<span class="nc" id="L227">            detalhesSection.setManaged(false);</span>
+<span class="nc" id="L228">            return;</span>
+        }
+<span class="nc" id="L230">        List&lt;Lote&gt; lotes = AppContext.getInstance().loteRepo.buscarLotesFEFO(p.getId());</span>
+<span class="nc" id="L231">        tblLotes.setItems(FXCollections.observableArrayList(lotes));</span>
+<span class="nc" id="L232">        detalhesSection.setVisible(true);</span>
+<span class="nc" id="L233">        detalhesSection.setManaged(true);</span>
+<span class="nc" id="L234">    }</span>
+
+    private void carregarProdutos() {
+<span class="nc" id="L237">        stockTotais = AppContext.getInstance().loteRepo.stockPorProduto();</span>
+<span class="nc" id="L238">        produtos.setAll(AppContext.getInstance().produtoRepo.listarAtivos());</span>
+<span class="nc" id="L239">    }</span>
+
+    private void carregarAlertas() {
+<span class="nc" id="L242">        vboxAlertas.getChildren().clear();</span>
+
+<span class="nc" id="L244">        List&lt;Produto&gt; semStock = AppContext.getInstance().catalogoServico.gerarAlertasStockMinimo();</span>
+<span class="nc bnc" id="L245" title="All 2 branches missed.">        if (!semStock.isEmpty()) {</span>
+<span class="nc" id="L246">            vboxAlertas.getChildren().add(labelSecao(&quot;⚠ Stock mínimo:&quot;));</span>
+<span class="nc" id="L247">            semStock.forEach(p -&gt; vboxAlertas.getChildren().add(labelItem(&quot;  • &quot; + p.getNome())));</span>
+        }
+
+<span class="nc" id="L250">        int dias = AppContext.getInstance().configuracao.getDiasAlertaValidade();</span>
+<span class="nc" id="L251">        List&lt;Lote&gt; janela = AppContext.getInstance().catalogoServico.gerarAlertasValidade(dias);</span>
+
+<span class="nc" id="L253">        Map&lt;Integer, String&gt; nomeProduto = new HashMap&lt;&gt;();</span>
+<span class="nc bnc" id="L254" title="All 2 branches missed.">        for (Lote l : janela) {</span>
+<span class="nc" id="L255">            nomeProduto.computeIfAbsent(l.getIdProduto(), id -&gt; {</span>
+<span class="nc" id="L256">                Produto p = AppContext.getInstance().produtoRepo.buscarPorId(id);</span>
+<span class="nc bnc" id="L257" title="All 2 branches missed.">                return p != null ? p.getNome() : &quot;Lote &quot; + l.getId();</span>
+            });
+<span class="nc" id="L259">        }</span>
+
+<span class="nc" id="L261">        LocalDate hoje = LocalDate.now();</span>
+<span class="nc" id="L262">        List&lt;Lote&gt; expirados = janela.stream().filter(l -&gt; l.getDataValidade().isBefore(hoje)).toList();</span>
+<span class="nc bnc" id="L263" title="All 2 branches missed.">        List&lt;Lote&gt; aVencer   = janela.stream().filter(l -&gt; !l.getDataValidade().isBefore(hoje)).toList();</span>
+
+<span class="nc bnc" id="L265" title="All 2 branches missed.">        if (!expirados.isEmpty()) {</span>
+<span class="nc" id="L266">            vboxAlertas.getChildren().add(labelSecao(&quot;🚨 Fora de validade:&quot;));</span>
+<span class="nc" id="L267">            expirados.forEach(l -&gt; vboxAlertas.getChildren().add(linhaLoteAlerta(l, nomeProduto.getOrDefault(l.getIdProduto(), &quot;Lote &quot; + l.getId()), true)));</span>
+        }
+<span class="nc bnc" id="L269" title="All 2 branches missed.">        if (!aVencer.isEmpty()) {</span>
+<span class="nc" id="L270">            vboxAlertas.getChildren().add(labelSecao(&quot;⚠ A vencer (&quot; + dias + &quot; dias):&quot;));</span>
+<span class="nc" id="L271">            aVencer.forEach(l -&gt; vboxAlertas.getChildren().add(linhaLoteAlerta(l, nomeProduto.getOrDefault(l.getIdProduto(), &quot;Lote &quot; + l.getId()), false)));</span>
+        }
+<span class="nc bnc" id="L273" title="All 6 branches missed.">        if (semStock.isEmpty() &amp;&amp; expirados.isEmpty() &amp;&amp; aVencer.isEmpty()) {</span>
+<span class="nc" id="L274">            vboxAlertas.getChildren().add(labelItem(&quot;Sem alertas activos.&quot;));</span>
+        }
+<span class="nc" id="L276">    }</span>
+
+    private Label labelSecao(String texto) {
+<span class="nc" id="L279">        Label l = new Label(texto);</span>
+<span class="nc" id="L280">        l.setStyle(&quot;-fx-font-weight: bold; -fx-font-size: 11px; -fx-padding: 4 0 0 0;&quot;);</span>
+<span class="nc" id="L281">        l.setWrapText(true);</span>
+<span class="nc" id="L282">        return l;</span>
+    }
+
+    private Label labelItem(String texto) {
+<span class="nc" id="L286">        Label l = new Label(texto);</span>
+<span class="nc" id="L287">        l.setStyle(&quot;-fx-font-size: 11px;&quot;);</span>
+<span class="nc" id="L288">        l.setWrapText(true);</span>
+<span class="nc" id="L289">        return l;</span>
+    }
+
+    private HBox linhaLoteAlerta(Lote lote, String nome, boolean expirado) {
+<span class="nc bnc" id="L293" title="All 2 branches missed.">        String detalhe = expirado</span>
+<span class="nc" id="L294">                ? &quot; — expirou &quot; + lote.getDataValidade()</span>
+<span class="nc" id="L295">                : &quot; — val. &quot; + lote.getDataValidade();</span>
+
+<span class="nc" id="L297">        Label lbl = new Label(&quot;  • &quot; + nome + detalhe + &quot; (&quot; + lote.getQuantidade() + &quot; un.)&quot;);</span>
+<span class="nc" id="L298">        lbl.setStyle(&quot;-fx-font-size: 11px;&quot;);</span>
+<span class="nc" id="L299">        lbl.setWrapText(true);</span>
+<span class="nc" id="L300">        HBox.setHgrow(lbl, Priority.ALWAYS);</span>
+
+        Button btn;
+<span class="nc bnc" id="L303" title="All 2 branches missed.">        if (expirado) {</span>
+<span class="nc" id="L304">            btn = new Button(&quot;Abater&quot;);</span>
+<span class="nc" id="L305">            btn.getStyleClass().add(&quot;btn-danger&quot;);</span>
+<span class="nc" id="L306">            btn.setOnAction(e -&gt; abaterLoteTodo(lote));</span>
+        } else {
+<span class="nc" id="L308">            btn = new Button(&quot;Desconto&quot;);</span>
+<span class="nc" id="L309">            btn.getStyleClass().add(&quot;btn-primary&quot;);</span>
+<span class="nc" id="L310">            btn.setOnAction(e -&gt; aplicarDescontoNoLote(lote));</span>
+        }
+<span class="nc" id="L312">        btn.setStyle(&quot;-fx-font-size: 9px; -fx-padding: 2 5 2 5;&quot;);</span>
+
+<span class="nc" id="L314">        HBox row = new HBox(6, lbl, btn);</span>
+<span class="nc" id="L315">        row.setAlignment(Pos.CENTER_LEFT);</span>
+<span class="nc" id="L316">        return row;</span>
+    }
+
+    private void abaterLoteTodo(Lote lote) {
+<span class="nc" id="L320">        Produto p = AppContext.getInstance().produtoRepo.buscarPorId(lote.getIdProduto());</span>
+<span class="nc bnc" id="L321" title="All 2 branches missed.">        String nome = p != null ? p.getNome() : &quot;Lote &quot; + lote.getId();</span>
+<span class="nc" id="L322">        Alert confirm = DialogoUtil.comOwner(new Alert(Alert.AlertType.CONFIRMATION));</span>
+<span class="nc" id="L323">        confirm.setTitle(&quot;Abater Lote&quot;);</span>
+<span class="nc" id="L324">        confirm.setHeaderText(nome + &quot; — val. &quot; + lote.getDataValidade());</span>
+<span class="nc" id="L325">        confirm.setContentText(&quot;Abater todo o lote (&quot; + lote.getQuantidade() + &quot; un.)?&quot;);</span>
+<span class="nc" id="L326">        confirm.showAndWait().ifPresent(bt -&gt; {</span>
+<span class="nc bnc" id="L327" title="All 2 branches missed.">            if (bt == ButtonType.OK) {</span>
+                try {
+<span class="nc" id="L329">                    Utilizador u = AppContext.getInstance().getUtilizadorAtual();</span>
+<span class="nc" id="L330">                    AppContext.getInstance().catalogoServico.abaterLote(u, lote.getId(), lote.getQuantidade());</span>
+<span class="nc" id="L331">                    carregarProdutos();</span>
+<span class="nc" id="L332">                    atualizarDetalhes(tblProdutos.getSelectionModel().getSelectedItem());</span>
+<span class="nc" id="L333">                    carregarAlertas();</span>
+<span class="nc" id="L334">                    mostrarInfo(&quot;Lote #&quot; + lote.getId() + &quot; abatido (&quot; + lote.getQuantidade() + &quot; un.).&quot;);</span>
+<span class="nc" id="L335">                } catch (Exception e) {</span>
+<span class="nc" id="L336">                    mostrarErro(e.getMessage());</span>
+<span class="nc" id="L337">                }</span>
+            }
+<span class="nc" id="L339">        });</span>
+<span class="nc" id="L340">    }</span>
+
+    private void aplicarDescontoNoLote(Lote lote) {
+<span class="nc" id="L343">        Produto p = AppContext.getInstance().produtoRepo.buscarPorId(lote.getIdProduto());</span>
+<span class="nc bnc" id="L344" title="All 2 branches missed.">        String nome = p != null ? p.getNome() : &quot;Lote &quot; + lote.getId();</span>
+<span class="nc bnc" id="L345" title="All 2 branches missed.">        String valorInicial = lote.temDesconto()</span>
+<span class="nc" id="L346">                ? String.valueOf((int) lote.getDesconto().getPercentagem())</span>
+<span class="nc" id="L347">                : &quot;10&quot;;</span>
+<span class="nc" id="L348">        TextInputDialog dlg = DialogoUtil.comOwner(new TextInputDialog(valorInicial));</span>
+<span class="nc" id="L349">        dlg.setTitle(&quot;Aplicar Desconto&quot;);</span>
+<span class="nc" id="L350">        dlg.setHeaderText(nome + &quot; — val. &quot; + lote.getDataValidade());</span>
+<span class="nc" id="L351">        dlg.setContentText(&quot;Percentagem (%):&quot;);</span>
+<span class="nc" id="L352">        dlg.showAndWait().ifPresent(pctStr -&gt; {</span>
+            try {
+<span class="nc" id="L354">                double pct = Double.parseDouble(pctStr.replace(&quot;,&quot;, &quot;.&quot;));</span>
+<span class="nc" id="L355">                Utilizador u = AppContext.getInstance().getUtilizadorAtual();</span>
+<span class="nc" id="L356">                AppContext.getInstance().catalogoServico.aplicarDesconto(u, lote.getId(), pct);</span>
+<span class="nc" id="L357">                mostrarInfo(&quot;Desconto de &quot; + pct + &quot;% aplicado ao lote #&quot; + lote.getId() + &quot;.&quot;);</span>
+<span class="nc" id="L358">                carregarAlertas();</span>
+<span class="nc" id="L359">                atualizarDetalhes(tblProdutos.getSelectionModel().getSelectedItem());</span>
+<span class="nc" id="L360">            } catch (NumberFormatException e) {</span>
+<span class="nc" id="L361">                mostrarErro(&quot;Percentagem inválida.&quot;);</span>
+<span class="nc" id="L362">            } catch (Exception e) {</span>
+<span class="nc" id="L363">                mostrarErro(e.getMessage());</span>
+<span class="nc" id="L364">            }</span>
+<span class="nc" id="L365">        });</span>
+<span class="nc" id="L366">    }</span>
+
+    private Optional&lt;ProdutoDTO&gt; mostrarDialogoProduto(Produto existente) {
+<span class="nc" id="L369">        Dialog&lt;ProdutoDTO&gt; dlg = DialogoUtil.comOwner(new Dialog&lt;&gt;());</span>
+<span class="nc bnc" id="L370" title="All 2 branches missed.">        dlg.setTitle(existente == null ? &quot;Criar Produto&quot; : &quot;Editar Produto&quot;);</span>
+<span class="nc" id="L371">        dlg.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);</span>
+
+<span class="nc bnc" id="L373" title="All 2 branches missed.">        TextField fCodigo    = new TextField(existente != null ? existente.getCodigoBarras() : &quot;&quot;);</span>
+<span class="nc bnc" id="L374" title="All 2 branches missed.">        TextField fNome      = new TextField(existente != null ? existente.getNome() : &quot;&quot;);</span>
+<span class="nc bnc" id="L375" title="All 2 branches missed.">        TextField fCategoria = new TextField(existente != null ? existente.getCategoria() : &quot;&quot;);</span>
+<span class="nc bnc" id="L376" title="All 2 branches missed.">        TextField fPreco     = new TextField(existente != null ? String.valueOf(existente.getPrecoBase()) : &quot;&quot;);</span>
+<span class="nc bnc" id="L377" title="All 2 branches missed.">        TextField fStock     = new TextField(existente != null ? String.valueOf(existente.getStockMinimo()) : &quot;0&quot;);</span>
+<span class="nc" id="L378">        CheckBox  fValidade  = new CheckBox(&quot;Tem data de validade&quot;);</span>
+<span class="nc bnc" id="L379" title="All 4 branches missed.">        fValidade.setSelected(existente == null || existente.isTemValidade());</span>
+
+<span class="nc" id="L381">        javafx.scene.layout.GridPane grid = new javafx.scene.layout.GridPane();</span>
+<span class="nc" id="L382">        grid.setHgap(8); grid.setVgap(8);</span>
+<span class="nc" id="L383">        grid.add(new Label(&quot;Código de barras:&quot;), 0, 0); grid.add(fCodigo, 1, 0);</span>
+<span class="nc" id="L384">        grid.add(new Label(&quot;Nome:&quot;), 0, 1);             grid.add(fNome, 1, 1);</span>
+<span class="nc" id="L385">        grid.add(new Label(&quot;Categoria:&quot;), 0, 2);        grid.add(fCategoria, 1, 2);</span>
+<span class="nc" id="L386">        grid.add(new Label(&quot;Preço base (€):&quot;), 0, 3);   grid.add(fPreco, 1, 3);</span>
+<span class="nc" id="L387">        grid.add(new Label(&quot;Stock mínimo:&quot;), 0, 4);     grid.add(fStock, 1, 4);</span>
+<span class="nc" id="L388">        grid.add(fValidade, 1, 5);</span>
+<span class="nc" id="L389">        dlg.getDialogPane().setContent(grid);</span>
+
+<span class="nc" id="L391">        dlg.setResultConverter(bt -&gt; {</span>
+<span class="nc bnc" id="L392" title="All 2 branches missed.">            if (bt == ButtonType.OK) {</span>
+                try {
+<span class="nc" id="L394">                    return new ProdutoDTO(fCodigo.getText().trim(), fNome.getText().trim(),</span>
+<span class="nc" id="L395">                            fCategoria.getText().trim(),</span>
+<span class="nc" id="L396">                            Double.parseDouble(fPreco.getText().replace(&quot;,&quot;, &quot;.&quot;)),</span>
+<span class="nc" id="L397">                            Integer.parseInt(fStock.getText().trim()),</span>
+<span class="nc" id="L398">                            fValidade.isSelected());</span>
+<span class="nc" id="L399">                } catch (NumberFormatException e) { return null; }</span>
+            }
+<span class="nc" id="L401">            return null;</span>
+        });
+<span class="nc" id="L403">        return dlg.showAndWait();</span>
+    }
+
+<span class="nc" id="L406">    private void mostrarErro(String m) { DialogoUtil.erro(m); }</span>
+<span class="nc" id="L407">    private void mostrarInfo(String m) { DialogoUtil.info(m); }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

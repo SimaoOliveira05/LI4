@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LogAuditoriaCentral.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">servidor-central</a> &gt; <a href="index.source.html" class="el_package">pt.trasmum.servidor.dominio</a> &gt; <span class="el_source">LogAuditoriaCentral.java</span></div><h1>LogAuditoriaCentral.java</h1><pre class="source lang-java linenums">package pt.trasmum.servidor.dominio;
+
+import java.time.LocalDateTime;
+
+public class LogAuditoriaCentral {
+    private int id;
+    private int idOriginalLoja;
+    private String idLoja;
+    private TipoAcao acao;
+    private LocalDateTime dataHora;
+    private String nomeUtilizador;
+    private String descricao;
+
+<span class="nc" id="L14">    public LogAuditoriaCentral() {}</span>
+
+    public LogAuditoriaCentral(int id, int idOriginalLoja, String idLoja, TipoAcao acao,
+<span class="fc" id="L17">                               LocalDateTime dataHora, String nomeUtilizador, String descricao) {</span>
+<span class="fc" id="L18">        this.id = id;</span>
+<span class="fc" id="L19">        this.idOriginalLoja = idOriginalLoja;</span>
+<span class="fc" id="L20">        this.idLoja = idLoja;</span>
+<span class="fc" id="L21">        this.acao = acao;</span>
+<span class="fc" id="L22">        this.dataHora = dataHora;</span>
+<span class="fc" id="L23">        this.nomeUtilizador = nomeUtilizador;</span>
+<span class="fc" id="L24">        this.descricao = descricao;</span>
+<span class="fc" id="L25">    }</span>
+
+<span class="nc" id="L27">    public int getId() { return id; }</span>
+<span class="nc" id="L28">    public void setId(int id) { this.id = id; }</span>
+<span class="nc" id="L29">    public int getIdOriginalLoja() { return idOriginalLoja; }</span>
+<span class="nc" id="L30">    public void setIdOriginalLoja(int idOriginalLoja) { this.idOriginalLoja = idOriginalLoja; }</span>
+<span class="nc" id="L31">    public String getIdLoja() { return idLoja; }</span>
+<span class="nc" id="L32">    public void setIdLoja(String idLoja) { this.idLoja = idLoja; }</span>
+<span class="nc" id="L33">    public TipoAcao getAcao() { return acao; }</span>
+<span class="nc" id="L34">    public void setAcao(TipoAcao acao) { this.acao = acao; }</span>
+<span class="nc" id="L35">    public LocalDateTime getDataHora() { return dataHora; }</span>
+<span class="nc" id="L36">    public void setDataHora(LocalDateTime dataHora) { this.dataHora = dataHora; }</span>
+<span class="nc" id="L37">    public String getNomeUtilizador() { return nomeUtilizador; }</span>
+<span class="nc" id="L38">    public void setNomeUtilizador(String nomeUtilizador) { this.nomeUtilizador = nomeUtilizador; }</span>
+<span class="nc" id="L39">    public String getDescricao() { return descricao; }</span>
+<span class="nc" id="L40">    public void setDescricao(String descricao) { this.descricao = descricao; }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

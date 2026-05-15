@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>VendaCentral.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">servidor-central</a> &gt; <a href="index.source.html" class="el_package">pt.trasmum.servidor.dominio</a> &gt; <span class="el_source">VendaCentral.java</span></div><h1>VendaCentral.java</h1><pre class="source lang-java linenums">package pt.trasmum.servidor.dominio;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+public class VendaCentral {
+    private int id;
+    private int idOriginalLoja;
+    private String idLoja;
+    private LocalDateTime dataHora;
+    private double totalFaturado;
+    private MetodoPagamento metodoPagamento;
+<span class="pc" id="L14">    private List&lt;LinhaVendaCentral&gt; linhas = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L16">    public VendaCentral() {}</span>
+
+    public VendaCentral(int id, int idOriginalLoja, String idLoja, LocalDateTime dataHora,
+                        double totalFaturado, MetodoPagamento metodoPagamento,
+<span class="fc" id="L20">                        List&lt;LinhaVendaCentral&gt; linhas) {</span>
+<span class="fc" id="L21">        this.id = id;</span>
+<span class="fc" id="L22">        this.idOriginalLoja = idOriginalLoja;</span>
+<span class="fc" id="L23">        this.idLoja = idLoja;</span>
+<span class="fc" id="L24">        this.dataHora = dataHora;</span>
+<span class="fc" id="L25">        this.totalFaturado = totalFaturado;</span>
+<span class="fc" id="L26">        this.metodoPagamento = metodoPagamento;</span>
+<span class="pc bpc" id="L27" title="1 of 2 branches missed.">        this.linhas = linhas != null ? linhas : new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L28">    }</span>
+
+<span class="nc" id="L30">    public int getId() { return id; }</span>
+<span class="nc" id="L31">    public void setId(int id) { this.id = id; }</span>
+<span class="nc" id="L32">    public int getIdOriginalLoja() { return idOriginalLoja; }</span>
+<span class="nc" id="L33">    public void setIdOriginalLoja(int idOriginalLoja) { this.idOriginalLoja = idOriginalLoja; }</span>
+<span class="nc" id="L34">    public String getIdLoja() { return idLoja; }</span>
+<span class="nc" id="L35">    public void setIdLoja(String idLoja) { this.idLoja = idLoja; }</span>
+<span class="nc" id="L36">    public LocalDateTime getDataHora() { return dataHora; }</span>
+<span class="nc" id="L37">    public void setDataHora(LocalDateTime dataHora) { this.dataHora = dataHora; }</span>
+<span class="nc" id="L38">    public double getTotalFaturado() { return totalFaturado; }</span>
+<span class="nc" id="L39">    public void setTotalFaturado(double totalFaturado) { this.totalFaturado = totalFaturado; }</span>
+<span class="nc" id="L40">    public MetodoPagamento getMetodoPagamento() { return metodoPagamento; }</span>
+<span class="nc" id="L41">    public void setMetodoPagamento(MetodoPagamento metodoPagamento) { this.metodoPagamento = metodoPagamento; }</span>
+<span class="nc" id="L42">    public List&lt;LinhaVendaCentral&gt; getLinhas() { return linhas; }</span>
+<span class="nc" id="L43">    public void setLinhas(List&lt;LinhaVendaCentral&gt; linhas) { this.linhas = linhas; }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

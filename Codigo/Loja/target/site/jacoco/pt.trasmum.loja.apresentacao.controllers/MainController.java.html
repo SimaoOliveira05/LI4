@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MainController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">TrasmUM — Software de Loja</a> &gt; <a href="index.source.html" class="el_package">pt.trasmum.loja.apresentacao.controllers</a> &gt; <span class="el_source">MainController.java</span></div><h1>MainController.java</h1><pre class="source lang-java linenums">package pt.trasmum.loja.apresentacao.controllers;
+
+import javafx.fxml.FXML;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.Separator;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.VBox;
+import pt.trasmum.loja.apresentacao.DialogoUtil;
+import pt.trasmum.loja.app.AppContext;
+import pt.trasmum.loja.app.GestorEscala;
+import pt.trasmum.loja.app.Navigator;
+import pt.trasmum.loja.dominio.core.PerfilUtilizador;
+import pt.trasmum.loja.dominio.core.Utilizador;
+
+<span class="nc" id="L16">public class MainController {</span>
+
+    @FXML private BorderPane mainBorderPane;
+    @FXML private VBox menuLateral;
+    @FXML private Label lblUtilizador;
+    @FXML private Label lblLoja;
+    @FXML private Label lblEscala;
+
+    // Botões de gestão (visíveis apenas para GESTOR/CEO)
+    @FXML private Separator sepGestao;
+    @FXML private Button btnAprovisionamento;
+    @FXML private Button btnPagamento;
+    @FXML private Button btnAdministracao;
+    @FXML private Button btnFechoDia;
+
+    @FXML
+    public void initialize() {
+<span class="nc" id="L33">        Navigator.setRootLayout(mainBorderPane);</span>
+
+<span class="nc" id="L35">        Utilizador u = AppContext.getInstance().getUtilizadorAtual();</span>
+<span class="nc bnc" id="L36" title="All 2 branches missed.">        if (u != null) {</span>
+<span class="nc" id="L37">            lblUtilizador.setText(u.getNomeUtilizador() + &quot; (&quot; + u.getPerfil() + &quot;)&quot;);</span>
+        }
+<span class="nc" id="L39">        lblLoja.setText(AppContext.getInstance().configuracao.getNomeLoja());</span>
+
+<span class="nc bnc" id="L41" title="All 6 branches missed.">        boolean gestor = u != null &amp;&amp; (u.getPerfil() == PerfilUtilizador.GESTOR || u.getPerfil() == PerfilUtilizador.CEO);</span>
+<span class="nc" id="L42">        sepGestao.setVisible(gestor);            sepGestao.setManaged(gestor);</span>
+<span class="nc" id="L43">        btnAprovisionamento.setVisible(gestor);  btnAprovisionamento.setManaged(gestor);</span>
+<span class="nc" id="L44">        btnPagamento.setVisible(gestor);         btnPagamento.setManaged(gestor);</span>
+<span class="nc" id="L45">        btnAdministracao.setVisible(gestor);     btnAdministracao.setManaged(gestor);</span>
+<span class="nc" id="L46">        btnFechoDia.setVisible(gestor);          btnFechoDia.setManaged(gestor);</span>
+
+<span class="nc" id="L48">        GestorEscala gestor2 = GestorEscala.getInstance();</span>
+<span class="nc" id="L49">        atualizarLblEscala(gestor2.getEscala());</span>
+<span class="nc" id="L50">        gestor2.escalaProperty().addListener((obs, ant, novo) -&gt; atualizarLblEscala(novo.doubleValue()));</span>
+
+<span class="nc" id="L52">        navegarVenda();</span>
+<span class="nc" id="L53">    }</span>
+
+    private void atualizarLblEscala(double fator) {
+<span class="nc" id="L56">        lblEscala.setText(String.format(&quot;%.0f%%&quot;, fator * 100));</span>
+<span class="nc" id="L57">    }</span>
+
+<span class="nc" id="L59">    @FXML public void navegarVenda()            { Navigator.navegarParaCentro(&quot;/fxml/VendaView.fxml&quot;); }</span>
+<span class="nc" id="L60">    @FXML public void navegarCatalogo()         { Navigator.navegarParaCentro(&quot;/fxml/CatalogoView.fxml&quot;); }</span>
+<span class="nc" id="L61">    @FXML public void navegarCaixa()            { Navigator.navegarParaCentro(&quot;/fxml/CaixaView.fxml&quot;); }</span>
+<span class="nc" id="L62">    @FXML public void navegarAprovisionamento() { Navigator.navegarParaCentro(&quot;/fxml/AprovisionamentoView.fxml&quot;); }</span>
+<span class="nc" id="L63">    @FXML public void navegarPagamento()        { Navigator.navegarParaCentro(&quot;/fxml/PagamentoView.fxml&quot;); }</span>
+<span class="nc" id="L64">    @FXML public void navegarAdministracao()    { Navigator.navegarParaCentro(&quot;/fxml/AdministracaoView.fxml&quot;); }</span>
+<span class="nc" id="L65">    @FXML public void navegarFechoDia()         { Navigator.navegarParaCentro(&quot;/fxml/FechoDiaView.fxml&quot;); }</span>
+
+<span class="nc" id="L67">    @FXML public void aumentarEscala() { GestorEscala.getInstance().aumentar(); }</span>
+<span class="nc" id="L68">    @FXML public void diminuirEscala() { GestorEscala.getInstance().diminuir(); }</span>
+
+    @FXML
+    public void onLogout() {
+<span class="nc" id="L72">        Utilizador u = AppContext.getInstance().getUtilizadorAtual();</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">        if (u != null) {</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">            if (AppContext.getInstance().caixaServico.buscarSessaoAtiva(u.getId()) != null) {</span>
+<span class="nc" id="L75">                DialogoUtil.erro(&quot;Não é possível terminar sessão com uma sessão de caixa aberta.\nFeche a caixa primeiro.&quot;);</span>
+<span class="nc" id="L76">                return;</span>
+            }
+<span class="nc" id="L78">            AppContext.getInstance().autenticacaoServico.encerrarSessao(u);</span>
+<span class="nc" id="L79">            AppContext.getInstance().setUtilizadorAtual(null);</span>
+        }
+<span class="nc" id="L81">        Navigator.navegarParaLogin();</span>
+<span class="nc" id="L82">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

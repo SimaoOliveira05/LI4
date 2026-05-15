@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MonitorServico.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">servidor-central</a> &gt; <a href="index.source.html" class="el_package">pt.trasmum.servidor.servico.impl</a> &gt; <span class="el_source">MonitorServico.java</span></div><h1>MonitorServico.java</h1><pre class="source lang-java linenums">package pt.trasmum.servidor.servico.impl;
+
+import pt.trasmum.servidor.dominio.FechoDiaCentral;
+import pt.trasmum.servidor.dominio.Loja;
+import pt.trasmum.servidor.dto.api.EstadoLojaDTO;
+import pt.trasmum.servidor.dto.api.MonitorRedeDTO;
+import pt.trasmum.servidor.repositorio.interfaces.FechoDiaCentralRepositorio;
+import pt.trasmum.servidor.repositorio.interfaces.LojaRepositorio;
+import pt.trasmum.servidor.servico.interfaces.IMonitorServico;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+
+public class MonitorServico implements IMonitorServico {
+<span class="nc" id="L16">    private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd HH:mm&quot;);</span>
+
+    private final LojaRepositorio lojaRepo;
+    private final FechoDiaCentralRepositorio fechoRepo;
+
+<span class="nc" id="L21">    public MonitorServico(LojaRepositorio lojaRepo, FechoDiaCentralRepositorio fechoRepo) {</span>
+<span class="nc" id="L22">        this.lojaRepo = lojaRepo;</span>
+<span class="nc" id="L23">        this.fechoRepo = fechoRepo;</span>
+<span class="nc" id="L24">    }</span>
+
+    @Override
+    public MonitorRedeDTO obterEstadoRede(LocalDate data) {
+<span class="nc" id="L28">        List&lt;Loja&gt; lojas = lojaRepo.listarTodas();</span>
+<span class="nc" id="L29">        List&lt;FechoDiaCentral&gt; fechos = fechoRepo.buscarPorData(data);</span>
+<span class="nc" id="L30">        Map&lt;String, FechoDiaCentral&gt; porLoja = new HashMap&lt;&gt;();</span>
+<span class="nc bnc" id="L31" title="All 2 branches missed.">        for (FechoDiaCentral f : fechos) porLoja.put(f.getIdLoja(), f);</span>
+
+<span class="nc" id="L33">        MonitorRedeDTO dto = new MonitorRedeDTO();</span>
+<span class="nc" id="L34">        dto.lojasEsperadas = lojas.size();</span>
+<span class="nc" id="L35">        dto.lojasRecebidas = porLoja.size();</span>
+<span class="nc" id="L36">        dto.lojasPendentes = Math.max(0, lojas.size() - porLoja.size());</span>
+<span class="nc" id="L37">        dto.estadoPorLoja = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L38" title="All 2 branches missed.">        for (Loja l : lojas) {</span>
+<span class="nc" id="L39">            FechoDiaCentral f = porLoja.get(l.getIdLoja());</span>
+<span class="nc" id="L40">            dto.estadoPorLoja.add(new EstadoLojaDTO(</span>
+<span class="nc" id="L41">                    l.getIdLoja(),</span>
+<span class="nc" id="L42">                    l.getNomeLoja(),</span>
+<span class="nc bnc" id="L43" title="All 2 branches missed.">                    f != null ? &quot;received&quot; : &quot;missing&quot;,</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">                    f != null ? f.getDataRecepcao().format(FMT) : null</span>
+            ));
+<span class="nc" id="L46">        }</span>
+<span class="nc" id="L47">        return dto;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

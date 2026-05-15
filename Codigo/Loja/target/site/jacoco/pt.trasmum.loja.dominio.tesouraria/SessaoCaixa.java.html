@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SessaoCaixa.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">TrasmUM — Software de Loja</a> &gt; <a href="index.source.html" class="el_package">pt.trasmum.loja.dominio.tesouraria</a> &gt; <span class="el_source">SessaoCaixa.java</span></div><h1>SessaoCaixa.java</h1><pre class="source lang-java linenums">package pt.trasmum.loja.dominio.tesouraria;
+
+import pt.trasmum.loja.dominio.core.RegistoSincronizavel;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+public class SessaoCaixa extends RegistoSincronizavel {
+
+    private int idUtilizador;
+    private double fundoInicial;
+    private List&lt;DetalheNumerario&gt; detalheFundoInicial;
+    private List&lt;Sangria&gt; sangrias;
+    private double saldoAtual;
+    private Double saldoContado;
+    private Double diferencaFecho;
+    private LocalDateTime dataAbertura;
+    private LocalDateTime dataEncerramento;
+
+    public SessaoCaixa() {
+<span class="fc" id="L22">        super();</span>
+<span class="fc" id="L23">        this.detalheFundoInicial = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L24">        this.sangrias = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L25">        this.dataAbertura = LocalDateTime.now();</span>
+<span class="fc" id="L26">    }</span>
+
+    public SessaoCaixa(String idLoja, int idUtilizador, double fundo) {
+<span class="fc" id="L29">        super(idLoja);</span>
+<span class="fc" id="L30">        this.idUtilizador = idUtilizador;</span>
+<span class="fc" id="L31">        this.fundoInicial = fundo;</span>
+<span class="fc" id="L32">        this.detalheFundoInicial = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L33">        this.sangrias = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L34">        this.dataAbertura = LocalDateTime.now();</span>
+<span class="fc" id="L35">        this.saldoAtual = fundo;</span>
+<span class="fc" id="L36">    }</span>
+
+    public void registarSangria(Sangria sangria) {
+<span class="nc" id="L39">        this.sangrias.add(sangria);</span>
+<span class="nc" id="L40">        this.saldoAtual -= sangria.getTotal();</span>
+<span class="nc" id="L41">    }</span>
+
+    public boolean excedeLimite(double limiteMaximo) {
+<span class="nc bnc" id="L44" title="All 2 branches missed.">        return this.saldoAtual &gt; limiteMaximo;</span>
+    }
+
+<span class="fc" id="L47">    public int getIdUtilizador() { return idUtilizador; }</span>
+<span class="nc" id="L48">    public void setIdUtilizador(int idUtilizador) { this.idUtilizador = idUtilizador; }</span>
+
+<span class="nc" id="L50">    public double getFundoInicial() { return fundoInicial; }</span>
+<span class="nc" id="L51">    public void setFundoInicial(double fundoInicial) { this.fundoInicial = fundoInicial; }</span>
+
+<span class="nc" id="L53">    public List&lt;DetalheNumerario&gt; getDetalheFundoInicial() { return detalheFundoInicial; }</span>
+<span class="nc" id="L54">    public void setDetalheFundoInicial(List&lt;DetalheNumerario&gt; detalheFundoInicial) { this.detalheFundoInicial = detalheFundoInicial; }</span>
+
+<span class="nc" id="L56">    public List&lt;Sangria&gt; getSangrias() { return sangrias; }</span>
+<span class="nc" id="L57">    public void setSangrias(List&lt;Sangria&gt; sangrias) { this.sangrias = sangrias; }</span>
+
+<span class="fc" id="L59">    public double getSaldoAtual() { return saldoAtual; }</span>
+<span class="fc" id="L60">    public void setSaldoAtual(double saldoAtual) { this.saldoAtual = saldoAtual; }</span>
+
+<span class="nc" id="L62">    public Double getSaldoContado() { return saldoContado; }</span>
+<span class="nc" id="L63">    public void setSaldoContado(Double saldoContado) { this.saldoContado = saldoContado; }</span>
+
+<span class="nc" id="L65">    public Double getDiferencaFecho() { return diferencaFecho; }</span>
+<span class="nc" id="L66">    public void setDiferencaFecho(Double diferencaFecho) { this.diferencaFecho = diferencaFecho; }</span>
+
+<span class="fc" id="L68">    public LocalDateTime getDataAbertura() { return dataAbertura; }</span>
+<span class="nc" id="L69">    public void setDataAbertura(LocalDateTime dataAbertura) { this.dataAbertura = dataAbertura; }</span>
+
+<span class="fc" id="L71">    public LocalDateTime getDataEncerramento() { return dataEncerramento; }</span>
+<span class="nc" id="L72">    public void setDataEncerramento(LocalDateTime dataEncerramento) { this.dataEncerramento = dataEncerramento; }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

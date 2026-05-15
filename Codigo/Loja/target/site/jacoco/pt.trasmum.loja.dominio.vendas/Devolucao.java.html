@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Devolucao.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">TrasmUM — Software de Loja</a> &gt; <a href="index.source.html" class="el_package">pt.trasmum.loja.dominio.vendas</a> &gt; <span class="el_source">Devolucao.java</span></div><h1>Devolucao.java</h1><pre class="source lang-java linenums">package pt.trasmum.loja.dominio.vendas;
+
+import pt.trasmum.loja.dominio.core.RegistoSincronizavel;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+public class Devolucao extends RegistoSincronizavel {
+
+    private LocalDateTime dataHora;
+    private int quantidade;
+    private LocalDate dataValidadeEmbalagem;
+    private String numeroFatura;
+    private int idUtilizador;
+    private int idFatura;
+    private int idLote;
+    private double valorRestituido;
+
+    public Devolucao() {
+<span class="fc" id="L20">        super();</span>
+<span class="fc" id="L21">    }</span>
+
+    public Devolucao(String idLoja, int idFatura, String numeroFatura, int idUtilizador,
+                     int idLote, int quantidade, LocalDate dataValidadeEmbalagem, double valorRestituido) {
+<span class="fc" id="L25">        super(idLoja);</span>
+<span class="fc" id="L26">        this.idFatura = idFatura;</span>
+<span class="fc" id="L27">        this.numeroFatura = numeroFatura;</span>
+<span class="fc" id="L28">        this.idUtilizador = idUtilizador;</span>
+<span class="fc" id="L29">        this.idLote = idLote;</span>
+<span class="fc" id="L30">        this.quantidade = quantidade;</span>
+<span class="fc" id="L31">        this.dataValidadeEmbalagem = dataValidadeEmbalagem;</span>
+<span class="fc" id="L32">        this.valorRestituido = valorRestituido;</span>
+<span class="fc" id="L33">        this.dataHora = LocalDateTime.now();</span>
+<span class="fc" id="L34">    }</span>
+
+<span class="fc" id="L36">    public LocalDateTime getDataHora() { return dataHora; }</span>
+<span class="nc" id="L37">    public void setDataHora(LocalDateTime dataHora) { this.dataHora = dataHora; }</span>
+
+<span class="fc" id="L39">    public int getQuantidade() { return quantidade; }</span>
+<span class="fc" id="L40">    public void setQuantidade(int quantidade) { this.quantidade = quantidade; }</span>
+
+<span class="nc" id="L42">    public LocalDate getDataValidadeEmbalagem() { return dataValidadeEmbalagem; }</span>
+<span class="nc" id="L43">    public void setDataValidadeEmbalagem(LocalDate dataValidadeEmbalagem) { this.dataValidadeEmbalagem = dataValidadeEmbalagem; }</span>
+
+<span class="nc" id="L45">    public String getNumeroFatura() { return numeroFatura; }</span>
+<span class="nc" id="L46">    public void setNumeroFatura(String numeroFatura) { this.numeroFatura = numeroFatura; }</span>
+
+<span class="nc" id="L48">    public int getIdUtilizador() { return idUtilizador; }</span>
+<span class="nc" id="L49">    public void setIdUtilizador(int idUtilizador) { this.idUtilizador = idUtilizador; }</span>
+
+<span class="fc" id="L51">    public int getIdFatura() { return idFatura; }</span>
+<span class="nc" id="L52">    public void setIdFatura(int idFatura) { this.idFatura = idFatura; }</span>
+
+<span class="fc" id="L54">    public int getIdLote() { return idLote; }</span>
+<span class="fc" id="L55">    public void setIdLote(int idLote) { this.idLote = idLote; }</span>
+
+<span class="fc" id="L57">    public double getValorRestituido() { return valorRestituido; }</span>
+<span class="nc" id="L58">    public void setValorRestituido(double valorRestituido) { this.valorRestituido = valorRestituido; }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

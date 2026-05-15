@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConfiguracaoTerminal.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">TrasmUM — Software de Loja</a> &gt; <a href="index.source.html" class="el_package">pt.trasmum.loja.dominio.core</a> &gt; <span class="el_source">ConfiguracaoTerminal.java</span></div><h1>ConfiguracaoTerminal.java</h1><pre class="source lang-java linenums">package pt.trasmum.loja.dominio.core;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.Properties;
+
+public class ConfiguracaoTerminal {
+
+    private final String idLoja;
+    private final String nomeLoja;
+    private final String morada;
+    private final String localidade;
+    private final String nif;
+    private final String email;
+    private double limiteMaximoCaixa;
+    private final String urlServidor;
+    private int diasAlertaValidade;
+
+    private ConfiguracaoTerminal(String idLoja, String nomeLoja, String morada, String localidade,
+                                  String nif, String email, double limiteMaximoCaixa,
+<span class="nc" id="L23">                                  String urlServidor, int diasAlertaValidade) {</span>
+<span class="nc" id="L24">        this.idLoja = idLoja;</span>
+<span class="nc" id="L25">        this.nomeLoja = nomeLoja;</span>
+<span class="nc" id="L26">        this.morada = morada;</span>
+<span class="nc" id="L27">        this.localidade = localidade;</span>
+<span class="nc" id="L28">        this.nif = nif;</span>
+<span class="nc" id="L29">        this.email = email;</span>
+<span class="nc" id="L30">        this.limiteMaximoCaixa = limiteMaximoCaixa;</span>
+<span class="nc" id="L31">        this.urlServidor = urlServidor;</span>
+<span class="nc" id="L32">        this.diasAlertaValidade = diasAlertaValidade;</span>
+<span class="nc" id="L33">    }</span>
+
+    public static ConfiguracaoTerminal carregar() {
+<span class="nc" id="L36">        Properties props = new Properties();</span>
+<span class="nc" id="L37">        try (InputStream is = ClassLoader.getSystemResourceAsStream(&quot;config.properties&quot;)) {</span>
+<span class="nc bnc" id="L38" title="All 2 branches missed.">            if (is == null) {</span>
+<span class="nc" id="L39">                throw new RuntimeException(&quot;config.properties não encontrado no classpath&quot;);</span>
+            }
+<span class="nc" id="L41">            props.load(new InputStreamReader(is, StandardCharsets.UTF_8));</span>
+<span class="nc" id="L42">        } catch (IOException e) {</span>
+<span class="nc" id="L43">            throw new RuntimeException(&quot;Erro ao carregar config.properties&quot;, e);</span>
+<span class="nc" id="L44">        }</span>
+
+<span class="nc" id="L46">        return new ConfiguracaoTerminal(</span>
+<span class="nc" id="L47">                props.getProperty(&quot;loja.id&quot;),</span>
+<span class="nc" id="L48">                props.getProperty(&quot;loja.nome&quot;),</span>
+<span class="nc" id="L49">                props.getProperty(&quot;loja.morada&quot;, &quot;&quot;),</span>
+<span class="nc" id="L50">                props.getProperty(&quot;loja.localidade&quot;, &quot;&quot;),</span>
+<span class="nc" id="L51">                props.getProperty(&quot;loja.nif&quot;, &quot;&quot;),</span>
+<span class="nc" id="L52">                props.getProperty(&quot;loja.email&quot;, &quot;&quot;),</span>
+<span class="nc" id="L53">                Double.parseDouble(props.getProperty(&quot;loja.limiteMaximoCaixa&quot;)),</span>
+<span class="nc" id="L54">                props.getProperty(&quot;servidor.url&quot;),</span>
+<span class="nc" id="L55">                Integer.parseInt(props.getProperty(&quot;servidor.alertaValidade.dias&quot;))</span>
+        );
+    }
+
+<span class="nc" id="L59">    public String getIdLoja() { return idLoja; }</span>
+<span class="nc" id="L60">    public String getNomeLoja() { return nomeLoja; }</span>
+<span class="nc" id="L61">    public String getMorada() { return morada; }</span>
+<span class="nc" id="L62">    public String getLocalidade() { return localidade; }</span>
+<span class="nc" id="L63">    public String getNif() { return nif; }</span>
+<span class="nc" id="L64">    public String getEmail() { return email; }</span>
+<span class="nc" id="L65">    public double getLimiteMaximoCaixa() { return limiteMaximoCaixa; }</span>
+<span class="nc" id="L66">    public String getUrlServidor() { return urlServidor; }</span>
+<span class="nc" id="L67">    public int getDiasAlertaValidade() { return diasAlertaValidade; }</span>
+
+<span class="nc" id="L69">    public void setLimiteMaximoCaixa(double limiteMaximoCaixa) { this.limiteMaximoCaixa = limiteMaximoCaixa; }</span>
+<span class="nc" id="L70">    public void setDiasAlertaValidade(int diasAlertaValidade) { this.diasAlertaValidade = diasAlertaValidade; }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

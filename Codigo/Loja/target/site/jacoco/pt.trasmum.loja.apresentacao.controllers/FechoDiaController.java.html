@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FechoDiaController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">TrasmUM — Software de Loja</a> &gt; <a href="index.source.html" class="el_package">pt.trasmum.loja.apresentacao.controllers</a> &gt; <span class="el_source">FechoDiaController.java</span></div><h1>FechoDiaController.java</h1><pre class="source lang-java linenums">package pt.trasmum.loja.apresentacao.controllers;
+
+import javafx.fxml.FXML;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
+import pt.trasmum.loja.apresentacao.DialogoUtil;
+import pt.trasmum.loja.app.AppContext;
+import pt.trasmum.loja.app.Navigator;
+import pt.trasmum.loja.dominio.core.ConfiguracaoTerminal;
+import pt.trasmum.loja.dominio.core.Utilizador;
+import pt.trasmum.loja.dominio.exceptions.EnvioFechoFalhouException;
+import pt.trasmum.loja.dominio.tesouraria.FechoDia;
+
+<span class="nc" id="L15">public class FechoDiaController {</span>
+
+    @FXML private Label lblEstado;
+    @FXML private Button btnIniciarFecho;
+    @FXML private Button btnReenviar;
+    @FXML private ProgressIndicator progressIndicador;
+
+<span class="nc" id="L22">    private int idFechoFalhado = -1;</span>
+
+    @FXML
+    public void initialize() {
+<span class="nc" id="L26">        btnReenviar.setVisible(false);</span>
+<span class="nc" id="L27">        progressIndicador.setVisible(false);</span>
+<span class="nc" id="L28">        lblEstado.setText(&quot;Pronto para iniciar fecho de dia.&quot;);</span>
+<span class="nc" id="L29">    }</span>
+
+    @FXML
+    public void onIniciarFecho() {
+<span class="nc" id="L33">        Utilizador u = AppContext.getInstance().getUtilizadorAtual();</span>
+<span class="nc" id="L34">        ConfiguracaoTerminal config = AppContext.getInstance().configuracao;</span>
+
+<span class="nc bnc" id="L36" title="All 2 branches missed.">        if (!AppContext.getInstance().caixaServico.obterSessoesAbertas().isEmpty()) {</span>
+<span class="nc" id="L37">            mostrarErro(&quot;Existem sessões de caixa abertas. Todos os funcionários devem fechar a caixa antes de encerrar o dia.&quot;);</span>
+<span class="nc" id="L38">            return;</span>
+        }
+
+<span class="nc" id="L41">        lblEstado.setText(&quot;A processar fecho de dia...&quot;);</span>
+<span class="nc" id="L42">        progressIndicador.setVisible(true);</span>
+<span class="nc" id="L43">        btnIniciarFecho.setDisable(true);</span>
+
+        // Executa em thread de background para não bloquear o UI
+<span class="nc" id="L46">        javafx.concurrent.Task&lt;FechoDia&gt; task = new javafx.concurrent.Task&lt;&gt;() {</span>
+            @Override protected FechoDia call() {
+<span class="nc" id="L48">                return AppContext.getInstance().fechoDiaServico.executarFecho(u, config);</span>
+            }
+        };
+<span class="nc" id="L51">        task.setOnSucceeded(ev -&gt; {</span>
+<span class="nc" id="L52">            progressIndicador.setVisible(false);</span>
+<span class="nc" id="L53">            FechoDia fecho = task.getValue();</span>
+<span class="nc" id="L54">            lblEstado.setText(&quot;Fecho confirmado — &quot; + fecho.getDataFecho());</span>
+<span class="nc" id="L55">            mostrarInfo(&quot;Fecho de dia realizado com sucesso.\nData: &quot; + fecho.getDataFecho());</span>
+<span class="nc" id="L56">            AppContext.getInstance().autenticacaoServico.encerrarSessao(u);</span>
+<span class="nc" id="L57">            AppContext.getInstance().setUtilizadorAtual(null);</span>
+<span class="nc" id="L58">            Navigator.navegarParaLogin();</span>
+<span class="nc" id="L59">        });</span>
+<span class="nc" id="L60">        task.setOnFailed(ev -&gt; {</span>
+<span class="nc" id="L61">            progressIndicador.setVisible(false);</span>
+<span class="nc" id="L62">            btnIniciarFecho.setDisable(false);</span>
+<span class="nc" id="L63">            Throwable ex = task.getException();</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">            if (ex instanceof EnvioFechoFalhouException) {</span>
+<span class="nc" id="L65">                lblEstado.setText(&quot;Falha no envio. Os dados ficaram como PENDENTE.&quot;);</span>
+<span class="nc" id="L66">                btnReenviar.setVisible(true);</span>
+<span class="nc" id="L67">                idFechoFalhado = 0; // sem id concreto — reenviar usa pendentes</span>
+<span class="nc" id="L68">                mostrarErro(&quot;Falha no envio ao servidor: &quot; + ex.getMessage()</span>
+                        + &quot;\n\nOs dados estão guardados localmente. Utilize 'Reenviar' quando houver conectividade.&quot;);
+            } else {
+<span class="nc" id="L71">                lblEstado.setText(&quot;Erro: &quot; + ex.getMessage());</span>
+<span class="nc" id="L72">                mostrarErro(ex.getMessage());</span>
+            }
+<span class="nc" id="L74">        });</span>
+<span class="nc" id="L75">        new Thread(task).start();</span>
+<span class="nc" id="L76">    }</span>
+
+    @FXML
+    public void onReenviar() {
+<span class="nc" id="L80">        lblEstado.setText(&quot;A reenviar...&quot;);</span>
+<span class="nc" id="L81">        progressIndicador.setVisible(true);</span>
+<span class="nc" id="L82">        btnReenviar.setDisable(true);</span>
+
+<span class="nc" id="L84">        Utilizador u = AppContext.getInstance().getUtilizadorAtual();</span>
+<span class="nc" id="L85">        javafx.concurrent.Task&lt;Boolean&gt; task = new javafx.concurrent.Task&lt;&gt;() {</span>
+            @Override protected Boolean call() {
+<span class="nc" id="L87">                return AppContext.getInstance().fechoDiaServico.reenviar(idFechoFalhado, u);</span>
+            }
+        };
+<span class="nc" id="L90">        task.setOnSucceeded(ev -&gt; {</span>
+<span class="nc" id="L91">            progressIndicador.setVisible(false);</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">            if (Boolean.TRUE.equals(task.getValue())) {</span>
+<span class="nc" id="L93">                lblEstado.setText(&quot;Reenvio bem-sucedido.&quot;);</span>
+<span class="nc" id="L94">                btnReenviar.setVisible(false);</span>
+<span class="nc" id="L95">                mostrarInfo(&quot;Fecho de dia reenviado com sucesso.&quot;);</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">                if (u != null) AppContext.getInstance().autenticacaoServico.encerrarSessao(u);</span>
+<span class="nc" id="L97">                AppContext.getInstance().setUtilizadorAtual(null);</span>
+<span class="nc" id="L98">                Navigator.navegarParaLogin();</span>
+            } else {
+<span class="nc" id="L100">                lblEstado.setText(&quot;Reenvio falhou. Tente mais tarde.&quot;);</span>
+<span class="nc" id="L101">                btnReenviar.setDisable(false);</span>
+<span class="nc" id="L102">                mostrarErro(&quot;O reenvio falhou. Verifique a conectividade com o servidor.&quot;);</span>
+            }
+<span class="nc" id="L104">        });</span>
+<span class="nc" id="L105">        task.setOnFailed(ev -&gt; {</span>
+<span class="nc" id="L106">            progressIndicador.setVisible(false);</span>
+<span class="nc" id="L107">            btnReenviar.setDisable(false);</span>
+<span class="nc" id="L108">            mostrarErro(&quot;Erro inesperado no reenvio: &quot; + task.getException().getMessage());</span>
+<span class="nc" id="L109">        });</span>
+<span class="nc" id="L110">        new Thread(task).start();</span>
+<span class="nc" id="L111">    }</span>
+
+<span class="nc" id="L113">    private void mostrarErro(String m) { DialogoUtil.erro(m); }</span>
+<span class="nc" id="L114">    private void mostrarInfo(String m)  { DialogoUtil.info(m); }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

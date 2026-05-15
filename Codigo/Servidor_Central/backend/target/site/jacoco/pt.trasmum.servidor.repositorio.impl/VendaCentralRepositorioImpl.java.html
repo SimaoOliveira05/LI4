@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>VendaCentralRepositorioImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">servidor-central</a> &gt; <a href="index.source.html" class="el_package">pt.trasmum.servidor.repositorio.impl</a> &gt; <span class="el_source">VendaCentralRepositorioImpl.java</span></div><h1>VendaCentralRepositorioImpl.java</h1><pre class="source lang-java linenums">package pt.trasmum.servidor.repositorio.impl;
+
+import pt.trasmum.servidor.dominio.LinhaVendaCentral;
+import pt.trasmum.servidor.dominio.MetodoPagamento;
+import pt.trasmum.servidor.dominio.VendaCentral;
+import pt.trasmum.servidor.infra.DatabaseConnection;
+import pt.trasmum.servidor.repositorio.interfaces.VendaCentralRepositorio;
+
+import java.sql.*;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+public class VendaCentralRepositorioImpl implements VendaCentralRepositorio {
+    private final DatabaseConnection db;
+
+<span class="nc" id="L19">    public VendaCentralRepositorioImpl(DatabaseConnection db) {</span>
+<span class="nc" id="L20">        this.db = db;</span>
+<span class="nc" id="L21">    }</span>
+
+    @Override
+    public void guardar(VendaCentral venda) {
+<span class="nc" id="L25">        Connection c = null;</span>
+        try {
+<span class="nc" id="L27">            c = db.obter();</span>
+<span class="nc" id="L28">            c.setAutoCommit(false);</span>
+<span class="nc" id="L29">            guardar(c, venda);</span>
+<span class="nc" id="L30">            c.commit();</span>
+<span class="nc" id="L31">        } catch (SQLException e) {</span>
+<span class="nc bnc" id="L32" title="All 2 branches missed.">            try { if (c != null) c.rollback(); } catch (SQLException ignored) {}</span>
+<span class="nc" id="L33">            throw new RuntimeException(&quot;Erro ao guardar venda: &quot; + e.getMessage(), e);</span>
+        } finally {
+<span class="nc bnc" id="L35" title="All 2 branches missed.">            if (c != null) {</span>
+<span class="nc" id="L36">                try { c.setAutoCommit(true); c.close(); } catch (SQLException ignored) {}</span>
+            }
+        }
+<span class="nc" id="L39">    }</span>
+
+    @Override
+    public void guardar(Connection conn, VendaCentral venda) {
+<span class="nc" id="L43">        String sqlVenda = &quot;INSERT INTO VendaCentral (idOriginalLoja, idLoja, dataHora, totalFaturado, metodoPagamento) &quot; +</span>
+                &quot;VALUES (?, ?, ?, ?, ?) &quot; +
+                &quot;ON DUPLICATE KEY UPDATE dataHora = VALUES(dataHora), totalFaturado = VALUES(totalFaturado), metodoPagamento = VALUES(metodoPagamento), id = LAST_INSERT_ID(id)&quot;;
+        int idVenda;
+<span class="nc" id="L47">        try (PreparedStatement ps = conn.prepareStatement(sqlVenda, Statement.RETURN_GENERATED_KEYS)) {</span>
+<span class="nc" id="L48">            ps.setInt(1, venda.getIdOriginalLoja());</span>
+<span class="nc" id="L49">            ps.setString(2, venda.getIdLoja());</span>
+<span class="nc" id="L50">            ps.setTimestamp(3, Timestamp.valueOf(venda.getDataHora()));</span>
+<span class="nc" id="L51">            ps.setDouble(4, venda.getTotalFaturado());</span>
+<span class="nc" id="L52">            ps.setString(5, venda.getMetodoPagamento().name());</span>
+<span class="nc" id="L53">            ps.executeUpdate();</span>
+<span class="nc" id="L54">            try (ResultSet keys = ps.getGeneratedKeys()) {</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">                idVenda = keys.next() ? keys.getInt(1) : 0;</span>
+            }
+<span class="nc" id="L57">        } catch (SQLException e) {</span>
+<span class="nc" id="L58">            throw new RuntimeException(&quot;Erro ao guardar venda: &quot; + e.getMessage(), e);</span>
+<span class="nc" id="L59">        }</span>
+
+<span class="nc" id="L61">        String sqlLinha = &quot;INSERT INTO LinhaVendaCentral (idVendaCentral, idOriginalLoja, idLoja, nomeProduto, categoria, quantidade, precoUnitario, subtotal) &quot; +</span>
+                &quot;VALUES (?, ?, ?, ?, ?, ?, ?, ?) &quot; +
+                &quot;ON DUPLICATE KEY UPDATE idVendaCentral = VALUES(idVendaCentral), nomeProduto = VALUES(nomeProduto), categoria = VALUES(categoria), quantidade = VALUES(quantidade), precoUnitario = VALUES(precoUnitario), subtotal = VALUES(subtotal)&quot;;
+<span class="nc" id="L64">        try (PreparedStatement ps = conn.prepareStatement(sqlLinha)) {</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">            for (LinhaVendaCentral l : venda.getLinhas()) {</span>
+<span class="nc" id="L66">                ps.setInt(1, idVenda);</span>
+<span class="nc" id="L67">                ps.setInt(2, l.getIdOriginalLoja());</span>
+<span class="nc" id="L68">                ps.setString(3, l.getIdLoja());</span>
+<span class="nc" id="L69">                ps.setString(4, l.getNomeProduto());</span>
+<span class="nc" id="L70">                ps.setString(5, l.getCategoria());</span>
+<span class="nc" id="L71">                ps.setInt(6, l.getQuantidade());</span>
+<span class="nc" id="L72">                ps.setDouble(7, l.getPrecoUnitario());</span>
+<span class="nc" id="L73">                ps.setDouble(8, l.getSubtotal());</span>
+<span class="nc" id="L74">                ps.addBatch();</span>
+<span class="nc" id="L75">            }</span>
+<span class="nc" id="L76">            ps.executeBatch();</span>
+<span class="nc" id="L77">        } catch (SQLException e) {</span>
+<span class="nc" id="L78">            throw new RuntimeException(&quot;Erro ao guardar linhas: &quot; + e.getMessage(), e);</span>
+<span class="nc" id="L79">        }</span>
+<span class="nc" id="L80">    }</span>
+
+    private VendaCentral mapear(ResultSet rs) throws SQLException {
+<span class="nc" id="L83">        return new VendaCentral(</span>
+<span class="nc" id="L84">                rs.getInt(&quot;id&quot;),</span>
+<span class="nc" id="L85">                rs.getInt(&quot;idOriginalLoja&quot;),</span>
+<span class="nc" id="L86">                rs.getString(&quot;idLoja&quot;),</span>
+<span class="nc" id="L87">                rs.getTimestamp(&quot;dataHora&quot;).toLocalDateTime(),</span>
+<span class="nc" id="L88">                rs.getDouble(&quot;totalFaturado&quot;),</span>
+<span class="nc" id="L89">                MetodoPagamento.valueOf(rs.getString(&quot;metodoPagamento&quot;)),</span>
+                new ArrayList&lt;&gt;()
+        );
+    }
+
+    @Override
+    public List&lt;VendaCentral&gt; buscarPorLoja(String idLoja) {
+<span class="nc" id="L96">        List&lt;VendaCentral&gt; out = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L97">        try (Connection c = db.obter();</span>
+<span class="nc" id="L98">             PreparedStatement ps = c.prepareStatement(</span>
+                     &quot;SELECT id, idOriginalLoja, idLoja, dataHora, totalFaturado, metodoPagamento FROM VendaCentral WHERE idLoja = ?&quot;)) {
+<span class="nc" id="L100">            ps.setString(1, idLoja);</span>
+<span class="nc" id="L101">            try (ResultSet rs = ps.executeQuery()) {</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">                while (rs.next()) out.add(mapear(rs));</span>
+            }
+<span class="nc" id="L104">        } catch (SQLException e) { throw new RuntimeException(e); }</span>
+<span class="nc" id="L105">        return out;</span>
+    }
+
+    @Override
+    public List&lt;VendaCentral&gt; buscarPorPeriodo(LocalDate inicio, LocalDate fim) {
+<span class="nc" id="L110">        List&lt;VendaCentral&gt; out = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L111">        try (Connection c = db.obter();</span>
+<span class="nc" id="L112">             PreparedStatement ps = c.prepareStatement(</span>
+                     &quot;SELECT id, idOriginalLoja, idLoja, dataHora, totalFaturado, metodoPagamento FROM VendaCentral WHERE DATE(dataHora) BETWEEN ? AND ?&quot;)) {
+<span class="nc" id="L114">            ps.setDate(1, Date.valueOf(inicio));</span>
+<span class="nc" id="L115">            ps.setDate(2, Date.valueOf(fim));</span>
+<span class="nc" id="L116">            try (ResultSet rs = ps.executeQuery()) {</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">                while (rs.next()) out.add(mapear(rs));</span>
+            }
+<span class="nc" id="L119">        } catch (SQLException e) { throw new RuntimeException(e); }</span>
+<span class="nc" id="L120">        return out;</span>
+    }
+
+    @Override
+    public List&lt;VendaCentral&gt; buscarPorLojaEPeriodo(String idLoja, LocalDate inicio, LocalDate fim) {
+<span class="nc" id="L125">        List&lt;VendaCentral&gt; out = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L126">        try (Connection c = db.obter();</span>
+<span class="nc" id="L127">             PreparedStatement ps = c.prepareStatement(</span>
+                     &quot;SELECT id, idOriginalLoja, idLoja, dataHora, totalFaturado, metodoPagamento FROM VendaCentral WHERE idLoja = ? AND DATE(dataHora) BETWEEN ? AND ?&quot;)) {
+<span class="nc" id="L129">            ps.setString(1, idLoja);</span>
+<span class="nc" id="L130">            ps.setDate(2, Date.valueOf(inicio));</span>
+<span class="nc" id="L131">            ps.setDate(3, Date.valueOf(fim));</span>
+<span class="nc" id="L132">            try (ResultSet rs = ps.executeQuery()) {</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">                while (rs.next()) out.add(mapear(rs));</span>
+            }
+<span class="nc" id="L135">        } catch (SQLException e) { throw new RuntimeException(e); }</span>
+<span class="nc" id="L136">        return out;</span>
+    }
+
+    @Override
+    public double totalVendasPorPeriodo(LocalDate inicio, LocalDate fim) {
+<span class="nc" id="L141">        try (Connection c = db.obter();</span>
+<span class="nc" id="L142">             PreparedStatement ps = c.prepareStatement(</span>
+                     &quot;SELECT COALESCE(SUM(totalFaturado), 0) FROM VendaCentral WHERE DATE(dataHora) BETWEEN ? AND ?&quot;)) {
+<span class="nc" id="L144">            ps.setDate(1, Date.valueOf(inicio));</span>
+<span class="nc" id="L145">            ps.setDate(2, Date.valueOf(fim));</span>
+<span class="nc" id="L146">            try (ResultSet rs = ps.executeQuery()) {</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">                return rs.next() ? rs.getDouble(1) : 0;</span>
+            }
+<span class="nc" id="L149">        } catch (SQLException e) { throw new RuntimeException(e); }</span>
+    }
+
+    @Override
+    public double totalVendasPorLojaEPeriodo(String idLoja, LocalDate inicio, LocalDate fim) {
+<span class="nc" id="L154">        try (Connection c = db.obter();</span>
+<span class="nc" id="L155">             PreparedStatement ps = c.prepareStatement(</span>
+                     &quot;SELECT COALESCE(SUM(totalFaturado), 0) FROM VendaCentral WHERE idLoja = ? AND DATE(dataHora) BETWEEN ? AND ?&quot;)) {
+<span class="nc" id="L157">            ps.setString(1, idLoja);</span>
+<span class="nc" id="L158">            ps.setDate(2, Date.valueOf(inicio));</span>
+<span class="nc" id="L159">            ps.setDate(3, Date.valueOf(fim));</span>
+<span class="nc" id="L160">            try (ResultSet rs = ps.executeQuery()) {</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">                return rs.next() ? rs.getDouble(1) : 0;</span>
+            }
+<span class="nc" id="L163">        } catch (SQLException e) { throw new RuntimeException(e); }</span>
+    }
+
+    @Override
+    public int totalTransacoesPorPeriodo(LocalDate inicio, LocalDate fim) {
+<span class="nc" id="L168">        try (Connection c = db.obter();</span>
+<span class="nc" id="L169">             PreparedStatement ps = c.prepareStatement(</span>
+                     &quot;SELECT COUNT(*) FROM VendaCentral WHERE DATE(dataHora) BETWEEN ? AND ?&quot;)) {
+<span class="nc" id="L171">            ps.setDate(1, Date.valueOf(inicio));</span>
+<span class="nc" id="L172">            ps.setDate(2, Date.valueOf(fim));</span>
+<span class="nc" id="L173">            try (ResultSet rs = ps.executeQuery()) {</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">                return rs.next() ? rs.getInt(1) : 0;</span>
+            }
+<span class="nc" id="L176">        } catch (SQLException e) { throw new RuntimeException(e); }</span>
+    }
+
+    @Override
+    public int totalTransacoesPorLojaEPeriodo(String idLoja, LocalDate inicio, LocalDate fim) {
+<span class="nc" id="L181">        try (Connection c = db.obter();</span>
+<span class="nc" id="L182">             PreparedStatement ps = c.prepareStatement(</span>
+                     &quot;SELECT COUNT(*) FROM VendaCentral WHERE idLoja = ? AND DATE(dataHora) BETWEEN ? AND ?&quot;)) {
+<span class="nc" id="L184">            ps.setString(1, idLoja);</span>
+<span class="nc" id="L185">            ps.setDate(2, Date.valueOf(inicio));</span>
+<span class="nc" id="L186">            ps.setDate(3, Date.valueOf(fim));</span>
+<span class="nc" id="L187">            try (ResultSet rs = ps.executeQuery()) {</span>
+<span class="nc bnc" id="L188" title="All 2 branches missed.">                return rs.next() ? rs.getInt(1) : 0;</span>
+            }
+<span class="nc" id="L190">        } catch (SQLException e) { throw new RuntimeException(e); }</span>
+    }
+
+    @Override
+    public Map&lt;String, Double&gt; vendasPorCategoria(LocalDate inicio, LocalDate fim) {
+<span class="nc" id="L195">        Map&lt;String, Double&gt; out = new LinkedHashMap&lt;&gt;();</span>
+<span class="nc" id="L196">        String sql = &quot;SELECT lv.categoria, COALESCE(SUM(lv.subtotal), 0) AS total &quot; +</span>
+                &quot;FROM LinhaVendaCentral lv JOIN VendaCentral v ON lv.idVendaCentral = v.id &quot; +
+                &quot;WHERE DATE(v.dataHora) BETWEEN ? AND ? &quot; +
+                &quot;GROUP BY lv.categoria ORDER BY total DESC&quot;;
+<span class="nc" id="L200">        try (Connection c = db.obter(); PreparedStatement ps = c.prepareStatement(sql)) {</span>
+<span class="nc" id="L201">            ps.setDate(1, Date.valueOf(inicio));</span>
+<span class="nc" id="L202">            ps.setDate(2, Date.valueOf(fim));</span>
+<span class="nc" id="L203">            try (ResultSet rs = ps.executeQuery()) {</span>
+<span class="nc bnc" id="L204" title="All 2 branches missed.">                while (rs.next()) out.put(rs.getString(&quot;categoria&quot;), rs.getDouble(&quot;total&quot;));</span>
+            }
+<span class="nc" id="L206">        } catch (SQLException e) { throw new RuntimeException(e); }</span>
+<span class="nc" id="L207">        return out;</span>
+    }
+
+    @Override
+    public Map&lt;String, Double&gt; vendasPorCategoriaPorLoja(String idLoja, LocalDate inicio, LocalDate fim) {
+<span class="nc" id="L212">        Map&lt;String, Double&gt; out = new LinkedHashMap&lt;&gt;();</span>
+<span class="nc" id="L213">        String sql = &quot;SELECT lv.categoria, COALESCE(SUM(lv.subtotal), 0) AS total &quot; +</span>
+                &quot;FROM LinhaVendaCentral lv JOIN VendaCentral v ON lv.idVendaCentral = v.id &quot; +
+                &quot;WHERE v.idLoja = ? AND DATE(v.dataHora) BETWEEN ? AND ? &quot; +
+                &quot;GROUP BY lv.categoria ORDER BY total DESC&quot;;
+<span class="nc" id="L217">        try (Connection c = db.obter(); PreparedStatement ps = c.prepareStatement(sql)) {</span>
+<span class="nc" id="L218">            ps.setString(1, idLoja);</span>
+<span class="nc" id="L219">            ps.setDate(2, Date.valueOf(inicio));</span>
+<span class="nc" id="L220">            ps.setDate(3, Date.valueOf(fim));</span>
+<span class="nc" id="L221">            try (ResultSet rs = ps.executeQuery()) {</span>
+<span class="nc bnc" id="L222" title="All 2 branches missed.">                while (rs.next()) out.put(rs.getString(&quot;categoria&quot;), rs.getDouble(&quot;total&quot;));</span>
+            }
+<span class="nc" id="L224">        } catch (SQLException e) { throw new RuntimeException(e); }</span>
+<span class="nc" id="L225">        return out;</span>
+    }
+
+    @Override
+    public Map&lt;String, Double&gt; vendasMensaisPorLoja(String idLoja, int ano) {
+<span class="nc" id="L230">        Map&lt;String, Double&gt; out = new LinkedHashMap&lt;&gt;();</span>
+<span class="nc" id="L231">        String[] meses = {&quot;Jan&quot;, &quot;Fev&quot;, &quot;Mar&quot;, &quot;Abr&quot;, &quot;Mai&quot;, &quot;Jun&quot;, &quot;Jul&quot;, &quot;Ago&quot;, &quot;Set&quot;, &quot;Out&quot;, &quot;Nov&quot;, &quot;Dez&quot;};</span>
+<span class="nc bnc" id="L232" title="All 2 branches missed.">        for (String m : meses) out.put(m, 0.0);</span>
+<span class="nc" id="L233">        String sql = &quot;SELECT MONTH(dataHora) AS mes, COALESCE(SUM(totalFaturado), 0) AS total &quot; +</span>
+                &quot;FROM VendaCentral WHERE idLoja = ? AND YEAR(dataHora) = ? GROUP BY MONTH(dataHora)&quot;;
+<span class="nc" id="L235">        try (Connection c = db.obter(); PreparedStatement ps = c.prepareStatement(sql)) {</span>
+<span class="nc" id="L236">            ps.setString(1, idLoja);</span>
+<span class="nc" id="L237">            ps.setInt(2, ano);</span>
+<span class="nc" id="L238">            try (ResultSet rs = ps.executeQuery()) {</span>
+<span class="nc bnc" id="L239" title="All 2 branches missed.">                while (rs.next()) {</span>
+<span class="nc" id="L240">                    int mes = rs.getInt(&quot;mes&quot;);</span>
+<span class="nc bnc" id="L241" title="All 4 branches missed.">                    if (mes &gt;= 1 &amp;&amp; mes &lt;= 12) out.put(meses[mes - 1], rs.getDouble(&quot;total&quot;));</span>
+<span class="nc" id="L242">                }</span>
+            }
+<span class="nc" id="L244">        } catch (SQLException e) { throw new RuntimeException(e); }</span>
+<span class="nc" id="L245">        return out;</span>
+    }
+
+    @Override
+    public Map&lt;String, Double&gt; totaisPorMetodoPagamento(LocalDate inicio, LocalDate fim) {
+<span class="nc" id="L250">        Map&lt;String, Double&gt; out = new LinkedHashMap&lt;&gt;();</span>
+<span class="nc" id="L251">        out.put(&quot;NUMERARIO&quot;, 0.0);</span>
+<span class="nc" id="L252">        out.put(&quot;MULTIBANCO&quot;, 0.0);</span>
+<span class="nc" id="L253">        String sql = &quot;SELECT metodoPagamento, COALESCE(SUM(totalFaturado), 0) AS total FROM VendaCentral &quot; +</span>
+                &quot;WHERE DATE(dataHora) BETWEEN ? AND ? GROUP BY metodoPagamento&quot;;
+<span class="nc" id="L255">        try (Connection c = db.obter(); PreparedStatement ps = c.prepareStatement(sql)) {</span>
+<span class="nc" id="L256">            ps.setDate(1, Date.valueOf(inicio));</span>
+<span class="nc" id="L257">            ps.setDate(2, Date.valueOf(fim));</span>
+<span class="nc" id="L258">            try (ResultSet rs = ps.executeQuery()) {</span>
+<span class="nc bnc" id="L259" title="All 2 branches missed.">                while (rs.next()) out.put(rs.getString(&quot;metodoPagamento&quot;), rs.getDouble(&quot;total&quot;));</span>
+            }
+<span class="nc" id="L261">        } catch (SQLException e) { throw new RuntimeException(e); }</span>
+<span class="nc" id="L262">        return out;</span>
+    }
+
+    @Override
+    public List&lt;Object[]&gt; relatorioAgregado(String idLoja, LocalDate inicio, LocalDate fim, String categoria) {
+<span class="nc" id="L267">        List&lt;Object[]&gt; out = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L268">        StringBuilder sql = new StringBuilder(</span>
+                &quot;SELECT DATE(v.dataHora) AS dia, v.idLoja, l.nomeLoja, lv.categoria, COALESCE(SUM(lv.subtotal), 0) AS total &quot; +
+                        &quot;FROM LinhaVendaCentral lv &quot; +
+                        &quot;JOIN VendaCentral v ON lv.idVendaCentral = v.id &quot; +
+                        &quot;JOIN Loja l ON v.idLoja = l.idLoja WHERE 1=1 &quot;);
+<span class="nc" id="L273">        List&lt;Object&gt; params = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L274" title="All 4 branches missed.">        if (idLoja != null &amp;&amp; !idLoja.isBlank()) { sql.append(&quot;AND v.idLoja = ? &quot;); params.add(idLoja); }</span>
+<span class="nc bnc" id="L275" title="All 2 branches missed.">        if (inicio != null) { sql.append(&quot;AND DATE(v.dataHora) &gt;= ? &quot;); params.add(Date.valueOf(inicio)); }</span>
+<span class="nc bnc" id="L276" title="All 2 branches missed.">        if (fim != null) { sql.append(&quot;AND DATE(v.dataHora) &lt;= ? &quot;); params.add(Date.valueOf(fim)); }</span>
+<span class="nc bnc" id="L277" title="All 4 branches missed.">        if (categoria != null &amp;&amp; !categoria.isBlank()) { sql.append(&quot;AND lv.categoria = ? &quot;); params.add(categoria); }</span>
+<span class="nc" id="L278">        sql.append(&quot;GROUP BY dia, v.idLoja, l.nomeLoja, lv.categoria ORDER BY dia DESC, v.idLoja, lv.categoria&quot;);</span>
+
+<span class="nc" id="L280">        try (Connection c = db.obter(); PreparedStatement ps = c.prepareStatement(sql.toString())) {</span>
+<span class="nc bnc" id="L281" title="All 2 branches missed.">            for (int i = 0; i &lt; params.size(); i++) ps.setObject(i + 1, params.get(i));</span>
+<span class="nc" id="L282">            try (ResultSet rs = ps.executeQuery()) {</span>
+<span class="nc bnc" id="L283" title="All 2 branches missed.">                while (rs.next()) {</span>
+<span class="nc" id="L284">                    out.add(new Object[]{</span>
+<span class="nc" id="L285">                            rs.getDate(&quot;dia&quot;).toLocalDate(),</span>
+<span class="nc" id="L286">                            rs.getString(&quot;idLoja&quot;),</span>
+<span class="nc" id="L287">                            rs.getString(&quot;nomeLoja&quot;),</span>
+<span class="nc" id="L288">                            rs.getString(&quot;categoria&quot;),</span>
+<span class="nc" id="L289">                            rs.getDouble(&quot;total&quot;)</span>
+                    });
+                }
+            }
+<span class="nc" id="L293">        } catch (SQLException e) { throw new RuntimeException(e); }</span>
+<span class="nc" id="L294">        return out;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

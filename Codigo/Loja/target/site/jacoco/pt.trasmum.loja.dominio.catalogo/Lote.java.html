@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Lote.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">TrasmUM — Software de Loja</a> &gt; <a href="index.source.html" class="el_package">pt.trasmum.loja.dominio.catalogo</a> &gt; <span class="el_source">Lote.java</span></div><h1>Lote.java</h1><pre class="source lang-java linenums">package pt.trasmum.loja.dominio.catalogo;
+
+import java.time.LocalDate;
+
+public class Lote {
+
+    private int id;
+    private int idProduto;
+    private int quantidade;
+    private LocalDate dataValidade;
+    private double precoVenda;
+    private Desconto desconto;
+
+<span class="nc" id="L14">    public Lote() {}</span>
+
+<span class="fc" id="L16">    public Lote(int idProduto, int quantidade, LocalDate dataValidade, double precoVenda) {</span>
+<span class="fc" id="L17">        this.idProduto = idProduto;</span>
+<span class="fc" id="L18">        this.quantidade = quantidade;</span>
+<span class="fc" id="L19">        this.dataValidade = dataValidade;</span>
+<span class="fc" id="L20">        this.precoVenda = precoVenda;</span>
+<span class="fc" id="L21">    }</span>
+
+    public void aplicarDesconto(Desconto desconto) {
+<span class="nc" id="L24">        this.desconto = desconto;</span>
+<span class="nc" id="L25">    }</span>
+
+    public double getPrecoFinal() {
+<span class="pc bpc" id="L28" title="1 of 2 branches missed.">        if (desconto != null) {</span>
+<span class="nc" id="L29">            return precoVenda * (1.0 - desconto.getPercentagem() / 100.0);</span>
+        }
+<span class="fc" id="L31">        return precoVenda;</span>
+    }
+
+    public boolean temDesconto() {
+<span class="nc bnc" id="L35" title="All 2 branches missed.">        return desconto != null;</span>
+    }
+
+<span class="fc" id="L38">    public int getId() { return id; }</span>
+<span class="fc" id="L39">    public void setId(int id) { this.id = id; }</span>
+
+<span class="fc" id="L41">    public int getIdProduto() { return idProduto; }</span>
+<span class="nc" id="L42">    public void setIdProduto(int idProduto) { this.idProduto = idProduto; }</span>
+
+<span class="fc" id="L44">    public int getQuantidade() { return quantidade; }</span>
+<span class="fc" id="L45">    public void setQuantidade(int quantidade) { this.quantidade = quantidade; }</span>
+
+<span class="nc" id="L47">    public LocalDate getDataValidade() { return dataValidade; }</span>
+<span class="nc" id="L48">    public void setDataValidade(LocalDate dataValidade) { this.dataValidade = dataValidade; }</span>
+
+<span class="nc" id="L50">    public double getPrecoVenda() { return precoVenda; }</span>
+<span class="nc" id="L51">    public void setPrecoVenda(double precoVenda) { this.precoVenda = precoVenda; }</span>
+
+<span class="nc" id="L53">    public Desconto getDesconto() { return desconto; }</span>
+<span class="nc" id="L54">    public void setDesconto(Desconto desconto) { this.desconto = desconto; }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LogAuditoriaCentralRepositorioImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">servidor-central</a> &gt; <a href="index.source.html" class="el_package">pt.trasmum.servidor.repositorio.impl</a> &gt; <span class="el_source">LogAuditoriaCentralRepositorioImpl.java</span></div><h1>LogAuditoriaCentralRepositorioImpl.java</h1><pre class="source lang-java linenums">package pt.trasmum.servidor.repositorio.impl;
+
+import pt.trasmum.servidor.dominio.LogAuditoriaCentral;
+import pt.trasmum.servidor.dominio.TipoAcao;
+import pt.trasmum.servidor.infra.DatabaseConnection;
+import pt.trasmum.servidor.repositorio.interfaces.LogAuditoriaCentralRepositorio;
+
+import java.sql.*;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+public class LogAuditoriaCentralRepositorioImpl implements LogAuditoriaCentralRepositorio {
+    private final DatabaseConnection db;
+
+<span class="nc" id="L16">    public LogAuditoriaCentralRepositorioImpl(DatabaseConnection db) { this.db = db; }</span>
+
+    @Override
+    public void guardar(LogAuditoriaCentral l) {
+<span class="nc" id="L20">        try (Connection c = db.obter()) { guardar(c, l); }</span>
+<span class="nc" id="L21">        catch (SQLException e) { throw new RuntimeException(e); }</span>
+<span class="nc" id="L22">    }</span>
+
+    @Override
+    public void guardar(Connection conn, LogAuditoriaCentral l) {
+<span class="nc" id="L26">        String sql = &quot;INSERT INTO LogAuditoriaCentral (idOriginalLoja, idLoja, acao, dataHora, nomeUtilizador, descricao) &quot; +</span>
+                &quot;VALUES (?, ?, ?, ?, ?, ?) &quot; +
+                &quot;ON DUPLICATE KEY UPDATE acao = VALUES(acao), dataHora = VALUES(dataHora), nomeUtilizador = VALUES(nomeUtilizador), descricao = VALUES(descricao)&quot;;
+<span class="nc" id="L29">        try (PreparedStatement ps = conn.prepareStatement(sql)) {</span>
+<span class="nc" id="L30">            ps.setInt(1, l.getIdOriginalLoja());</span>
+<span class="nc" id="L31">            ps.setString(2, l.getIdLoja());</span>
+<span class="nc" id="L32">            ps.setString(3, l.getAcao().name());</span>
+<span class="nc" id="L33">            ps.setTimestamp(4, Timestamp.valueOf(l.getDataHora()));</span>
+<span class="nc" id="L34">            ps.setString(5, l.getNomeUtilizador());</span>
+<span class="nc" id="L35">            ps.setString(6, l.getDescricao());</span>
+<span class="nc" id="L36">            ps.executeUpdate();</span>
+<span class="nc" id="L37">        } catch (SQLException e) { throw new RuntimeException(e); }</span>
+<span class="nc" id="L38">    }</span>
+
+    private LogAuditoriaCentral mapear(ResultSet rs) throws SQLException {
+<span class="nc" id="L41">        return new LogAuditoriaCentral(</span>
+<span class="nc" id="L42">                rs.getInt(&quot;id&quot;),</span>
+<span class="nc" id="L43">                rs.getInt(&quot;idOriginalLoja&quot;),</span>
+<span class="nc" id="L44">                rs.getString(&quot;idLoja&quot;),</span>
+<span class="nc" id="L45">                TipoAcao.valueOf(rs.getString(&quot;acao&quot;)),</span>
+<span class="nc" id="L46">                rs.getTimestamp(&quot;dataHora&quot;).toLocalDateTime(),</span>
+<span class="nc" id="L47">                rs.getString(&quot;nomeUtilizador&quot;),</span>
+<span class="nc" id="L48">                rs.getString(&quot;descricao&quot;)</span>
+        );
+    }
+
+    @Override
+    public List&lt;LogAuditoriaCentral&gt; buscarPorLoja(String idLoja) {
+<span class="nc" id="L54">        List&lt;LogAuditoriaCentral&gt; out = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L55">        try (Connection c = db.obter();</span>
+<span class="nc" id="L56">             PreparedStatement ps = c.prepareStatement(</span>
+                     &quot;SELECT id, idOriginalLoja, idLoja, acao, dataHora, nomeUtilizador, descricao FROM LogAuditoriaCentral WHERE idLoja = ? ORDER BY dataHora DESC&quot;)) {
+<span class="nc" id="L58">            ps.setString(1, idLoja);</span>
+<span class="nc" id="L59">            try (ResultSet rs = ps.executeQuery()) {</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">                while (rs.next()) out.add(mapear(rs));</span>
+            }
+<span class="nc" id="L62">        } catch (SQLException e) { throw new RuntimeException(e); }</span>
+<span class="nc" id="L63">        return out;</span>
+    }
+
+    @Override
+    public List&lt;LogAuditoriaCentral&gt; buscarPorLojaEPeriodo(String idLoja, LocalDate inicio, LocalDate fim) {
+<span class="nc" id="L68">        List&lt;LogAuditoriaCentral&gt; out = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L69">        try (Connection c = db.obter();</span>
+<span class="nc" id="L70">             PreparedStatement ps = c.prepareStatement(</span>
+                     &quot;SELECT id, idOriginalLoja, idLoja, acao, dataHora, nomeUtilizador, descricao FROM LogAuditoriaCentral WHERE idLoja = ? AND DATE(dataHora) BETWEEN ? AND ? ORDER BY dataHora DESC&quot;)) {
+<span class="nc" id="L72">            ps.setString(1, idLoja);</span>
+<span class="nc" id="L73">            ps.setDate(2, Date.valueOf(inicio));</span>
+<span class="nc" id="L74">            ps.setDate(3, Date.valueOf(fim));</span>
+<span class="nc" id="L75">            try (ResultSet rs = ps.executeQuery()) {</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">                while (rs.next()) out.add(mapear(rs));</span>
+            }
+<span class="nc" id="L78">        } catch (SQLException e) { throw new RuntimeException(e); }</span>
+<span class="nc" id="L79">        return out;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">servidor-central</a> &gt; <a href="index.source.html" class="el_package">pt.trasmum.servidor.handler</a> &gt; <span class="el_source">AuthHandler.java</span></div><h1>AuthHandler.java</h1><pre class="source lang-java linenums">package pt.trasmum.servidor.handler;
+
+import io.javalin.http.Context;
+import pt.trasmum.servidor.app.SessaoManager;
+import pt.trasmum.servidor.dominio.CEO;
+import pt.trasmum.servidor.dto.api.LoginRequestDTO;
+import pt.trasmum.servidor.dto.api.LoginResponseDTO;
+import pt.trasmum.servidor.servico.interfaces.IAutenticacaoCEOServico;
+
+import java.util.Map;
+
+public class AuthHandler {
+    private final IAutenticacaoCEOServico autenticacao;
+    private final SessaoManager sessoes;
+
+<span class="nc" id="L16">    public AuthHandler(IAutenticacaoCEOServico autenticacao, SessaoManager sessoes) {</span>
+<span class="nc" id="L17">        this.autenticacao = autenticacao;</span>
+<span class="nc" id="L18">        this.sessoes = sessoes;</span>
+<span class="nc" id="L19">    }</span>
+
+    public void login(Context ctx) {
+<span class="nc" id="L22">        LoginRequestDTO req = ctx.bodyAsClass(LoginRequestDTO.class);</span>
+<span class="nc" id="L23">        CEO ceo = autenticacao.autenticar(req.nomeUtilizador, req.palavraPasse);</span>
+<span class="nc" id="L24">        String token = sessoes.criar(ceo);</span>
+<span class="nc" id="L25">        ctx.status(200).json(new LoginResponseDTO(token, ceo.getNomeUtilizador()));</span>
+<span class="nc" id="L26">    }</span>
+
+    public void logout(Context ctx) {
+<span class="nc" id="L29">        String token = extrairToken(ctx);</span>
+<span class="nc" id="L30">        sessoes.remover(token);</span>
+<span class="nc" id="L31">        ctx.status(204);</span>
+<span class="nc" id="L32">    }</span>
+
+    public void verificarToken(Context ctx) {
+<span class="nc bnc" id="L35" title="All 2 branches missed.">        if (&quot;OPTIONS&quot;.equalsIgnoreCase(ctx.method().name())) return;</span>
+<span class="nc" id="L36">        String path = ctx.path();</span>
+<span class="nc bnc" id="L37" title="All 2 branches missed.">        if (path.startsWith(&quot;/api/auth/&quot;)) return;</span>
+<span class="nc" id="L38">        String token = extrairToken(ctx);</span>
+<span class="nc" id="L39">        CEO ceo = sessoes.obter(token);</span>
+<span class="nc bnc" id="L40" title="All 2 branches missed.">        if (ceo == null) {</span>
+<span class="nc" id="L41">            ctx.status(401).json(Map.of(&quot;erro&quot;, &quot;Sessão inválida ou expirada&quot;));</span>
+<span class="nc" id="L42">            ctx.skipRemainingHandlers();</span>
+        }
+<span class="nc" id="L44">    }</span>
+
+    private String extrairToken(Context ctx) {
+<span class="nc" id="L47">        String header = ctx.header(&quot;Authorization&quot;);</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">        if (header == null) return null;</span>
+<span class="nc bnc" id="L49" title="All 2 branches missed.">        if (header.startsWith(&quot;Bearer &quot;)) return header.substring(7);</span>
+<span class="nc" id="L50">        return header;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

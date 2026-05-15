@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DatabaseConnection.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">servidor-central</a> &gt; <a href="index.source.html" class="el_package">pt.trasmum.servidor.infra</a> &gt; <span class="el_source">DatabaseConnection.java</span></div><h1>DatabaseConnection.java</h1><pre class="source lang-java linenums">package pt.trasmum.servidor.infra;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.Properties;
+
+public class DatabaseConnection {
+    private final String url;
+    private final String user;
+    private final String password;
+
+    private final int maxTentativas;
+    private final int delayMs;
+
+<span class="nc" id="L16">    public DatabaseConnection(Properties config) {</span>
+<span class="nc" id="L17">        this.url = require(config, &quot;db.url&quot;);</span>
+<span class="nc" id="L18">        this.user = require(config, &quot;db.user&quot;);</span>
+<span class="nc" id="L19">        this.password = require(config, &quot;db.password&quot;);</span>
+<span class="nc" id="L20">        this.maxTentativas = Integer.parseInt(config.getProperty(&quot;db.retry.maxTentativas&quot;, &quot;10&quot;));</span>
+<span class="nc" id="L21">        this.delayMs = Integer.parseInt(config.getProperty(&quot;db.retry.delayMs&quot;, &quot;2000&quot;));</span>
+<span class="nc" id="L22">    }</span>
+
+    private String require(Properties config, String key) {
+<span class="nc" id="L25">        String value = config.getProperty(key);</span>
+<span class="nc bnc" id="L26" title="All 4 branches missed.">        if (value == null || value.isBlank()) {</span>
+<span class="nc" id="L27">            throw new IllegalStateException(&quot;Config obrigatória em falta: &quot; + key);</span>
+        }
+<span class="nc" id="L29">        return value;</span>
+    }
+
+    public Connection obter() throws SQLException {
+<span class="nc" id="L33">        int tentativas = maxTentativas;</span>
+
+        while (true) {
+            try {
+<span class="nc" id="L37">                return DriverManager.getConnection(url, user, password);</span>
+<span class="nc" id="L38">            } catch (SQLException e) {</span>
+<span class="nc bnc" id="L39" title="All 2 branches missed.">                if (--tentativas == 0) throw e;</span>
+
+                try {
+<span class="nc" id="L42">                    Thread.sleep(delayMs);</span>
+<span class="nc" id="L43">                } catch (InterruptedException ignored) {}</span>
+<span class="nc" id="L44">            }</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,7 +1,7 @@
 pt/trasmum/servidor/app/SessaoManager.class
 pt/trasmum/servidor/infra/JsonUtil.class
-pt/trasmum/servidor/repositorio/impl/VendaCentralRepositorioImpl.class
 pt/trasmum/servidor/servico/impl/DashboardServico.class
+pt/trasmum/servidor/repositorio/impl/VendaCentralRepositorioImpl.class
 pt/trasmum/servidor/dto/api/DashboardGlobalDTO.class
 pt/trasmum/servidor/dominio/CEO.class
 pt/trasmum/servidor/dto/api/RelatorioLinhaDTO.class
@@ -21,8 +21,8 @@ pt/trasmum/servidor/dominio/FechoDiaCentral.class
 pt/trasmum/servidor/repositorio/impl/SessaoCaixaCentralRepositorioImpl.class
 pt/trasmum/servidor/dto/api/DecomposicaoLojaDTO.class
 pt/trasmum/servidor/dto/api/EstadoLojaDTO.class
-pt/trasmum/servidor/repositorio/interfaces/CEORepositorio.class
 pt/trasmum/servidor/servico/impl/AutenticacaoCEOServico.class
+pt/trasmum/servidor/repositorio/interfaces/CEORepositorio.class
 pt/trasmum/servidor/dominio/RemessaCentral.class
 pt/trasmum/servidor/dominio/MetodoPagamento.class
 pt/trasmum/servidor/servico/interfaces/IRelatorioServico.class
@@ -43,11 +43,11 @@ pt/trasmum/servidor/dominio/CredenciaisInvalidasException.class
 pt/trasmum/servidor/dto/api/MonitorRedeDTO.class
 pt/trasmum/servidor/dominio/TipoPagamento.class
 pt/trasmum/servidor/dto/ingestao/LogAuditoriaDTO.class
-pt/trasmum/servidor/dominio/TipoAcao.class
 pt/trasmum/servidor/dominio/IntegridadeInvalidaException.class
+pt/trasmum/servidor/dominio/TipoAcao.class
 pt/trasmum/servidor/repositorio/interfaces/FechoDiaCentralRepositorio.class
-pt/trasmum/servidor/dto/api/DashboardLojaDTO.class
 pt/trasmum/servidor/handler/LojaHandler.class
+pt/trasmum/servidor/dto/api/DashboardLojaDTO.class
 pt/trasmum/servidor/infra/DatabaseConnection.class
 pt/trasmum/servidor/repositorio/impl/RemessaCentralRepositorioImpl.class
 pt/trasmum/servidor/dto/ingestao/LinhaVendaDTO.class
@@ -70,6 +70,6 @@ pt/trasmum/servidor/repositorio/interfaces/LogAuditoriaCentralRepositorio.class
 pt/trasmum/servidor/repositorio/impl/LojaRepositorioImpl.class
 pt/trasmum/servidor/repositorio/interfaces/SessaoCaixaCentralRepositorio.class
 pt/trasmum/servidor/servico/impl/RelatorioServico.class
+pt/trasmum/servidor/servico/interfaces/IMonitorServico.class
 pt/trasmum/servidor/dto/api/LoginResponseDTO.class
 pt/trasmum/servidor/dto/ingestao/PacoteFechoDTO.class
-pt/trasmum/servidor/servico/interfaces/IMonitorServico.class

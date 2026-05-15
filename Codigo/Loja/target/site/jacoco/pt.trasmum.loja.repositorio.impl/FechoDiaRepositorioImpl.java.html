@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FechoDiaRepositorioImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">TrasmUM — Software de Loja</a> &gt; <a href="index.source.html" class="el_package">pt.trasmum.loja.repositorio.impl</a> &gt; <span class="el_source">FechoDiaRepositorioImpl.java</span></div><h1>FechoDiaRepositorioImpl.java</h1><pre class="source lang-java linenums">package pt.trasmum.loja.repositorio.impl;
+
+import pt.trasmum.loja.dominio.core.EstadoSincronizacao;
+import pt.trasmum.loja.dominio.tesouraria.FechoDia;
+import pt.trasmum.loja.repositorio.interfaces.FechoDiaRepositorio;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class FechoDiaRepositorioImpl implements FechoDiaRepositorio {
+
+    private final Connection connection;
+
+<span class="nc" id="L15">    public FechoDiaRepositorioImpl(Connection connection) {</span>
+<span class="nc" id="L16">        this.connection = connection;</span>
+<span class="nc" id="L17">    }</span>
+
+    @Override
+    public void guardar(FechoDia fecho) {
+<span class="nc" id="L21">        String sql = &quot;INSERT INTO FechoDia (idLoja, estadoSincronizacao, idUtilizador, dataFecho) VALUES (?, ?, ?, ?)&quot;;</span>
+<span class="nc" id="L22">        try (PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {</span>
+<span class="nc" id="L23">            ps.setString(1, fecho.getIdLoja());</span>
+<span class="nc" id="L24">            ps.setString(2, fecho.getEstadoSincronizacao().name());</span>
+<span class="nc" id="L25">            ps.setInt(3, fecho.getIdUtilizador());</span>
+<span class="nc" id="L26">            ps.setDate(4, Date.valueOf(fecho.getDataFecho()));</span>
+<span class="nc" id="L27">            ps.executeUpdate();</span>
+<span class="nc" id="L28">            try (ResultSet keys = ps.getGeneratedKeys()) {</span>
+<span class="nc bnc" id="L29" title="All 2 branches missed.">                if (keys.next()) fecho.setId(keys.getInt(1));</span>
+            }
+<span class="nc" id="L31">        } catch (SQLException e) {</span>
+<span class="nc" id="L32">            throw new RuntimeException(&quot;Erro ao guardar fecho de dia&quot;, e);</span>
+<span class="nc" id="L33">        }</span>
+<span class="nc" id="L34">    }</span>
+
+    @Override
+    public void atualizar(FechoDia fecho) {
+<span class="nc" id="L38">        String sql = &quot;UPDATE FechoDia SET estadoSincronizacao = ? WHERE id = ?&quot;;</span>
+<span class="nc" id="L39">        try (PreparedStatement ps = connection.prepareStatement(sql)) {</span>
+<span class="nc" id="L40">            ps.setString(1, fecho.getEstadoSincronizacao().name());</span>
+<span class="nc" id="L41">            ps.setInt(2, fecho.getId());</span>
+<span class="nc" id="L42">            ps.executeUpdate();</span>
+<span class="nc" id="L43">        } catch (SQLException e) {</span>
+<span class="nc" id="L44">            throw new RuntimeException(&quot;Erro ao atualizar fecho de dia&quot;, e);</span>
+<span class="nc" id="L45">        }</span>
+<span class="nc" id="L46">    }</span>
+
+    @Override
+    public FechoDia buscarUltimoConfirmado() {
+<span class="nc" id="L50">        String sql = &quot;SELECT * FROM FechoDia WHERE estadoSincronizacao = 'CONFIRMADO' ORDER BY dataFecho DESC LIMIT 1&quot;;</span>
+<span class="nc" id="L51">        try (PreparedStatement ps = connection.prepareStatement(sql);</span>
+<span class="nc" id="L52">             ResultSet rs = ps.executeQuery()) {</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">            if (rs.next()) return mapear(rs);</span>
+<span class="nc bnc" id="L54" title="All 4 branches missed.">        } catch (SQLException e) {</span>
+<span class="nc" id="L55">            throw new RuntimeException(&quot;Erro ao buscar último fecho confirmado&quot;, e);</span>
+<span class="nc" id="L56">        }</span>
+<span class="nc" id="L57">        return null;</span>
+    }
+
+    @Override
+    public void reverterEmTransito() {
+<span class="nc" id="L62">        String sql = &quot;UPDATE FechoDia SET estadoSincronizacao = 'PENDENTE' WHERE estadoSincronizacao = 'EM_TRANSITO'&quot;;</span>
+<span class="nc" id="L63">        try (PreparedStatement ps = connection.prepareStatement(sql)) {</span>
+<span class="nc" id="L64">            ps.executeUpdate();</span>
+<span class="nc" id="L65">        } catch (SQLException e) {</span>
+<span class="nc" id="L66">            throw new RuntimeException(&quot;Erro ao reverter fechos em trânsito&quot;, e);</span>
+<span class="nc" id="L67">        }</span>
+<span class="nc" id="L68">    }</span>
+
+    @Override
+    public List&lt;FechoDia&gt; buscarPendentes() {
+<span class="nc" id="L72">        String sql = &quot;SELECT * FROM FechoDia WHERE estadoSincronizacao = 'PENDENTE'&quot;;</span>
+<span class="nc" id="L73">        List&lt;FechoDia&gt; lista = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L74">        try (PreparedStatement ps = connection.prepareStatement(sql);</span>
+<span class="nc" id="L75">             ResultSet rs = ps.executeQuery()) {</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">            while (rs.next()) lista.add(mapear(rs));</span>
+<span class="nc" id="L77">        } catch (SQLException e) {</span>
+<span class="nc" id="L78">            throw new RuntimeException(&quot;Erro ao buscar fechos pendentes&quot;, e);</span>
+<span class="nc" id="L79">        }</span>
+<span class="nc" id="L80">        return lista;</span>
+    }
+
+    private FechoDia mapear(ResultSet rs) throws SQLException {
+<span class="nc" id="L84">        FechoDia f = new FechoDia();</span>
+<span class="nc" id="L85">        f.setId(rs.getInt(&quot;id&quot;));</span>
+<span class="nc" id="L86">        f.setIdLoja(rs.getString(&quot;idLoja&quot;));</span>
+<span class="nc" id="L87">        f.setEstadoSincronizacao(EstadoSincronizacao.valueOf(rs.getString(&quot;estadoSincronizacao&quot;)));</span>
+<span class="nc" id="L88">        f.setIdUtilizador(rs.getInt(&quot;idUtilizador&quot;));</span>
+<span class="nc" id="L89">        f.setDataFecho(rs.getDate(&quot;dataFecho&quot;).toLocalDate());</span>
+<span class="nc" id="L90">        return f;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

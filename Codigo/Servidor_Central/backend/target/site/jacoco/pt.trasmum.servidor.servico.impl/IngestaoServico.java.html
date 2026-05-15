@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IngestaoServico.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">servidor-central</a> &gt; <a href="index.source.html" class="el_package">pt.trasmum.servidor.servico.impl</a> &gt; <span class="el_source">IngestaoServico.java</span></div><h1>IngestaoServico.java</h1><pre class="source lang-java linenums">package pt.trasmum.servidor.servico.impl;
+
+import com.google.gson.Gson;
+import pt.trasmum.servidor.dominio.*;
+import pt.trasmum.servidor.dto.ingestao.*;
+import pt.trasmum.servidor.repositorio.interfaces.*;
+import pt.trasmum.servidor.servico.interfaces.IIngestaoServico;
+
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+public class IngestaoServico implements IIngestaoServico {
+    private final pt.trasmum.servidor.infra.DatabaseConnection db;
+    private final LojaRepositorio lojaRepo;
+    private final FechoDiaCentralRepositorio fechoRepo;
+    private final VendaCentralRepositorio vendaRepo;
+    private final DevolucaoCentralRepositorio devolucaoRepo;
+    private final RemessaCentralRepositorio remessaRepo;
+    private final PagamentoCentralRepositorio pagamentoRepo;
+    private final SessaoCaixaCentralRepositorio sessaoRepo;
+    private final LogAuditoriaCentralRepositorio logRepo;
+    private final Gson gson;
+
+    public IngestaoServico(pt.trasmum.servidor.infra.DatabaseConnection db,
+                           LojaRepositorio lojaRepo,
+                           FechoDiaCentralRepositorio fechoRepo,
+                           VendaCentralRepositorio vendaRepo,
+                           DevolucaoCentralRepositorio devolucaoRepo,
+                           RemessaCentralRepositorio remessaRepo,
+                           PagamentoCentralRepositorio pagamentoRepo,
+                           SessaoCaixaCentralRepositorio sessaoRepo,
+                           LogAuditoriaCentralRepositorio logRepo,
+<span class="fc" id="L40">                           Gson gson) {</span>
+<span class="fc" id="L41">        this.db = db;</span>
+<span class="fc" id="L42">        this.lojaRepo = lojaRepo;</span>
+<span class="fc" id="L43">        this.fechoRepo = fechoRepo;</span>
+<span class="fc" id="L44">        this.vendaRepo = vendaRepo;</span>
+<span class="fc" id="L45">        this.devolucaoRepo = devolucaoRepo;</span>
+<span class="fc" id="L46">        this.remessaRepo = remessaRepo;</span>
+<span class="fc" id="L47">        this.pagamentoRepo = pagamentoRepo;</span>
+<span class="fc" id="L48">        this.sessaoRepo = sessaoRepo;</span>
+<span class="fc" id="L49">        this.logRepo = logRepo;</span>
+<span class="fc" id="L50">        this.gson = gson;</span>
+<span class="fc" id="L51">    }</span>
+
+    @Override
+    public void processarPacote(PacoteFechoDTO pacote) {
+<span class="fc" id="L55">        verificarHash(pacote);</span>
+
+<span class="fc" id="L57">        Connection conn = null;</span>
+        try {
+<span class="fc" id="L59">            conn = db.obter();</span>
+<span class="fc" id="L60">            conn.setAutoCommit(false);</span>
+
+<span class="fc" id="L62">            lojaRepo.criarSeNaoExistir(conn, new Loja(pacote.idLoja, pacote.nomeLoja));</span>
+
+<span class="fc" id="L64">            FechoDiaCentral fecho = new FechoDiaCentral(</span>
+                    0, pacote.idLoja,
+<span class="fc" id="L66">                    LocalDate.parse(pacote.dataFecho),</span>
+<span class="fc" id="L67">                    LocalDateTime.now()</span>
+            );
+<span class="fc" id="L69">            fechoRepo.guardar(conn, fecho);</span>
+
+<span class="fc bfc" id="L71" title="All 4 branches covered.">            if (pacote.vendas != null) for (VendaDTO v : pacote.vendas) vendaRepo.guardar(conn, mapearVenda(pacote.idLoja, v));</span>
+<span class="fc bfc" id="L72" title="All 4 branches covered.">            if (pacote.devolucoes != null) for (DevolucaoDTO d : pacote.devolucoes) devolucaoRepo.guardar(conn, mapearDevolucao(pacote.idLoja, d));</span>
+<span class="fc bfc" id="L73" title="All 4 branches covered.">            if (pacote.remessas != null) for (RemessaDTO r : pacote.remessas) remessaRepo.guardar(conn, mapearRemessa(pacote.idLoja, r));</span>
+<span class="fc bfc" id="L74" title="All 4 branches covered.">            if (pacote.pagamentos != null) for (PagamentoDTO p : pacote.pagamentos) {</span>
+<span class="fc" id="L75">                pagamentoRepo.guardar(conn, mapearPagamento(pacote.idLoja, p));</span>
+<span class="pc bpc" id="L76" title="1 of 2 branches missed.">                if (p.dataPagamento != null) {</span>
+<span class="fc" id="L77">                    remessaRepo.atualizarEstadoPagamento(conn, pacote.idLoja, p.idOriginalRemessa, EstadoPagamentoRemessa.PAGA);</span>
+                }
+<span class="fc" id="L79">            }</span>
+<span class="fc bfc" id="L80" title="All 4 branches covered.">            if (pacote.sessoesCaixa != null) for (SessaoCaixaDTO s : pacote.sessoesCaixa) sessaoRepo.guardar(conn, mapearSessao(pacote.idLoja, s));</span>
+<span class="fc bfc" id="L81" title="All 4 branches covered.">            if (pacote.logs != null) for (LogAuditoriaDTO l : pacote.logs) logRepo.guardar(conn, mapearLog(pacote.idLoja, l));</span>
+
+<span class="fc" id="L83">            conn.commit();</span>
+<span class="fc" id="L84">        } catch (SQLException e) {</span>
+<span class="pc bpc" id="L85" title="1 of 2 branches missed.">            try { if (conn != null) conn.rollback(); } catch (SQLException ignored) {}</span>
+<span class="fc" id="L86">            throw new RuntimeException(&quot;Erro a processar pacote: &quot; + e.getMessage(), e);</span>
+<span class="nc" id="L87">        } catch (RuntimeException e) {</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">            try { if (conn != null) conn.rollback(); } catch (SQLException ignored) {}</span>
+<span class="nc" id="L89">            throw e;</span>
+        } finally {
+<span class="pc bpc" id="L91" title="1 of 2 branches missed.">            if (conn != null) {</span>
+<span class="pc" id="L92">                try { conn.setAutoCommit(true); conn.close(); } catch (SQLException ignored) {}</span>
+            }
+        }
+<span class="fc" id="L95">    }</span>
+
+    private void verificarHash(PacoteFechoDTO pacote) {
+<span class="fc" id="L98">        String hashRecebido = pacote.hashIntegridade;</span>
+<span class="fc bfc" id="L99" title="All 4 branches covered.">        if (hashRecebido == null || hashRecebido.isBlank()) {</span>
+<span class="fc" id="L100">            throw new IntegridadeInvalidaException(&quot;Hash de integridade ausente&quot;);</span>
+        }
+<span class="fc" id="L102">        pacote.hashIntegridade = null;</span>
+<span class="fc" id="L103">        String json = gson.toJson(pacote);</span>
+<span class="fc" id="L104">        pacote.hashIntegridade = hashRecebido;</span>
+<span class="fc" id="L105">        String calculado = sha256(json);</span>
+<span class="fc bfc" id="L106" title="All 2 branches covered.">        if (!calculado.equalsIgnoreCase(hashRecebido)) {</span>
+<span class="fc" id="L107">            throw new IntegridadeInvalidaException(&quot;Hash de integridade inválido&quot;);</span>
+        }
+<span class="fc" id="L109">    }</span>
+
+    private static String sha256(String input) {
+        try {
+<span class="fc" id="L113">            MessageDigest md = MessageDigest.getInstance(&quot;SHA-256&quot;);</span>
+<span class="fc" id="L114">            byte[] hash = md.digest(input.getBytes(StandardCharsets.UTF_8));</span>
+<span class="fc" id="L115">            StringBuilder sb = new StringBuilder();</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">            for (byte b : hash) sb.append(String.format(&quot;%02x&quot;, b));</span>
+<span class="fc" id="L117">            return sb.toString();</span>
+<span class="nc" id="L118">        } catch (NoSuchAlgorithmException e) {</span>
+<span class="nc" id="L119">            throw new RuntimeException(e);</span>
+        }
+    }
+
+    private VendaCentral mapearVenda(String idLoja, VendaDTO v) {
+<span class="fc" id="L124">        List&lt;LinhaVendaCentral&gt; linhas = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L125" title="1 of 2 branches missed.">        if (v.linhas != null) {</span>
+<span class="pc bpc" id="L126" title="1 of 2 branches missed.">            for (LinhaVendaDTO l : v.linhas) {</span>
+<span class="nc" id="L127">                linhas.add(new LinhaVendaCentral(</span>
+                        0, 0, l.idOriginalLoja, idLoja,
+                        l.nomeProduto, l.categoria, l.quantidade, l.precoUnitario, l.subtotal
+                ));
+<span class="nc" id="L131">            }</span>
+        }
+<span class="fc" id="L133">        return new VendaCentral(</span>
+                0, v.idOriginalLoja, idLoja,
+<span class="fc" id="L135">                LocalDateTime.parse(v.dataHora),</span>
+                v.totalFaturado,
+<span class="fc" id="L137">                MetodoPagamento.valueOf(v.metodoPagamento),</span>
+                linhas
+        );
+    }
+
+    private DevolucaoCentral mapearDevolucao(String idLoja, DevolucaoDTO d) {
+<span class="fc" id="L143">        return new DevolucaoCentral(</span>
+                0, d.idOriginalLoja, d.idOriginalVenda, idLoja,
+<span class="fc" id="L145">                LocalDateTime.parse(d.dataHora),</span>
+                d.quantidade, d.valorRestituido
+        );
+    }
+
+    private RemessaCentral mapearRemessa(String idLoja, RemessaDTO r) {
+        EstadoPagamentoRemessa estado;
+<span class="pc bpc" id="L152" title="2 of 3 branches missed.">        switch (r.estadoPagamento) {</span>
+<span class="fc" id="L153">            case &quot;PENDENTE&quot;, &quot;PENDENTE_PAGAMENTO&quot; -&gt; estado = EstadoPagamentoRemessa.PENDENTE_PAGAMENTO;</span>
+<span class="nc" id="L154">            case &quot;PAGO&quot;, &quot;PAGA&quot; -&gt; estado = EstadoPagamentoRemessa.PAGA;</span>
+<span class="nc" id="L155">            default -&gt; throw new IllegalArgumentException(&quot;Estado de pagamento desconhecido: &quot; + r.estadoPagamento);</span>
+        }
+<span class="fc" id="L157">        return new RemessaCentral(</span>
+                0, r.idOriginalLoja, idLoja, r.nomeFornecedor,
+<span class="fc" id="L159">                LocalDate.parse(r.dataRecepcao), r.valorTotalGuia, estado</span>
+        );
+    }
+
+    private PagamentoCentral mapearPagamento(String idLoja, PagamentoDTO p) {
+<span class="fc" id="L164">        return new PagamentoCentral(</span>
+                0, p.idOriginalLoja, p.idOriginalRemessa, idLoja, p.valor,
+<span class="pc bpc" id="L166" title="1 of 2 branches missed.">                p.dataPagamento != null ? LocalDate.parse(p.dataPagamento.substring(0, 10)) : null,</span>
+<span class="pc bpc" id="L167" title="1 of 2 branches missed.">                p.tipoPagamento != null ? TipoPagamento.valueOf(p.tipoPagamento) : null</span>
+        );
+    }
+
+    private SessaoCaixaCentral mapearSessao(String idLoja, SessaoCaixaDTO s) {
+<span class="fc" id="L172">        return new SessaoCaixaCentral(</span>
+                0, s.idOriginalLoja, idLoja, s.idUtilizador, s.saldoFinal,
+<span class="fc" id="L174">                LocalDateTime.parse(s.dataAbertura),</span>
+<span class="pc bpc" id="L175" title="1 of 2 branches missed.">                s.dataEncerramento != null ? LocalDateTime.parse(s.dataEncerramento) : null</span>
+        );
+    }
+
+    private LogAuditoriaCentral mapearLog(String idLoja, LogAuditoriaDTO l) {
+<span class="fc" id="L180">        return new LogAuditoriaCentral(</span>
+                0, l.idOriginalLoja, idLoja,
+<span class="fc" id="L182">                TipoAcao.valueOf(l.acao),</span>
+<span class="fc" id="L183">                LocalDateTime.parse(l.dataHora),</span>
+                l.nomeUtilizador,
+                l.descricao
+        );
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

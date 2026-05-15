@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Desconto.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">TrasmUM — Software de Loja</a> &gt; <a href="index.source.html" class="el_package">pt.trasmum.loja.dominio.catalogo</a> &gt; <span class="el_source">Desconto.java</span></div><h1>Desconto.java</h1><pre class="source lang-java linenums">package pt.trasmum.loja.dominio.catalogo;
+
+import java.time.LocalDate;
+
+public class Desconto {
+
+    private int id;
+    private int idLote;
+    private double percentagem;
+    private LocalDate dataAplicacao;
+    private int idUtilizadorAplicou;
+
+<span class="nc" id="L13">    public Desconto() {}</span>
+
+<span class="nc" id="L15">    public Desconto(int idLote, double percentagem, LocalDate dataAplicacao, int idUtilizadorAplicou) {</span>
+<span class="nc" id="L16">        this.idLote = idLote;</span>
+<span class="nc" id="L17">        this.percentagem = percentagem;</span>
+<span class="nc" id="L18">        this.dataAplicacao = dataAplicacao;</span>
+<span class="nc" id="L19">        this.idUtilizadorAplicou = idUtilizadorAplicou;</span>
+<span class="nc" id="L20">    }</span>
+
+<span class="nc" id="L22">    public int getId() { return id; }</span>
+<span class="nc" id="L23">    public void setId(int id) { this.id = id; }</span>
+
+<span class="nc" id="L25">    public int getIdLote() { return idLote; }</span>
+<span class="nc" id="L26">    public void setIdLote(int idLote) { this.idLote = idLote; }</span>
+
+<span class="nc" id="L28">    public double getPercentagem() { return percentagem; }</span>
+<span class="nc" id="L29">    public void setPercentagem(double percentagem) { this.percentagem = percentagem; }</span>
+
+<span class="nc" id="L31">    public LocalDate getDataAplicacao() { return dataAplicacao; }</span>
+<span class="nc" id="L32">    public void setDataAplicacao(LocalDate dataAplicacao) { this.dataAplicacao = dataAplicacao; }</span>
+
+<span class="nc" id="L34">    public int getIdUtilizadorAplicou() { return idUtilizadorAplicou; }</span>
+<span class="nc" id="L35">    public void setIdUtilizadorAplicou(int idUtilizadorAplicou) { this.idUtilizadorAplicou = idUtilizadorAplicou; }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

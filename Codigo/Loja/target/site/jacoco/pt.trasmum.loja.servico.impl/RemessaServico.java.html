@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RemessaServico.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">TrasmUM — Software de Loja</a> &gt; <a href="index.source.html" class="el_package">pt.trasmum.loja.servico.impl</a> &gt; <span class="el_source">RemessaServico.java</span></div><h1>RemessaServico.java</h1><pre class="source lang-java linenums">package pt.trasmum.loja.servico.impl;
+
+import pt.trasmum.loja.dominio.catalogo.Produto;
+import pt.trasmum.loja.dominio.core.ConfiguracaoTerminal;
+import pt.trasmum.loja.dominio.core.PerfilUtilizador;
+import pt.trasmum.loja.dominio.core.TipoAcao;
+import pt.trasmum.loja.dominio.core.Utilizador;
+import pt.trasmum.loja.dominio.exceptions.RemessaSemLinhasException;
+import pt.trasmum.loja.dominio.exceptions.ExcecoesCatalogo.ProdutoInativoException;
+import pt.trasmum.loja.dominio.exceptions.ExcecoesCatalogo.ProdutoNaoEncontradoException;
+import pt.trasmum.loja.dominio.exceptions.ExcecoesCatalogo.ProdutoNaoFornecidoException;
+import pt.trasmum.loja.dominio.fornecedores.*;
+import pt.trasmum.loja.dominio.fornecedores.PedidoRemessa.EstadoPedido;
+import pt.trasmum.loja.repositorio.interfaces.*;
+import pt.trasmum.loja.servico.interfaces.IAuditoriaServico;
+import pt.trasmum.loja.servico.interfaces.IAutorizacaoServico;
+import pt.trasmum.loja.servico.interfaces.IRemessaServico;
+
+import java.time.LocalDate;
+import java.util.List;
+
+public class RemessaServico implements IRemessaServico {
+
+    private final RemessaRepositorio remessaRepo;
+    private final PedidoRemessaRepositorio pedidoRepo;
+    private final PagamentoRepositorio pagamentoRepo;
+    private final ProdutoRepositorio produtoRepo;
+    private final FornecedorProdutoRepositorio fornecedorProdutoRepo;
+    private final IAutorizacaoServico autorizacaoServico;
+    private final IAuditoriaServico auditoriaServico;
+    private final ConfiguracaoTerminal configuracao;
+
+    public RemessaServico(RemessaRepositorio remessaRepo, PedidoRemessaRepositorio pedidoRepo,
+                           PagamentoRepositorio pagamentoRepo, ProdutoRepositorio produtoRepo,
+                           FornecedorProdutoRepositorio fornecedorProdutoRepo,
+                           IAutorizacaoServico autorizacaoServico, IAuditoriaServico auditoriaServico,
+<span class="nc" id="L37">                           ConfiguracaoTerminal configuracao) {</span>
+<span class="nc" id="L38">        this.remessaRepo = remessaRepo;</span>
+<span class="nc" id="L39">        this.pedidoRepo = pedidoRepo;</span>
+<span class="nc" id="L40">        this.pagamentoRepo = pagamentoRepo;</span>
+<span class="nc" id="L41">        this.produtoRepo = produtoRepo;</span>
+<span class="nc" id="L42">        this.fornecedorProdutoRepo = fornecedorProdutoRepo;</span>
+<span class="nc" id="L43">        this.autorizacaoServico = autorizacaoServico;</span>
+<span class="nc" id="L44">        this.auditoriaServico = auditoriaServico;</span>
+<span class="nc" id="L45">        this.configuracao = configuracao;</span>
+<span class="nc" id="L46">    }</span>
+
+    @Override
+    public Remessa registarRemessa(Utilizador utilizador, Fornecedor fornecedor,
+                                    List&lt;LinhaRemessa&gt; linhas, double valorTotalGuia, int idPedidoRemessa) {
+<span class="nc" id="L51">        autorizacaoServico.exigirPerfil(utilizador, PerfilUtilizador.GESTOR, PerfilUtilizador.CEO);</span>
+<span class="nc bnc" id="L52" title="All 4 branches missed.">        if (linhas == null || linhas.isEmpty()) throw new RemessaSemLinhasException(&quot;A remessa deve ter pelo menos uma linha.&quot;);</span>
+
+<span class="nc bnc" id="L54" title="All 2 branches missed.">        for (LinhaRemessa linha : linhas) {</span>
+<span class="nc" id="L55">            Produto p = produtoRepo.buscarPorId(linha.getIdProduto());</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">            if (p == null) throw new ProdutoNaoEncontradoException(&quot;Produto não encontrado: &quot; + linha.getIdProduto());</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">            if (!p.isAtivo()) throw new ProdutoInativoException(&quot;Produto inativo: &quot; + p.getNome());</span>
+<span class="nc bnc" id="L58" title="All 2 branches missed.">            if (!fornecedorProdutoRepo.fornece(fornecedor.getId(), p.getId()))</span>
+<span class="nc" id="L59">                throw new ProdutoNaoFornecidoException(</span>
+<span class="nc" id="L60">                        &quot;Produto '&quot; + p.getNome() + &quot;' não é fornecido por &quot; + fornecedor.getNome() + &quot;.&quot;);</span>
+<span class="nc" id="L61">        }</span>
+
+<span class="nc" id="L63">        Remessa remessa = new Remessa(configuracao.getIdLoja(), fornecedor.getId(),</span>
+<span class="nc" id="L64">                utilizador.getId(), LocalDate.now(), valorTotalGuia);</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">        for (LinhaRemessa linha : linhas) remessa.adicionarLinha(linha);</span>
+
+<span class="nc" id="L67">        remessaRepo.guardar(remessa);</span>
+<span class="nc" id="L68">        associarPedido(idPedidoRemessa);</span>
+
+<span class="nc" id="L70">        Pagamento pagamento = new Pagamento(configuracao.getIdLoja(), fornecedor.getId(),</span>
+<span class="nc" id="L71">                remessa.getId(), valorTotalGuia);</span>
+<span class="nc" id="L72">        pagamentoRepo.guardar(pagamento);</span>
+
+<span class="nc" id="L74">        auditoriaServico.registar(utilizador, TipoAcao.ALTERACAO_CATALOGO, &quot;Remessa&quot;, remessa.getId(),</span>
+<span class="nc" id="L75">                String.format(&quot;Recebeu remessa do fornecedor '%s' (%.2f €, %d linhas)&quot;, fornecedor.getNome(), valorTotalGuia, linhas.size()));</span>
+<span class="nc" id="L76">        return remessa;</span>
+    }
+
+    @Override
+    public void associarPedido(int idPedidoRemessa) {
+<span class="nc" id="L81">        PedidoRemessa pedido = pedidoRepo.buscarPorId(idPedidoRemessa);</span>
+<span class="nc bnc" id="L82" title="All 4 branches missed.">        if (pedido != null &amp;&amp; pedido.getEstado() == EstadoPedido.PENDENTE) {</span>
+<span class="nc" id="L83">            pedido.setEstado(EstadoPedido.CONCLUIDO);</span>
+<span class="nc" id="L84">            pedidoRepo.atualizar(pedido);</span>
+        }
+<span class="nc" id="L86">    }</span>
+
+    @Override
+    public PedidoRemessa criarPedidoRemessa(Utilizador utilizador, Fornecedor fornecedor,
+                                             List&lt;LinhaPedidoRemessa&gt; linhas) {
+<span class="nc" id="L91">        autorizacaoServico.exigirPerfil(utilizador, PerfilUtilizador.GESTOR, PerfilUtilizador.CEO);</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">        for (LinhaPedidoRemessa linha : linhas) {</span>
+<span class="nc" id="L93">            Produto p = produtoRepo.buscarPorId(linha.getIdProduto());</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">            if (p == null) throw new ProdutoNaoEncontradoException(&quot;Produto não encontrado: &quot; + linha.getIdProduto());</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">            if (!p.isAtivo()) throw new ProdutoInativoException(&quot;Produto inativo: &quot; + p.getNome());</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">            if (!fornecedorProdutoRepo.fornece(fornecedor.getId(), p.getId()))</span>
+<span class="nc" id="L97">                throw new ProdutoNaoFornecidoException(</span>
+<span class="nc" id="L98">                        &quot;Produto '&quot; + p.getNome() + &quot;' não é fornecido por &quot; + fornecedor.getNome() + &quot;.&quot;);</span>
+<span class="nc" id="L99">        }</span>
+<span class="nc" id="L100">        PedidoRemessa pedido = new PedidoRemessa(fornecedor.getId(), utilizador.getId(), LocalDate.now());</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">        for (LinhaPedidoRemessa linha : linhas) pedido.adicionarLinha(linha);</span>
+<span class="nc" id="L102">        pedidoRepo.guardar(pedido);</span>
+<span class="nc" id="L103">        return pedido;</span>
+    }
+
+    @Override
+    public List&lt;PedidoRemessa&gt; listarPedidos(EstadoPedido estado) {
+<span class="nc" id="L108">        return pedidoRepo.buscarPorEstado(estado);</span>
+    }
+
+    @Override
+    public List&lt;Remessa&gt; obterRemessasPendentes() {
+<span class="nc" id="L113">        return remessaRepo.buscarPendentes();</span>
+    }
+
+    @Override
+    public List&lt;Pagamento&gt; obterPagamentosPendentes() {
+<span class="nc" id="L118">        return pagamentoRepo.buscarPendentes();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

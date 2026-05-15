@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PedidoRemessaRepositorioImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">TrasmUM — Software de Loja</a> &gt; <a href="index.source.html" class="el_package">pt.trasmum.loja.repositorio.impl</a> &gt; <span class="el_source">PedidoRemessaRepositorioImpl.java</span></div><h1>PedidoRemessaRepositorioImpl.java</h1><pre class="source lang-java linenums">package pt.trasmum.loja.repositorio.impl;
+
+import pt.trasmum.loja.dominio.fornecedores.LinhaPedidoRemessa;
+import pt.trasmum.loja.dominio.fornecedores.PedidoRemessa;
+import pt.trasmum.loja.dominio.fornecedores.PedidoRemessa.EstadoPedido;
+import pt.trasmum.loja.repositorio.interfaces.PedidoRemessaRepositorio;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class PedidoRemessaRepositorioImpl implements PedidoRemessaRepositorio {
+
+    private final Connection connection;
+
+<span class="nc" id="L16">    public PedidoRemessaRepositorioImpl(Connection connection) {</span>
+<span class="nc" id="L17">        this.connection = connection;</span>
+<span class="nc" id="L18">    }</span>
+
+    @Override
+    public void guardar(PedidoRemessa pedido) {
+<span class="nc" id="L22">        String sql = &quot;INSERT INTO PedidoRemessa (idFornecedor, idUtilizador, dataCriacao, estado) VALUES (?, ?, ?, ?)&quot;;</span>
+<span class="nc" id="L23">        try (PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {</span>
+<span class="nc" id="L24">            ps.setInt(1, pedido.getIdFornecedor());</span>
+<span class="nc" id="L25">            ps.setInt(2, pedido.getIdUtilizador());</span>
+<span class="nc" id="L26">            ps.setDate(3, Date.valueOf(pedido.getDataCriacao()));</span>
+<span class="nc" id="L27">            ps.setString(4, pedido.getEstado().name());</span>
+<span class="nc" id="L28">            ps.executeUpdate();</span>
+<span class="nc" id="L29">            try (ResultSet keys = ps.getGeneratedKeys()) {</span>
+<span class="nc bnc" id="L30" title="All 2 branches missed.">                if (keys.next()) pedido.setId(keys.getInt(1));</span>
+            }
+<span class="nc" id="L32">        } catch (SQLException e) {</span>
+<span class="nc" id="L33">            throw new RuntimeException(&quot;Erro ao guardar pedido de remessa&quot;, e);</span>
+<span class="nc" id="L34">        }</span>
+
+<span class="nc bnc" id="L36" title="All 2 branches missed.">        for (LinhaPedidoRemessa linha : pedido.getLinhas()) {</span>
+<span class="nc" id="L37">            linha.setIdPedidoRemessa(pedido.getId());</span>
+<span class="nc" id="L38">            guardarLinha(linha);</span>
+<span class="nc" id="L39">        }</span>
+<span class="nc" id="L40">    }</span>
+
+    @Override
+    public void atualizar(PedidoRemessa pedido) {
+<span class="nc" id="L44">        String sql = &quot;UPDATE PedidoRemessa SET estado = ? WHERE id = ?&quot;;</span>
+<span class="nc" id="L45">        try (PreparedStatement ps = connection.prepareStatement(sql)) {</span>
+<span class="nc" id="L46">            ps.setString(1, pedido.getEstado().name());</span>
+<span class="nc" id="L47">            ps.setInt(2, pedido.getId());</span>
+<span class="nc" id="L48">            ps.executeUpdate();</span>
+<span class="nc" id="L49">        } catch (SQLException e) {</span>
+<span class="nc" id="L50">            throw new RuntimeException(&quot;Erro ao atualizar pedido de remessa&quot;, e);</span>
+<span class="nc" id="L51">        }</span>
+<span class="nc" id="L52">    }</span>
+
+    @Override
+    public PedidoRemessa buscarPorId(int id) {
+<span class="nc" id="L56">        String sql = &quot;SELECT * FROM PedidoRemessa WHERE id = ?&quot;;</span>
+<span class="nc" id="L57">        try (PreparedStatement ps = connection.prepareStatement(sql)) {</span>
+<span class="nc" id="L58">            ps.setInt(1, id);</span>
+<span class="nc" id="L59">            try (ResultSet rs = ps.executeQuery()) {</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">                if (rs.next()) return mapearComLinhas(rs);</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">            }</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">        } catch (SQLException e) {</span>
+<span class="nc" id="L63">            throw new RuntimeException(&quot;Erro ao buscar pedido de remessa por id&quot;, e);</span>
+<span class="nc" id="L64">        }</span>
+<span class="nc" id="L65">        return null;</span>
+    }
+
+    @Override
+    public List&lt;PedidoRemessa&gt; buscarPorEstado(EstadoPedido estado) {
+<span class="nc" id="L70">        String sql = &quot;SELECT * FROM PedidoRemessa WHERE estado = ?&quot;;</span>
+<span class="nc" id="L71">        List&lt;PedidoRemessa&gt; lista = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L72">        try (PreparedStatement ps = connection.prepareStatement(sql)) {</span>
+<span class="nc" id="L73">            ps.setString(1, estado.name());</span>
+<span class="nc" id="L74">            try (ResultSet rs = ps.executeQuery()) {</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">                while (rs.next()) lista.add(mapearComLinhas(rs));</span>
+            }
+<span class="nc" id="L77">        } catch (SQLException e) {</span>
+<span class="nc" id="L78">            throw new RuntimeException(&quot;Erro ao buscar pedidos por estado&quot;, e);</span>
+<span class="nc" id="L79">        }</span>
+<span class="nc" id="L80">        return lista;</span>
+    }
+
+    @Override
+    public List&lt;PedidoRemessa&gt; buscarPendentesPorFornecedor(int idFornecedor) {
+<span class="nc" id="L85">        String sql = &quot;SELECT * FROM PedidoRemessa WHERE estado = 'PENDENTE' AND idFornecedor = ?&quot;;</span>
+<span class="nc" id="L86">        List&lt;PedidoRemessa&gt; lista = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L87">        try (PreparedStatement ps = connection.prepareStatement(sql)) {</span>
+<span class="nc" id="L88">            ps.setInt(1, idFornecedor);</span>
+<span class="nc" id="L89">            try (ResultSet rs = ps.executeQuery()) {</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">                while (rs.next()) lista.add(mapearComLinhas(rs));</span>
+            }
+<span class="nc" id="L92">        } catch (SQLException e) {</span>
+<span class="nc" id="L93">            throw new RuntimeException(&quot;Erro ao buscar pedidos pendentes por fornecedor&quot;, e);</span>
+<span class="nc" id="L94">        }</span>
+<span class="nc" id="L95">        return lista;</span>
+    }
+
+    private void guardarLinha(LinhaPedidoRemessa linha) {
+<span class="nc" id="L99">        String sql = &quot;INSERT INTO LinhaPedidoRemessa (idPedidoRemessa, idProduto, quantidadePretendida) VALUES (?, ?, ?)&quot;;</span>
+<span class="nc" id="L100">        try (PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {</span>
+<span class="nc" id="L101">            ps.setInt(1, linha.getIdPedidoRemessa());</span>
+<span class="nc" id="L102">            ps.setInt(2, linha.getIdProduto());</span>
+<span class="nc" id="L103">            ps.setInt(3, linha.getQuantidadePretendida());</span>
+<span class="nc" id="L104">            ps.executeUpdate();</span>
+<span class="nc" id="L105">            try (ResultSet keys = ps.getGeneratedKeys()) {</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">                if (keys.next()) linha.setId(keys.getInt(1));</span>
+            }
+<span class="nc" id="L108">        } catch (SQLException e) {</span>
+<span class="nc" id="L109">            throw new RuntimeException(&quot;Erro ao guardar linha do pedido de remessa&quot;, e);</span>
+<span class="nc" id="L110">        }</span>
+<span class="nc" id="L111">    }</span>
+
+    private PedidoRemessa mapearComLinhas(ResultSet rs) throws SQLException {
+<span class="nc" id="L114">        PedidoRemessa p = new PedidoRemessa();</span>
+<span class="nc" id="L115">        p.setId(rs.getInt(&quot;id&quot;));</span>
+<span class="nc" id="L116">        p.setIdFornecedor(rs.getInt(&quot;idFornecedor&quot;));</span>
+<span class="nc" id="L117">        p.setIdUtilizador(rs.getInt(&quot;idUtilizador&quot;));</span>
+<span class="nc" id="L118">        p.setDataCriacao(rs.getDate(&quot;dataCriacao&quot;).toLocalDate());</span>
+<span class="nc" id="L119">        p.setEstado(EstadoPedido.valueOf(rs.getString(&quot;estado&quot;)));</span>
+<span class="nc" id="L120">        p.setLinhas(buscarLinhas(p.getId()));</span>
+<span class="nc" id="L121">        return p;</span>
+    }
+
+    private List&lt;LinhaPedidoRemessa&gt; buscarLinhas(int idPedido) {
+<span class="nc" id="L125">        String sql = &quot;SELECT * FROM LinhaPedidoRemessa WHERE idPedidoRemessa = ?&quot;;</span>
+<span class="nc" id="L126">        List&lt;LinhaPedidoRemessa&gt; linhas = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L127">        try (PreparedStatement ps = connection.prepareStatement(sql)) {</span>
+<span class="nc" id="L128">            ps.setInt(1, idPedido);</span>
+<span class="nc" id="L129">            try (ResultSet rs = ps.executeQuery()) {</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">                while (rs.next()) {</span>
+<span class="nc" id="L131">                    LinhaPedidoRemessa l = new LinhaPedidoRemessa();</span>
+<span class="nc" id="L132">                    l.setId(rs.getInt(&quot;id&quot;));</span>
+<span class="nc" id="L133">                    l.setIdPedidoRemessa(rs.getInt(&quot;idPedidoRemessa&quot;));</span>
+<span class="nc" id="L134">                    l.setIdProduto(rs.getInt(&quot;idProduto&quot;));</span>
+<span class="nc" id="L135">                    l.setQuantidadePretendida(rs.getInt(&quot;quantidadePretendida&quot;));</span>
+<span class="nc" id="L136">                    linhas.add(l);</span>
+<span class="nc" id="L137">                }</span>
+            }
+<span class="nc" id="L139">        } catch (SQLException e) {</span>
+<span class="nc" id="L140">            throw new RuntimeException(&quot;Erro ao buscar linhas do pedido&quot;, e);</span>
+<span class="nc" id="L141">        }</span>
+<span class="nc" id="L142">        return linhas;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

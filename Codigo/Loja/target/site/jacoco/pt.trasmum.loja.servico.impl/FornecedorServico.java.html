@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FornecedorServico.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">TrasmUM — Software de Loja</a> &gt; <a href="index.source.html" class="el_package">pt.trasmum.loja.servico.impl</a> &gt; <span class="el_source">FornecedorServico.java</span></div><h1>FornecedorServico.java</h1><pre class="source lang-java linenums">package pt.trasmum.loja.servico.impl;
+
+import pt.trasmum.loja.dominio.catalogo.Produto;
+import pt.trasmum.loja.dominio.core.PerfilUtilizador;
+import pt.trasmum.loja.dominio.core.TipoAcao;
+import pt.trasmum.loja.dominio.core.Utilizador;
+import pt.trasmum.loja.dominio.exceptions.ExcecoesCatalogo.ProdutoInativoException;
+import pt.trasmum.loja.dominio.exceptions.ExcecoesCatalogo.ProdutoNaoEncontradoException;
+import pt.trasmum.loja.dominio.fornecedores.Fornecedor;
+import pt.trasmum.loja.dominio.fornecedores.FornecedorProduto;
+import pt.trasmum.loja.repositorio.interfaces.FornecedorProdutoRepositorio;
+import pt.trasmum.loja.repositorio.interfaces.FornecedorRepositorio;
+import pt.trasmum.loja.repositorio.interfaces.ProdutoRepositorio;
+import pt.trasmum.loja.servico.interfaces.IAuditoriaServico;
+import pt.trasmum.loja.servico.interfaces.IAutorizacaoServico;
+import pt.trasmum.loja.servico.interfaces.IFornecedorServico;
+
+import java.util.List;
+
+public class FornecedorServico implements IFornecedorServico {
+
+    private final FornecedorRepositorio fornecedorRepo;
+    private final FornecedorProdutoRepositorio fornecedorProdutoRepo;
+    private final ProdutoRepositorio produtoRepo;
+    private final IAutorizacaoServico autorizacaoServico;
+    private final IAuditoriaServico auditoriaServico;
+
+    public FornecedorServico(FornecedorRepositorio fornecedorRepo,
+                             FornecedorProdutoRepositorio fornecedorProdutoRepo,
+                             ProdutoRepositorio produtoRepo,
+                             IAutorizacaoServico autorizacaoServico,
+<span class="nc" id="L32">                             IAuditoriaServico auditoriaServico) {</span>
+<span class="nc" id="L33">        this.fornecedorRepo = fornecedorRepo;</span>
+<span class="nc" id="L34">        this.fornecedorProdutoRepo = fornecedorProdutoRepo;</span>
+<span class="nc" id="L35">        this.produtoRepo = produtoRepo;</span>
+<span class="nc" id="L36">        this.autorizacaoServico = autorizacaoServico;</span>
+<span class="nc" id="L37">        this.auditoriaServico = auditoriaServico;</span>
+<span class="nc" id="L38">    }</span>
+
+    @Override
+    public Fornecedor criarFornecedor(Utilizador utilizador, Fornecedor fornecedor) {
+<span class="nc" id="L42">        autorizacaoServico.exigirPerfil(utilizador, PerfilUtilizador.GESTOR, PerfilUtilizador.CEO);</span>
+<span class="nc" id="L43">        fornecedorRepo.guardar(fornecedor);</span>
+<span class="nc" id="L44">        auditoriaServico.registar(utilizador, TipoAcao.ALTERACAO_CATALOGO, &quot;Fornecedor&quot;, fornecedor.getId(),</span>
+<span class="nc" id="L45">                &quot;Criou fornecedor '&quot; + fornecedor.getNome() + &quot;'&quot;);</span>
+<span class="nc" id="L46">        return fornecedor;</span>
+    }
+
+    @Override
+    public void editarFornecedor(Utilizador utilizador, Fornecedor fornecedor) {
+<span class="nc" id="L51">        autorizacaoServico.exigirPerfil(utilizador, PerfilUtilizador.GESTOR, PerfilUtilizador.CEO);</span>
+<span class="nc" id="L52">        fornecedorRepo.atualizar(fornecedor);</span>
+<span class="nc" id="L53">        auditoriaServico.registar(utilizador, TipoAcao.ALTERACAO_CATALOGO, &quot;Fornecedor&quot;, fornecedor.getId(),</span>
+<span class="nc" id="L54">                &quot;Editou fornecedor '&quot; + fornecedor.getNome() + &quot;'&quot;);</span>
+<span class="nc" id="L55">    }</span>
+
+    @Override
+    public Fornecedor buscarPorId(int id) {
+<span class="nc" id="L59">        return fornecedorRepo.buscarPorId(id);</span>
+    }
+
+    @Override
+    public List&lt;Fornecedor&gt; listarTodos() {
+<span class="nc" id="L64">        return fornecedorRepo.listarTodos();</span>
+    }
+
+    @Override
+    public void associarProduto(Utilizador utilizador, int idFornecedor, int idProduto, double precoFornecedor) {
+<span class="nc" id="L69">        autorizacaoServico.exigirPerfil(utilizador, PerfilUtilizador.GESTOR, PerfilUtilizador.CEO);</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">        if (precoFornecedor &lt; 0) throw new IllegalArgumentException(&quot;Preço do fornecedor não pode ser negativo.&quot;);</span>
+<span class="nc" id="L71">        Produto p = produtoRepo.buscarPorId(idProduto);</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">        if (p == null) throw new ProdutoNaoEncontradoException(&quot;Produto não encontrado: &quot; + idProduto);</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">        if (!p.isAtivo()) throw new ProdutoInativoException(&quot;Produto inativo: &quot; + p.getNome());</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">        if (fornecedorRepo.buscarPorId(idFornecedor) == null)</span>
+<span class="nc" id="L75">            throw new IllegalArgumentException(&quot;Fornecedor não encontrado: &quot; + idFornecedor);</span>
+<span class="nc" id="L76">        fornecedorProdutoRepo.associar(idFornecedor, idProduto, precoFornecedor);</span>
+<span class="nc" id="L77">        auditoriaServico.registar(utilizador, TipoAcao.ALTERACAO_CATALOGO, &quot;FornecedorProduto&quot;, idFornecedor,</span>
+<span class="nc" id="L78">                String.format(&quot;Associou produto #%d ao fornecedor #%d (preço: %.2f €)&quot;, idProduto, idFornecedor, precoFornecedor));</span>
+<span class="nc" id="L79">    }</span>
+
+    @Override
+    public void desassociarProduto(Utilizador utilizador, int idFornecedor, int idProduto) {
+<span class="nc" id="L83">        autorizacaoServico.exigirPerfil(utilizador, PerfilUtilizador.GESTOR, PerfilUtilizador.CEO);</span>
+<span class="nc" id="L84">        fornecedorProdutoRepo.desassociar(idFornecedor, idProduto);</span>
+<span class="nc" id="L85">        auditoriaServico.registar(utilizador, TipoAcao.ALTERACAO_CATALOGO, &quot;FornecedorProduto&quot;, idFornecedor,</span>
+<span class="nc" id="L86">                String.format(&quot;Removeu produto #%d do fornecedor #%d&quot;, idProduto, idFornecedor));</span>
+<span class="nc" id="L87">    }</span>
+
+    @Override
+    public void atualizarPrecoFornecedor(Utilizador utilizador, int idFornecedor, int idProduto, double novoPreco) {
+<span class="nc" id="L91">        autorizacaoServico.exigirPerfil(utilizador, PerfilUtilizador.GESTOR, PerfilUtilizador.CEO);</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">        if (novoPreco &lt; 0) throw new IllegalArgumentException(&quot;Preço do fornecedor não pode ser negativo.&quot;);</span>
+<span class="nc" id="L93">        fornecedorProdutoRepo.atualizarPreco(idFornecedor, idProduto, novoPreco);</span>
+<span class="nc" id="L94">        auditoriaServico.registar(utilizador, TipoAcao.ALTERACAO_PRECO, &quot;FornecedorProduto&quot;, idFornecedor,</span>
+<span class="nc" id="L95">                String.format(&quot;Atualizou preço do produto #%d no fornecedor #%d para %.2f €&quot;, idProduto, idFornecedor, novoPreco));</span>
+<span class="nc" id="L96">    }</span>
+
+    @Override
+    public List&lt;Produto&gt; listarProdutosFornecidos(int idFornecedor) {
+<span class="nc" id="L100">        return fornecedorProdutoRepo.listarProdutosDoFornecedor(idFornecedor);</span>
+    }
+
+    @Override
+    public List&lt;FornecedorProduto&gt; listarCatalogoDetalhado(int idFornecedor) {
+<span class="nc" id="L105">        return fornecedorProdutoRepo.listarDetalhado(idFornecedor);</span>
+    }
+
+    @Override
+    public boolean fornece(int idFornecedor, int idProduto) {
+<span class="nc" id="L110">        return fornecedorProdutoRepo.fornece(idFornecedor, idProduto);</span>
+    }
+
+    @Override
+    public double precoDoFornecedor(int idFornecedor, int idProduto) {
+<span class="nc" id="L115">        return fornecedorProdutoRepo.precoDoFornecedor(idFornecedor, idProduto);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
