@@ -35,12 +35,12 @@ case "$ALVO" in
         load_sql trasmum_loja "${ROOT}/Loja/src/main/resources/mock_data.sql"
         ;;
     servidor)
-        reset_db trasmum_servidor "${ROOT}/ServidorCentral/backend/db/schema.sql"
+        reset_db trasmum_servidor "${ROOT}/Servidor_Central/backend/db/schema.sql"
         ;;
     ambas)
         reset_db trasmum_loja "${ROOT}/Loja/src/main/resources/schema.sql"
         load_sql trasmum_loja "${ROOT}/Loja/src/main/resources/mock_data.sql"
-        reset_db trasmum_servidor "${ROOT}/ServidorCentral/backend/db/schema.sql"
+        reset_db trasmum_servidor "${ROOT}/Servidor_Central/backend/db/schema.sql"
         ;;
     *)
         echo "Uso: $0 [loja|servidor]   (sem argumentos = ambas)" >&2

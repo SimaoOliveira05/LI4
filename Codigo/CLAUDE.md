@@ -24,8 +24,6 @@ scripts/loja-up.sh             # JavaFX POS terminal
 
 `db-reset.sh` honours `DB_USER` / `DB_PASS` / `DB_HOST` (defaults `trasmum/trasmum/localhost`).
 
-> Note: `dev-up.sh` and `loja-up.sh` currently reference `ServidorCentral/`, but the actual directory is `Servidor_Central/`. Fix the path in the script or run subprojects directly:
-
 ```bash
 # Loja (run from Loja/)
 mvn javafx:run                 # run

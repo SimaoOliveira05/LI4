@@ -9,7 +9,6 @@ import pt.trasmum.servidor.dominio.IntegridadeInvalidaException;
 
 import java.io.InputStream;
 import java.lang.reflect.Type;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 public class ServerMain {
@@ -45,10 +44,10 @@ public class ServerMain {
             try (InputStream is = ServerMain.class.getClassLoader()
                     .getResourceAsStream("openapi.yaml")) {
                 if (is == null) { c.status(404).result("openapi.yaml não encontrado"); return; }
-                c.contentType("application/yaml").result(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+                c.contentType("application/yaml; charset=UTF-8").result(is.readAllBytes());
             }
         });
-        app.get("/swagger-ui", c -> c.contentType("text/html").result(swaggerUiHtml()));
+        app.get("/swagger-ui", c -> c.contentType("text/html; charset=UTF-8").result(swaggerUiHtml()));
 
         // ── Sincronização (Software de Loja) ────────────────────────────────
         app.post("/fecho", ctx.ingestaoHandler::receberPacote);
