@@ -22,9 +22,27 @@ mvn javafx:run
 
 # Compile only (no packaging)
 mvn compile
+
+# Run all tests (JUnit 5 + Mockito, no DB required)
+mvn test
+
+# Run a specific test class
+mvn test -Dtest=VendaServicoTest
+
+# Run a specific test method
+mvn test -Dtest=VendaServicoTest#nomeDoMetodo
 ```
 
-There are no automated tests in this project.
+## Tests
+
+Unit tests live in `src/test/java/pt/trasmum/loja/servico/impl/`. They use **JUnit 5** (`junit-jupiter`) and **Mockito** — all repositories are mocked, so no database or running application is needed.
+
+| Classe de teste          | O que testa                                         |
+|--------------------------|-----------------------------------------------------|
+| `AutorizacaoServicoTest` | Verificação de perfis e lançamento de `AcessoNegadoException` |
+| `DevolucaoServicoTest`   | Lógica de devoluções de vendas                      |
+| `FechoDiaServicoTest`    | Agregação e hash do pacote de fecho de dia          |
+| `VendaServicoTest`       | Criação de vendas, stock, sessão de caixa           |
 
 ## Architecture
 

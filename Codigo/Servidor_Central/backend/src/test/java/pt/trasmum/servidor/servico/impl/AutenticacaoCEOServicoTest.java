@@ -65,7 +65,7 @@ class AutenticacaoCEOServicoTest {
     }
 
     @Test
-    void autenticar_caminhoFeliz_retornaCeoELimpaBlockeio() {
+    void autenticar_caminhoFeliz_retornaCeoELimpaBloqueio() {
         String hashCorreto = BCrypt.hashpw("correta", BCrypt.gensalt());
         // Usar "admin" para evitar chamada extra ao repo (apagarBootstrapSeNecessario)
         CEO ceo = new CEO(1, "admin", hashCorreto, 0, null);
@@ -93,7 +93,7 @@ class AutenticacaoCEOServicoTest {
     }
 
     @Test
-    void registarFalhado_aoAtingirLimiar_defineBlockeioEAtualiza() {
+    void registarFalhado_aoAtingirLimiar_defineBloqueioEAtualiza() {
         // limiar = 3; CEO já tem 2 tentativas; esta é a 3ª (atinge)
         CEO ceo = new CEO(1, "ceo2", "hash", 2, null);
 
