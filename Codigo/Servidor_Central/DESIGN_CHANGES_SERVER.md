@@ -2,6 +2,15 @@
 
 Entradas em ordem cronológica inversa (mais recente no topo).
 
+## 2026-05-16 — Especificação OpenAPI servida como ficheiro estático em vez do plugin `javalin-openapi`
+
+**Área**: Backend  
+**O quê**: A especificação OpenAPI é servida como ficheiro estático `openapi.yaml` (classpath resource) através de dois endpoints adicionados manualmente em `ServerMain`: `GET /openapi.yaml` (devolve o YAML com `Content-Type: application/yaml; charset=UTF-8`) e `GET /swagger-ui` (devolve HTML com a Swagger UI embutida via CDN). Não foi utilizado o plugin `javalin-openapi` nem a anotação `@OpenApi` nos handlers.  
+**Porquê**: O plugin `javalin-openapi` em versão compatível com Javalin 6 requeria dependências de processamento de anotações (`javalin-openapi-plugin`, `swagger-core`) que conflituavam com a versão de Javalin utilizada no projecto e introduziam complexidade desnecessária de configuração de _annotation processors_ no Maven. A abordagem estática é mais simples, previsível e sem dependências adicionais.  
+**Impacto no design**: O ficheiro `openapi.yaml` tem de ser mantido manualmente em sincronização com os handlers sempre que a API for alterada. A especificação não é gerada automaticamente a partir das anotações do código.
+
+---
+
 ## 2026-05-13 — Endpoint `/api/lojas` adicional (ausente no swagger.txt)
 
 **Área**: Backend  
