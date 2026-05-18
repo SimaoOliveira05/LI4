@@ -5,8 +5,8 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-BACKEND_DIR="${ROOT}/ServidorCentral/backend"
-FRONTEND_DIR="${ROOT}/ServidorCentral/frontend"
+BACKEND_DIR="${ROOT}/Servidor_Central/backend"
+FRONTEND_DIR="${ROOT}/Servidor_Central/frontend"
 
 PIDS=()
 cleanup() {

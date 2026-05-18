@@ -24,8 +24,6 @@ scripts/loja-up.sh             # JavaFX POS terminal
 
 `db-reset.sh` honours `DB_USER` / `DB_PASS` / `DB_HOST` (defaults `trasmum/trasmum/localhost`).
 
-> Note: `dev-up.sh` and `loja-up.sh` currently reference `ServidorCentral/`, but the actual directory is `Servidor_Central/`. Fix the path in the script or run subprojects directly:
-
 ```bash
 # Loja (run from Loja/)
 mvn javafx:run                 # run
@@ -48,7 +46,25 @@ Full stack via Docker (from `Servidor_Central/`):
 docker compose up --build      # MySQL :3307, backend :8080, frontend :3000
 ```
 
-There are no automated tests in any subproject.
+## Tests
+
+Both Maven subprojects have unit tests using **JUnit 5 + Mockito**. No database or running server needed — all dependencies are mocked.
+
+```bash
+# Loja (4 test classes: Autorizacao, Devolucao, FechoDia, Venda)
+cd Loja && mvn test
+
+# Backend (2 test classes: AutenticacaoCEO, Ingestao)
+cd Servidor_Central/backend && mvn test
+
+# Run a single test class
+mvn test -Dtest=NomeDaClasse
+
+# Run a single test method
+mvn test -Dtest=NomeDaClasse#nomeDoMetodo
+```
+
+The frontend has no automated tests.
 
 Default dashboard login: `admin` / `admin123` (deleted on the first real CEO login).
 

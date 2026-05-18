@@ -1,8 +1,8 @@
 # Build outputs
-Código/Loja/target/
-Código/ServidorCentral/backend/target/
-Código/ServidorCentral/frontend/dist/
-Código/ServidorCentral/frontend/dist-ssr/
+Codigo/Loja/target/
+Codigo/Servidor_Central/backend/target/
+Codigo/Servidor_Central/frontend/dist/
+Codigo/Servidor_Central/frontend/dist-ssr/
 node_modules/
 
 # OS
@@ -28,3 +28,5 @@ lerna-debug.log*
 *.iml
 *.suo
 *.sw?
+
+.env

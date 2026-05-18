@@ -1,0 +1,866 @@
+openapi: 3.0.3
+info:
+  title: Servidor Central API
+  description: |
+    API REST do Servidor Central do sistema de conveniência Trasmum.
+
+    Gere o ciclo de vida completo de autenticação da CEO, receção de pacotes de fecho
+    de dia enviados pelas lojas (Delta Sync), dashboards analíticos, relatórios,
+    remessas a fornecedores e estado de consolidação da rede.
+
+    **Autenticação**: todos os endpoints `/api/**` (excepto `/api/auth/login`) exigem
+    um `Bearer` token obtido via `POST /api/auth/login`.
+    O endpoint `/fecho` é invocado pelo Software de Loja e não requer sessão CEO.
+  version: 1.0.0
+  contact:
+    name: Grupo LI4 — Trasmum
+
+servers:
+  - url: http://localhost:8080
+    description: Servidor de desenvolvimento local
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Autenticação
+    description: Ciclo de vida da sessão da CEO no Servidor Central
+  - name: Sincronização
+    description: Receção de pacotes de fecho de dia enviados pelo Software de Loja
+  - name: Dashboard e Métricas
+    description: Painel analítico global e por loja da CEO
+  - name: Relatórios Analíticos
+    description: Relatórios filtráveis por loja, período e categoria de produto
+  - name: Remessas da Rede
+    description: Consulta consolidada de remessas e pagamentos a fornecedores
+  - name: Estado de Consolidação
+    description: Verificação de quais lojas já enviaram o fecho para uma data
+  - name: Lojas
+    description: Consulta de lojas registadas na rede
+
+paths:
+  /api/auth/login:
+    post:
+      tags: [Autenticação]
+      summary: Autenticação da CEO
+      description: |
+        Autentica a CEO com validação de credenciais. Implementa controlo de bloqueio
+        por tentativas falhadas consecutivas. Devolve um token Bearer a incluir em
+        todos os pedidos subsequentes via header `Authorization: Bearer <token>`.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              nomeUtilizador: ceo
+              palavraPasse: senha123
+      responses:
+        '200':
+          description: Autenticação bem-sucedida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+              example:
+                token: a7f3c91d-4e2b-4f8a-9c1e-3b5d7f2a6e4c
+                nomeUtilizador: ceo
+        '401':
+          description: Credenciais inválidas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroResponse'
+              example:
+                erro: Credenciais inválidas
+        '423':
+          description: Conta bloqueada por excesso de tentativas falhadas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroResponse'
+              example:
+                erro: Conta bloqueada. Contacte o administrador.
+
+  /api/auth/logout:
+    post:
+      tags: [Autenticação]
+      summary: Encerrar sessão
+      description: Invalida o token Bearer da sessão activa.
+      responses:
+        '204':
+          description: Sessão encerrada com sucesso
+        '401':
+          description: Token inválido ou sessão já expirada
+
+  /fecho:
+    post:
+      tags: [Sincronização]
+      summary: Receber pacote de fecho de dia
+      description: |
+        Receção, validação e persistência do pacote de fecho de dia enviado pelo
+        Software de Loja (corresponde aos fluxos DS3 e DS4, requisitos RF15 e RF16).
+
+        A idempotência é garantida através da chave composta `idLoja` + `dataFecho` —
+        um reenvio do mesmo pacote não produz duplicação de registos.
+
+        O campo `hashIntegridade` contém o SHA-256 do payload serializado; o servidor
+        valida a integridade antes de persistir.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PacoteFecho'
+      responses:
+        '200':
+          description: Pacote processado e persistido com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ack:
+                    type: boolean
+                    example: true
+                  mensagem:
+                    type: string
+                    example: Pacote processado com sucesso
+        '400':
+          description: Erro de integridade ou dados inválidos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ack:
+                    type: boolean
+                    example: false
+                  erro:
+                    type: string
+                    example: Hash de integridade inválido
+        '500':
+          description: Erro interno do servidor
+
+  /ping:
+    get:
+      tags: [Sincronização]
+      summary: Health check
+      description: Verifica a disponibilidade do servidor (utilizado pelo Software de Loja antes de enviar o fecho).
+      security: []
+      responses:
+        '200':
+          description: Servidor disponível
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+
+  /api/dashboard/global:
+    get:
+      tags: [Dashboard e Métricas]
+      summary: Métricas globais da rede
+      description: |
+        Métricas agregadas de toda a rede (vendas totais, devoluções, transações,
+        ticket médio, repartição por método de pagamento, vendas por categoria
+        e decomposição por loja) para o período indicado.
+
+        Atenção: o Servidor Central opera sempre sobre dados do dia anterior —
+        os dados do dia em curso só ficam disponíveis após o fecho de cada loja.
+      parameters:
+        - name: inicio
+          in: query
+          description: Data de início do período (ISO 8601). Por defeito, 30 dias antes de `fim`.
+          schema:
+            type: string
+            format: date
+            example: "2026-04-01"
+        - name: fim
+          in: query
+          description: Data de fim do período (ISO 8601). Por defeito, hoje.
+          schema:
+            type: string
+            format: date
+            example: "2026-05-12"
+      responses:
+        '200':
+          description: Métricas globais calculadas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardGlobal'
+        '401':
+          description: Não autenticado
+
+  /api/dashboard/loja/{idLoja}:
+    get:
+      tags: [Dashboard e Métricas]
+      summary: Métricas de uma loja específica
+      description: |
+        Métricas detalhadas para uma loja específica: vendas, devoluções, ticket médio,
+        despesas, lucro, histórico de fechos e logs de auditoria.
+      parameters:
+        - name: idLoja
+          in: path
+          required: true
+          description: Identificador da loja
+          schema:
+            type: string
+            example: L001
+        - name: inicio
+          in: query
+          description: Data de início do período (ISO 8601). Por defeito, 30 dias antes de `fim`.
+          schema:
+            type: string
+            format: date
+        - name: fim
+          in: query
+          description: Data de fim do período (ISO 8601). Por defeito, hoje.
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Métricas da loja calculadas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardLoja'
+        '401':
+          description: Não autenticado
+
+  /api/monitor:
+    get:
+      tags: [Estado de Consolidação]
+      summary: Estado de consolidação da rede
+      description: |
+        Estado de consolidação da rede para a data indicada: quantas lojas já enviaram
+        o fecho de dia e quais ainda estão pendentes. Corresponde ao caso de uso
+        "Consultar Estado de Consolidação da Rede".
+      parameters:
+        - name: data
+          in: query
+          description: Data a consultar (ISO 8601). Por defeito, hoje.
+          schema:
+            type: string
+            format: date
+            example: "2026-05-12"
+      responses:
+        '200':
+          description: Estado de consolidação da rede
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonitorRede'
+        '401':
+          description: Não autenticado
+
+  /api/remessas:
+    get:
+      tags: [Remessas da Rede]
+      summary: Consultar remessas da rede
+      description: |
+        Consulta de remessas e pagamentos a fornecedores em toda a rede,
+        com suporte a filtros por loja e estado de pagamento.
+      parameters:
+        - name: idLoja
+          in: query
+          description: Filtrar por loja (opcional; sem valor devolve todas as lojas)
+          schema:
+            type: string
+            example: L001
+        - name: estadoPagamento
+          in: query
+          description: Filtrar por estado de pagamento
+          schema:
+            type: string
+            enum: [PENDENTE_PAGAMENTO, PAGA]
+            example: PENDENTE_PAGAMENTO
+      responses:
+        '200':
+          description: Lista de remessas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RemessaCentral'
+        '401':
+          description: Não autenticado
+
+  /api/relatorios:
+    get:
+      tags: [Relatórios Analíticos]
+      summary: Gerar relatório analítico
+      description: |
+        Geração de relatório analítico com suporte a filtros por loja, período e
+        categoria de produto. Corresponde ao caso de uso "Consultar Dashboards
+        e Relatórios Analíticos".
+      parameters:
+        - name: idLoja
+          in: query
+          description: Filtrar por loja (opcional; sem valor agrega todas as lojas)
+          schema:
+            type: string
+            example: L001
+        - name: categoria
+          in: query
+          description: Filtrar por categoria de produto (opcional)
+          schema:
+            type: string
+            example: Bebidas
+        - name: inicio
+          in: query
+          description: Data de início do período (ISO 8601)
+          schema:
+            type: string
+            format: date
+            example: "2026-04-01"
+        - name: fim
+          in: query
+          description: Data de fim do período (ISO 8601)
+          schema:
+            type: string
+            format: date
+            example: "2026-05-12"
+      responses:
+        '200':
+          description: Linhas do relatório gerado
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RelatorioLinha'
+        '401':
+          description: Não autenticado
+
+  /api/lojas:
+    get:
+      tags: [Lojas]
+      summary: Listar lojas da rede
+      description: Lista todas as lojas registadas na rede.
+      responses:
+        '200':
+          description: Lista de lojas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Loja'
+        '401':
+          description: Não autenticado
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: "Token obtido via POST /api/auth/login. Incluir como `Authorization: Bearer <token>`."
+
+  schemas:
+
+    # ── Autenticação ──────────────────────────────────────────────────────────
+
+    LoginRequest:
+      type: object
+      required: [nomeUtilizador, palavraPasse]
+      properties:
+        nomeUtilizador:
+          type: string
+          example: ceo
+        palavraPasse:
+          type: string
+          format: password
+          example: senha123
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: Bearer token a incluir no header Authorization
+          example: a7f3c91d-4e2b-4f8a-9c1e-3b5d7f2a6e4c
+        nomeUtilizador:
+          type: string
+          example: ceo
+
+    ErroResponse:
+      type: object
+      properties:
+        erro:
+          type: string
+          example: Operação não autorizada
+
+    # ── Dashboard ─────────────────────────────────────────────────────────────
+
+    DashboardGlobal:
+      type: object
+      properties:
+        vendasTotais:
+          type: number
+          format: double
+          example: 125430.50
+        totalTransacoes:
+          type: integer
+          example: 4820
+        ticketMedio:
+          type: number
+          format: double
+          example: 26.02
+        totalDevolucoes:
+          type: number
+          format: double
+          example: 2340.00
+        percentagemNumerario:
+          type: number
+          format: double
+          description: Percentagem de vendas pagas em numerário (0–100)
+          example: 38.5
+        percentagemMultibanco:
+          type: number
+          format: double
+          description: Percentagem de vendas pagas por multibanco/MB Way (0–100)
+          example: 61.5
+        totalDespesas:
+          type: number
+          format: double
+          example: 48200.00
+        lucroLiquido:
+          type: number
+          format: double
+          example: 74890.50
+        lojasEsperadas:
+          type: integer
+          example: 5
+        lojasSincronizadas:
+          type: integer
+          example: 5
+        vendasPorCategoria:
+          type: object
+          additionalProperties:
+            type: number
+            format: double
+          example:
+            Bebidas: 32500.00
+            Snacks: 28100.00
+            Higiene: 14800.00
+        vendasMensaisLoja1:
+          type: object
+          additionalProperties:
+            type: number
+            format: double
+          example:
+            "2026-01": 18200.00
+            "2026-02": 17450.00
+        vendasMensaisLoja2:
+          type: object
+          additionalProperties:
+            type: number
+            format: double
+          example:
+            "2026-01": 15600.00
+            "2026-02": 16100.00
+        decomposicaoPorLoja:
+          type: array
+          items:
+            $ref: '#/components/schemas/DecomposicaoLoja'
+
+    DashboardLoja:
+      type: object
+      properties:
+        idLoja:
+          type: string
+          example: L001
+        nomeLoja:
+          type: string
+          example: Trasmum — Braga
+        vendasTotais:
+          type: number
+          format: double
+          example: 31250.75
+        totalTransacoes:
+          type: integer
+          example: 1205
+        totalDevolucoes:
+          type: number
+          format: double
+          example: 580.00
+        ticketMedio:
+          type: number
+          format: double
+          example: 25.93
+        totalDespesas:
+          type: number
+          format: double
+          example: 12400.00
+        lucroLiquido:
+          type: number
+          format: double
+          example: 18270.75
+        vendasMensais:
+          type: object
+          additionalProperties:
+            type: number
+            format: double
+          example:
+            "2026-04": 15800.00
+            "2026-05": 15450.75
+        vendasPorCategoria:
+          type: object
+          additionalProperties:
+            type: number
+            format: double
+          example:
+            Bebidas: 9800.00
+            Snacks: 7200.00
+        historicoFechos:
+          type: array
+          description: Histórico de pacotes de fecho de dia recebidos desta loja
+          items:
+            type: object
+        logsAuditoria:
+          type: array
+          description: Logs de auditoria associados a esta loja
+          items:
+            type: object
+
+    DecomposicaoLoja:
+      type: object
+      properties:
+        idLoja:
+          type: string
+          example: L001
+        nomeLoja:
+          type: string
+          example: Trasmum — Braga
+        vendas:
+          type: number
+          format: double
+          example: 31250.75
+        transacoes:
+          type: integer
+          example: 1205
+        devolucoes:
+          type: number
+          format: double
+          example: 580.00
+        despesas:
+          type: number
+          format: double
+          example: 12400.00
+        lucro:
+          type: number
+          format: double
+          example: 18270.75
+
+    # ── Monitor / Consolidação ────────────────────────────────────────────────
+
+    MonitorRede:
+      type: object
+      properties:
+        lojasEsperadas:
+          type: integer
+          example: 5
+        lojasRecebidas:
+          type: integer
+          example: 3
+        lojasPendentes:
+          type: integer
+          example: 2
+        estadoPorLoja:
+          type: array
+          items:
+            $ref: '#/components/schemas/EstadoLoja'
+
+    EstadoLoja:
+      type: object
+      properties:
+        idLoja:
+          type: string
+          example: L001
+        nomeLoja:
+          type: string
+          example: Trasmum — Braga
+        estado:
+          type: string
+          enum: [RECEBIDO, PENDENTE]
+          example: RECEBIDO
+        horaRecepcao:
+          type: string
+          description: Timestamp ISO 8601 de receção do fecho; null se ainda pendente
+          nullable: true
+          example: "2026-05-12T23:45:00"
+
+    # ── Remessas ──────────────────────────────────────────────────────────────
+
+    RemessaCentral:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1042
+        idLoja:
+          type: string
+          example: L001
+        nomeLoja:
+          type: string
+          example: Trasmum — Braga
+        nomeFornecedor:
+          type: string
+          example: Distribuidora Norte Lda.
+        dataRecepcao:
+          type: string
+          format: date
+          example: "2026-05-10"
+        valorTotalGuia:
+          type: number
+          format: double
+          example: 4250.00
+        estadoPagamento:
+          type: string
+          enum: [PENDENTE_PAGAMENTO, PAGA]
+          example: PENDENTE_PAGAMENTO
+
+    # ── Relatórios ────────────────────────────────────────────────────────────
+
+    RelatorioLinha:
+      type: object
+      properties:
+        data:
+          type: string
+          format: date
+          example: "2026-05-10"
+        idLoja:
+          type: string
+          example: L001
+        nomeLoja:
+          type: string
+          example: Trasmum — Braga
+        categoria:
+          type: string
+          example: Bebidas
+        vendas:
+          type: number
+          format: double
+          example: 1250.75
+
+    # ── Lojas ─────────────────────────────────────────────────────────────────
+
+    Loja:
+      type: object
+      properties:
+        idLoja:
+          type: string
+          example: L001
+        nomeLoja:
+          type: string
+          example: Trasmum — Braga
+
+    # ── Pacote de Fecho (ingestão) ────────────────────────────────────────────
+
+    PacoteFecho:
+      type: object
+      required: [idLoja, nomeLoja, dataFecho, hashIntegridade]
+      properties:
+        idLoja:
+          type: string
+          example: L001
+        nomeLoja:
+          type: string
+          example: Trasmum — Braga
+        dataFecho:
+          type: string
+          format: date
+          example: "2026-05-12"
+        hashIntegridade:
+          type: string
+          description: Hash SHA-256 do payload serializado para verificação de integridade
+          example: "3a7bd3e2360a3d29aa0576b27bd6c67f..."
+        vendas:
+          type: array
+          items:
+            $ref: '#/components/schemas/VendaFecho'
+        devolucoes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DevolucaoFecho'
+        remessas:
+          type: array
+          items:
+            $ref: '#/components/schemas/RemessaFecho'
+        pagamentos:
+          type: array
+          items:
+            $ref: '#/components/schemas/PagamentoFecho'
+        sessoesCaixa:
+          type: array
+          items:
+            $ref: '#/components/schemas/SessaoCaixaFecho'
+        logs:
+          type: array
+          items:
+            $ref: '#/components/schemas/LogAuditoriaFecho'
+
+    VendaFecho:
+      type: object
+      properties:
+        idOriginalLoja:
+          type: integer
+          description: ID da venda no sistema local da loja
+          example: 4201
+        dataHora:
+          type: string
+          format: date-time
+          example: "2026-05-12T14:32:00"
+        totalFaturado:
+          type: number
+          format: double
+          example: 18.45
+        metodoPagamento:
+          type: string
+          enum: [NUMERARIO, MULTIBANCO, MB_WAY]
+          example: MULTIBANCO
+        linhas:
+          type: array
+          items:
+            $ref: '#/components/schemas/LinhaVendaFecho'
+
+    LinhaVendaFecho:
+      type: object
+      properties:
+        idOriginalLoja:
+          type: integer
+          example: 8501
+        nomeProduto:
+          type: string
+          example: Água 1,5L
+        categoria:
+          type: string
+          example: Bebidas
+        quantidade:
+          type: integer
+          example: 2
+        precoUnitario:
+          type: number
+          format: double
+          example: 0.89
+        subtotal:
+          type: number
+          format: double
+          example: 1.78
+
+    DevolucaoFecho:
+      type: object
+      properties:
+        idOriginalLoja:
+          type: integer
+          example: 301
+        idOriginalVenda:
+          type: integer
+          example: 4180
+        dataHora:
+          type: string
+          format: date-time
+          example: "2026-05-12T16:10:00"
+        quantidade:
+          type: integer
+          example: 1
+        valorRestituido:
+          type: number
+          format: double
+          example: 0.89
+
+    RemessaFecho:
+      type: object
+      properties:
+        idOriginalLoja:
+          type: integer
+          example: 55
+        nomeFornecedor:
+          type: string
+          example: Distribuidora Norte Lda.
+        dataRecepcao:
+          type: string
+          format: date
+          example: "2026-05-12"
+        valorTotalGuia:
+          type: number
+          format: double
+          example: 3200.00
+        estadoPagamento:
+          type: string
+          enum: [PENDENTE_PAGAMENTO, PAGA]
+          example: PENDENTE_PAGAMENTO
+
+    PagamentoFecho:
+      type: object
+      properties:
+        idOriginalLoja:
+          type: integer
+          example: 201
+        idOriginalRemessa:
+          type: integer
+          example: 50
+        valor:
+          type: number
+          format: double
+          example: 3200.00
+        dataPagamento:
+          type: string
+          format: date
+          example: "2026-05-12"
+        tipoPagamento:
+          type: string
+          example: TRANSFERENCIA
+
+    SessaoCaixaFecho:
+      type: object
+      properties:
+        idOriginalLoja:
+          type: integer
+          example: 701
+        idUtilizador:
+          type: integer
+          example: 12
+        saldoFinal:
+          type: number
+          format: double
+          example: 452.30
+        dataAbertura:
+          type: string
+          format: date-time
+          example: "2026-05-12T08:00:00"
+        dataEncerramento:
+          type: string
+          format: date-time
+          example: "2026-05-12T23:55:00"
+
+    LogAuditoriaFecho:
+      type: object
+      properties:
+        idOriginalLoja:
+          type: integer
+          example: 9001
+        acao:
+          type: string
+          description: Tipo de ação registada (ex. LOGIN, VENDA, DEVOLUCAO)
+          example: VENDA
+        dataHora:
+          type: string
+          format: date-time
+          example: "2026-05-12T14:32:00"
+        nomeUtilizador:
+          type: string
+          example: funcionario1
+        descricao:
+          type: string
+          example: Venda #4201 registada pelo funcionário
