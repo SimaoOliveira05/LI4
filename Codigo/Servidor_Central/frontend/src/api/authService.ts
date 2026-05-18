@@ -20,8 +20,16 @@ export async function logout(): Promise<void> {
   localStorage.removeItem(USER_KEY);
 }
 
+export async function criarCEO(nomeUtilizador: string, palavraPasse: string): Promise<void> {
+  await http.post('/api/ceo', { nomeUtilizador, palavraPasse });
+}
+
 export function isAuthenticated(): boolean {
   return !!getToken();
+}
+
+export function isBootstrap(): boolean {
+  return utilizadorAtual() === 'admin';
 }
 
 export function utilizadorAtual(): string | null {

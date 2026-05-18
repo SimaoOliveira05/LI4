@@ -5,7 +5,7 @@ import { computed } from 'vue'
 import { isAuthenticated } from '@/api/authService'
 
 const route = useRoute()
-const mostrarSidebar = computed(() => !route.meta.publica && isAuthenticated())
+const mostrarSidebar = computed(() => !route.meta.publica && !route.meta.soBootstrap && isAuthenticated())
 </script>
 
 <template>

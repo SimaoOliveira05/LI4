@@ -25,6 +25,8 @@ security:
 tags:
   - name: Autenticação
     description: Ciclo de vida da sessão da CEO no Servidor Central
+  - name: Gestão de Contas CEO
+    description: Criação de contas CEO (bootstrapping ADR-06)
   - name: Sincronização
     description: Receção de pacotes de fecho de dia enviados pelo Software de Loja
   - name: Dashboard e Métricas
@@ -95,6 +97,46 @@ paths:
         '401':
           description: Token inválido ou sessão já expirada
 
+  /api/ceo:
+    post:
+      tags: [Gestão de Contas CEO]
+      summary: Criar conta CEO
+      description: |
+        Cria uma nova conta CEO autenticada. Requer um token Bearer válido — tipicamente
+        o da conta de bootstrap `admin/admin123` criada automaticamente na instalação
+        (ADR-06). Após o primeiro login bem-sucedido com a nova conta, a conta de
+        bootstrap é automaticamente eliminada.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CriarCEORequest'
+            example:
+              nomeUtilizador: catia
+              palavraPasse: senha_segura
+      responses:
+        '201':
+          description: Conta criada com sucesso
+        '400':
+          description: Dados inválidos (campos em branco)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroResponse'
+              example:
+                erro: Nome de utilizador obrigatório
+        '409':
+          description: Já existe uma conta CEO registada no sistema
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroResponse'
+              example:
+                erro: Já existe uma conta CEO registada no sistema. Não é possível criar outra.
+        '401':
+          description: Não autenticado
+
   /fecho:
     post:
       tags: [Sincronização]
@@ -103,11 +145,21 @@ paths:
         Receção, validação e persistência do pacote de fecho de dia enviado pelo
         Software de Loja (corresponde aos fluxos DS3 e DS4, requisitos RF15 e RF16).
 
+        > **⚠ Endpoint não testável directamente pelo Swagger UI.**
+        > Este endpoint é invocado exclusivamente pelo Software de Loja. O campo
+        > `hashIntegridade` depende da serialização exacta do pacote e não pode
+        > ser calculado manualmente nesta interface.
+
+        **Algoritmo de `hashIntegridade`:**
+        1. Construir o objecto `PacoteFechoDTO` completo.
+        2. Definir `hashIntegridade = null`.
+        3. Serializar para JSON com Gson (sem o campo `hashIntegridade`).
+        4. Calcular o SHA-256 da string JSON em UTF-8.
+        5. Codificar o resultado em hexadecimal minúsculo (64 caracteres).
+        6. Incluir esse valor como `hashIntegridade` no pedido.
+
         A idempotência é garantida através da chave composta `idLoja` + `dataFecho` —
         um reenvio do mesmo pacote não produz duplicação de registos.
-
-        O campo `hashIntegridade` contém o SHA-256 do payload serializado; o servidor
-        valida a integridade antes de persistir.
       security: []
       requestBody:
         required: true
@@ -369,6 +421,18 @@ components:
   schemas:
 
     # ── Autenticação ──────────────────────────────────────────────────────────
+
+    CriarCEORequest:
+      type: object
+      required: [nomeUtilizador, palavraPasse]
+      properties:
+        nomeUtilizador:
+          type: string
+          example: catia
+        palavraPasse:
+          type: string
+          format: password
+          example: senha_segura
 
     LoginRequest:
       type: object

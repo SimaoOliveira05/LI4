@@ -38,6 +38,7 @@ public class AppContext {
     public final IRelatorioServico relatorioServico;
 
     public final AuthHandler authHandler;
+    public final CEOHandler ceoHandler;
     public final IngestaoHandler ingestaoHandler;
     public final DashboardHandler dashboardHandler;
     public final MonitorHandler monitorHandler;
@@ -72,6 +73,7 @@ public class AppContext {
         this.relatorioServico = new RelatorioServico(vendaRepo);
 
         this.authHandler = new AuthHandler(autenticacaoServico, sessoes);
+        this.ceoHandler = new CEOHandler(autenticacaoServico);
         this.ingestaoHandler = new IngestaoHandler(ingestaoServico);
         this.dashboardHandler = new DashboardHandler(dashboardServico);
         this.monitorHandler = new MonitorHandler(monitorServico);

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { login } from '@/api/authService'
+import { useRouter, useRoute } from 'vue-router'
+import { login, isBootstrap } from '@/api/authService'
 
 const MAX_TENTATIVAS = 5
 const DURACAO_BLOQUEIO_MS = 15 * 60 * 1000
@@ -10,6 +10,8 @@ const CHAVE_TENTATIVAS = 'trasmum.login.tentativas'
 const CHAVE_DESBLOQUEIO = 'trasmum.login.desbloqueio'
 
 const router = useRouter()
+const route = useRoute()
+const contaCriada = computed(() => route.query.setup === 'ok')
 const nomeUtilizador = ref('')
 const palavraPasse = ref('')
 const erro = ref<string | null>(null)
@@ -73,8 +75,12 @@ async function submeter() {
     await login(nomeUtilizador.value, palavraPasse.value)
     localStorage.removeItem(CHAVE_TENTATIVAS)
     localStorage.removeItem(CHAVE_DESBLOQUEIO)
-    const redirect = (router.currentRoute.value.query.redirect as string) || '/'
-    router.replace(redirect)
+    if (isBootstrap()) {
+      window.location.replace('/setup')
+    } else {
+      const redirect = (router.currentRoute.value.query.redirect as string) || '/'
+      router.replace(redirect)
+    }
   } catch (e) {
     const novasTentativas = tentativasFalhadas() + 1
     localStorage.setItem(CHAVE_TENTATIVAS, String(novasTentativas))
@@ -98,6 +104,10 @@ async function submeter() {
       <div class="mb-6">
         <h1 class="font-black text-2xl tracking-tighter text-[#0f172a]">TrasmUM</h1>
         <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Analítica Central</p>
+      </div>
+
+      <div v-if="contaCriada" class="mb-5 rounded-lg bg-[#f0fdf4] border border-[#bbf7d0] p-3">
+        <p class="text-xs text-[#166534] font-semibold">Conta criada com sucesso. Pode agora iniciar sessão.</p>
       </div>
 
       <form @submit.prevent="submeter" class="space-y-4">

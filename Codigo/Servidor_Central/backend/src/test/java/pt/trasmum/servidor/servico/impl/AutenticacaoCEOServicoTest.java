@@ -4,10 +4,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mindrot.jbcrypt.BCrypt;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import pt.trasmum.servidor.dominio.CEO;
 import pt.trasmum.servidor.dominio.ContaBloqueadaException;
+import pt.trasmum.servidor.dominio.ContaCEOJaExisteException;
 import pt.trasmum.servidor.dominio.CredenciaisInvalidasException;
 import pt.trasmum.servidor.repositorio.interfaces.CEORepositorio;
 
@@ -130,6 +132,38 @@ class AutenticacaoCEOServicoTest {
         servico.autenticar("ceoReal", "pass");
 
         verify(repo, never()).apagarPorNomeUtilizador(any());
+    }
+
+    // ── criar ───────────────────────────────────────────────────────
+
+    @Test
+    void criar_nomeUtilizadorEmBranco_lancaIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class,
+                () -> servico.criar("", "senha123"));
+        verify(repo, never()).criar(any());
+    }
+
+    @Test
+    void criar_contaDefinitivaJaExiste_lancaContaCEOJaExisteException() {
+        when(repo.existeContaDefinitiva()).thenReturn(true);
+        assertThrows(ContaCEOJaExisteException.class,
+                () -> servico.criar("catia", "senha123"));
+        verify(repo, never()).criar(any());
+    }
+
+    @Test
+    void criar_caminhoFeliz_persisteCeoComHashBcrypt() {
+        when(repo.existeContaDefinitiva()).thenReturn(false);
+
+        servico.criar("catia", "senha123");
+
+        ArgumentCaptor<CEO> captor = ArgumentCaptor.forClass(CEO.class);
+        verify(repo).criar(captor.capture());
+        CEO persistido = captor.getValue();
+        assertEquals("catia", persistido.getNomeUtilizador());
+        assertTrue(BCrypt.checkpw("senha123", persistido.getHashPalavraPasse()));
+        assertEquals(0, persistido.getTentativasLogin());
+        assertNull(persistido.getBloqueadoAte());
     }
 
     // ── estaBloqueado ───────────────────────────────────────────────

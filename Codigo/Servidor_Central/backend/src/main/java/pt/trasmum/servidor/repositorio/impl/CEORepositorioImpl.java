@@ -71,6 +71,29 @@ public class CEORepositorioImpl implements CEORepositorio {
     }
 
     @Override
+    public void criar(CEO ceo) {
+        String sql = "INSERT INTO CEO (nomeUtilizador, hashPalavraPasse, tentativasLogin, bloqueadoAte) VALUES (?, ?, 0, NULL)";
+        try (Connection c = db.obter(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, ceo.getNomeUtilizador());
+            ps.setString(2, ceo.getHashPalavraPasse());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao criar CEO: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public boolean existeContaDefinitiva() {
+        String sql = "SELECT COUNT(*) FROM CEO WHERE nomeUtilizador != 'admin'";
+        try (Connection c = db.obter(); PreparedStatement ps = c.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            return rs.next() && rs.getInt(1) > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao verificar conta definitiva: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
     public int contarTodos() {
         try (Connection c = db.obter(); PreparedStatement ps = c.prepareStatement("SELECT COUNT(*) FROM CEO");
              ResultSet rs = ps.executeQuery()) {

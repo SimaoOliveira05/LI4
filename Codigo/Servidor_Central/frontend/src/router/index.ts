@@ -5,12 +5,14 @@ import ShipmentsView from '@/views/ShipmentsView.vue'
 import StoreDashboardView from '@/views/StoreDashboardView.vue'
 import ReportsView from '@/views/ReportsView.vue'
 import LoginView from '@/views/LoginView.vue'
-import { isAuthenticated } from '@/api/authService'
+import SetupView from '@/views/SetupView.vue'
+import { isAuthenticated, isBootstrap } from '@/api/authService'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     { path: '/login', name: 'login', component: LoginView, meta: { publica: true } },
+    { path: '/setup', name: 'setup', component: SetupView, meta: { soBootstrap: true } },
     { path: '/', name: 'dashboard', component: DashboardView },
     { path: '/store-dashboard', name: 'store-dashboard', component: StoreDashboardView },
     { path: '/monitor', name: 'monitor', component: MonitorView },
@@ -21,9 +23,9 @@ const router = createRouter({
 
 router.beforeEach((to) => {
   if (to.meta.publica) return true
-  if (!isAuthenticated()) {
-    return { name: 'login', query: { redirect: to.fullPath } }
-  }
+  if (!isAuthenticated()) return { name: 'login', query: { redirect: to.fullPath } }
+  if (isBootstrap() && !to.meta.soBootstrap) return { name: 'setup' }
+  if (!isBootstrap() && to.meta.soBootstrap) return { name: 'dashboard' }
   return true
 })
 

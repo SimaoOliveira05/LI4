@@ -3,6 +3,7 @@ package pt.trasmum.servidor.servico.impl;
 import org.mindrot.jbcrypt.BCrypt;
 import pt.trasmum.servidor.dominio.CEO;
 import pt.trasmum.servidor.dominio.ContaBloqueadaException;
+import pt.trasmum.servidor.dominio.ContaCEOJaExisteException;
 import pt.trasmum.servidor.dominio.CredenciaisInvalidasException;
 import pt.trasmum.servidor.repositorio.interfaces.CEORepositorio;
 import pt.trasmum.servidor.servico.interfaces.IAutenticacaoCEOServico;
@@ -39,6 +40,17 @@ public class AutenticacaoCEOServico implements IAutenticacaoCEOServico {
         limparBloqueio(ceo);
         apagarBootstrapSeNecessario(ceo);
         return ceo;
+    }
+
+    @Override
+    public void criar(String nomeUtilizador, String palavraPasse) {
+        if (nomeUtilizador == null || nomeUtilizador.isBlank())
+            throw new IllegalArgumentException("Nome de utilizador obrigatório");
+        if (palavraPasse == null || palavraPasse.isBlank())
+            throw new IllegalArgumentException("Palavra-passe obrigatória");
+        if (repo.existeContaDefinitiva())
+            throw new ContaCEOJaExisteException("Já existe uma conta CEO registada no sistema. Não é possível criar outra.");
+        repo.criar(new CEO(nomeUtilizador, BCrypt.hashpw(palavraPasse, BCrypt.gensalt()), 0, null));
     }
 
     @Override

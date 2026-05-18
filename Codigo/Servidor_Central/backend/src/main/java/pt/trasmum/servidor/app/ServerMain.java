@@ -4,6 +4,7 @@ import io.javalin.Javalin;
 import io.javalin.json.JsonMapper;
 import org.jetbrains.annotations.NotNull;
 import pt.trasmum.servidor.dominio.ContaBloqueadaException;
+import pt.trasmum.servidor.dominio.ContaCEOJaExisteException;
 import pt.trasmum.servidor.dominio.CredenciaisInvalidasException;
 import pt.trasmum.servidor.dominio.IntegridadeInvalidaException;
 
@@ -56,6 +57,8 @@ public class ServerMain {
         app.post("/api/auth/login", ctx.authHandler::login);
         app.post("/api/auth/logout", ctx.authHandler::logout);
 
+        app.post("/api/ceo", ctx.ceoHandler::criar);
+
         app.get("/api/dashboard/global", ctx.dashboardHandler::global);
         app.get("/api/dashboard/loja/{idLoja}", ctx.dashboardHandler::loja);
         app.get("/api/monitor", ctx.monitorHandler::estado);
@@ -67,6 +70,8 @@ public class ServerMain {
                 c.status(401).json(Map.of("erro", e.getMessage())));
         app.exception(ContaBloqueadaException.class, (e, c) ->
                 c.status(423).json(Map.of("erro", e.getMessage())));
+        app.exception(ContaCEOJaExisteException.class, (e, c) ->
+                c.status(409).json(Map.of("erro", e.getMessage())));
         app.exception(IntegridadeInvalidaException.class, (e, c) ->
                 c.status(400).json(Map.of("ack", false, "erro", e.getMessage())));
         app.exception(IllegalArgumentException.class, (e, c) ->
