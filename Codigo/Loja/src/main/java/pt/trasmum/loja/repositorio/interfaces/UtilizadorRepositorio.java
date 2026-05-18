@@ -7,6 +7,8 @@ import java.util.List;
 public interface UtilizadorRepositorio {
     Utilizador buscarPorCredenciais(String nomeUtilizador, String palavraPasse);
     Utilizador buscarPorId(int id);
+    /** Procura por nome de utilizador independentemente de estar ativo ou não. */
+    Utilizador buscarPorNome(String nomeUtilizador);
     void guardar(Utilizador utilizador);
     void atualizar(Utilizador utilizador);
     void desativar(int id);

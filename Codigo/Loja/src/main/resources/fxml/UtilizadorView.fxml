@@ -19,7 +19,6 @@
         <columns>
             <TableColumn fx:id="colNome"   text="Nome de utilizador" prefWidth="200"/>
             <TableColumn fx:id="colPerfil" text="Perfil"             prefWidth="130"/>
-            <TableColumn fx:id="colAtivo"  text="Ativo"              prefWidth="80"/>
         </columns>
     </TableView>
 </VBox>

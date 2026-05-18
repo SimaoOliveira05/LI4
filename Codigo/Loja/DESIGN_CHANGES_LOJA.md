@@ -315,3 +315,32 @@ A contagem por denominação na abertura é trabalhosa e proporciona pouco valor
 
 **Impacto no design**: Diagrama de classes de domínio — `SessaoCaixa.fundoInicial` passa de coleção para atributo escalar `double`. Schema — nova coluna `fundoInicial` na tabela `SessaoCaixa`.
 
+
+---
+
+## 2026-05-18 — `UtilizadorRepositorio.buscarPorNome` e regras de desativação
+
+**Área**: Repositório / Serviço (contrato)
+
+**O que mudou**:
+- `UtilizadorRepositorio`: novo método `buscarPorNome(String)` que procura por nome de utilizador **independentemente do estado `ativo`** (os restantes lookups filtravam `ativo = 1`).
+- `UtilizadorServico.desativar`: novas invariantes — não se pode desativar a própria conta, um GESTOR só desativa FUNCIONARIO, e tem de existir sempre ≥1 CEO ativo no sistema.
+- `AppContext.garantirContaAdmin`: passa a só recriar a conta `admin` quando não existe nenhum CEO ativo; se a conta `admin` já existir (desativada) é reativada via `atualizar`, em vez de um INSERT que violava a constraint `UNIQUE(nomeUtilizador)`.
+
+**Porquê**: Eliminar a conta `admin` (desativá-la) provocava `Duplicate entry 'admin'` no arranque, porque a verificação de existência só olhava para utilizadores ativos. As regras de desativação fecham brechas de privilégio (GESTOR a desativar CEO) e garantem que o sistema nunca fica sem CEO.
+
+**Impacto no design**: Contrato de `UtilizadorRepositorio` ganha `buscarPorNome`; contrato de `UtilizadorServico.desativar` ganha pré-condições adicionais.
+
+---
+
+## 2026-05-18 — Devolução em numerário desconta a caixa
+
+**Área**: Serviço (contrato) / Composição
+
+**O que mudou**:
+- `DevolucaoServico` passou a depender de `SessaoCaixaRepositorio` (novo parâmetro de construtor; injetado em `AppContext`).
+- `DevolucaoServico.processar`: se a venda original foi paga em numerário, exige sessão de caixa aberta (lança `SessaoCaixaNaoEncontradaException` caso contrário) e, após persistir a devolução, subtrai `valorRestituido` ao `saldoAtual` da sessão (espelho de `VendaServico.finalizarVenda`). Devoluções de vendas em MULTIBANCO não tocam na caixa.
+
+**Porquê**: O dinheiro restituído ao cliente saía fisicamente da caixa mas o saldo da sessão não refletia isso, ficando o fecho de dia incoerente.
+
+**Impacto no design**: Contrato/colaborações de `DevolucaoServico` — nova dependência `SessaoCaixaRepositorio` e nova pré-condição (sessão de caixa aberta para devoluções em numerário). Modelo de domínio inalterado.

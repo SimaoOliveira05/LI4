@@ -1,6 +1,5 @@
 package pt.trasmum.loja.apresentacao.controllers;
 
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -19,7 +18,6 @@ public class UtilizadorController {
     @FXML private TableView<Utilizador> tblUtilizadores;
     @FXML private TableColumn<Utilizador, String>  colNome;
     @FXML private TableColumn<Utilizador, String>  colPerfil;
-    @FXML private TableColumn<Utilizador, Boolean> colAtivo;
 
     private final ObservableList<Utilizador> utilizadores = FXCollections.observableArrayList();
 
@@ -27,7 +25,6 @@ public class UtilizadorController {
     public void initialize() {
         colNome.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getNomeUtilizador()));
         colPerfil.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getPerfil().name()));
-        colAtivo.setCellValueFactory(c -> new SimpleBooleanProperty(c.getValue().isAtivo()).asObject());
         tblUtilizadores.setItems(utilizadores);
         carregar();
     }

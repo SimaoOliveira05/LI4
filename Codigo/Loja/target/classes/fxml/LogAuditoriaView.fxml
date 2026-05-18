@@ -24,9 +24,9 @@
             <columns>
                 <TableColumn fx:id="colDataHora"    text="Data/Hora"      prefWidth="160"/>
                 <TableColumn fx:id="colTipo"        text="Tipo"           prefWidth="180"/>
-                <TableColumn fx:id="colEntidade"    text="Entidade"       prefWidth="140"/>
-                <TableColumn fx:id="colUtilizador"  text="Utilizador"     prefWidth="160"/>
-                <TableColumn fx:id="colEstado"      text="Sincronização"  prefWidth="140"/>
+                <TableColumn fx:id="colEntidade"    text="Ocorrência"     prefWidth="460"/>
+                <TableColumn fx:id="colUtilizador"  text="Utilizador"     prefWidth="130"/>
+                <TableColumn fx:id="colEstado"      text="Sincronização"  prefWidth="115"/>
             </columns>
         </TableView>
     </center>

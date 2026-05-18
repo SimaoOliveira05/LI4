@@ -6,19 +6,19 @@
            styleClass="view-root">
     <TabPane tabClosingPolicy="UNAVAILABLE">
         <tabs>
-            <Tab text="Utilizadores">
+            <Tab text="Configuração e Utilizadores">
                 <content>
-                    <fx:include source="UtilizadorView.fxml"/>
+                    <SplitPane dividerPositions="0.45">
+                        <items>
+                            <fx:include source="UtilizadorView.fxml"/>
+                            <fx:include source="LojaView.fxml"/>
+                        </items>
+                    </SplitPane>
                 </content>
             </Tab>
             <Tab text="Auditoria">
                 <content>
                     <fx:include source="LogAuditoriaView.fxml"/>
-                </content>
-            </Tab>
-            <Tab text="Loja">
-                <content>
-                    <fx:include source="LojaView.fxml"/>
                 </content>
             </Tab>
         </tabs>

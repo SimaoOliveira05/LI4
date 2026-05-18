@@ -50,6 +50,27 @@ public class UtilizadorServico implements IUtilizadorServico {
         Utilizador alvo = utilizadorRepo.buscarPorId(idAlvo);
         if (alvo == null) throw new IllegalArgumentException("Utilizador não encontrado: " + idAlvo);
 
+        // Não pode desativar a própria conta
+        if (gestor.getId() == idAlvo) {
+            throw new IllegalStateException("Não é possível desativar a sua própria conta.");
+        }
+
+        // GESTOR só pode desativar FUNCIONARIO; CEO/GESTOR só por um CEO
+        if (gestor.getPerfil() == PerfilUtilizador.GESTOR && alvo.getPerfil() != PerfilUtilizador.FUNCIONARIO) {
+            throw new pt.trasmum.loja.dominio.exceptions.ExcecoesSeguranca.AcessoNegadoException(
+                    "GESTOR só pode desativar utilizadores com perfil FUNCIONARIO.");
+        }
+
+        // Tem de existir sempre pelo menos um CEO ativo no sistema
+        if (alvo.getPerfil() == PerfilUtilizador.CEO) {
+            long ceosAtivos = utilizadorRepo.listarAtivos().stream()
+                    .filter(u -> u.getPerfil() == PerfilUtilizador.CEO)
+                    .count();
+            if (ceosAtivos <= 1) {
+                throw new IllegalStateException("Não é possível desativar o único CEO ativo no sistema.");
+            }
+        }
+
         // Não pode desativar o único GESTOR ativo
         if (alvo.getPerfil() == PerfilUtilizador.GESTOR) {
             long gestoresAtivos = utilizadorRepo.listarAtivos().stream()

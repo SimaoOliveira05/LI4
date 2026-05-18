@@ -9,12 +9,15 @@ import pt.trasmum.loja.dominio.exceptions.ExcecoesVenda.ArtigoNaoConstaNaFaturaE
 import pt.trasmum.loja.dominio.exceptions.ExcecoesVenda.DevolucaoJaProcessadaException;
 import pt.trasmum.loja.dominio.exceptions.ExcecoesVenda.FaturaNaoEncontradaException;
 import pt.trasmum.loja.dominio.exceptions.ExcecoesVenda.QuantidadeDevolucaoExcedidaException;
+import pt.trasmum.loja.dominio.exceptions.ExcecoesCaixa.SessaoCaixaNaoEncontradaException;
+import pt.trasmum.loja.dominio.tesouraria.SessaoCaixa;
 import pt.trasmum.loja.dominio.vendas.Devolucao;
 import pt.trasmum.loja.dominio.vendas.LinhaVenda;
 import pt.trasmum.loja.dominio.vendas.Venda;
 import pt.trasmum.loja.repositorio.interfaces.DevolucaoRepositorio;
 import pt.trasmum.loja.repositorio.interfaces.LoteRepositorio;
 import pt.trasmum.loja.repositorio.interfaces.ProdutoRepositorio;
+import pt.trasmum.loja.repositorio.interfaces.SessaoCaixaRepositorio;
 import pt.trasmum.loja.repositorio.interfaces.VendaRepositorio;
 import pt.trasmum.loja.servico.interfaces.IAuditoriaServico;
 import pt.trasmum.loja.servico.interfaces.IDevolucaoServico;
@@ -28,16 +31,19 @@ public class DevolucaoServico implements IDevolucaoServico {
     private final DevolucaoRepositorio devolucaoRepo;
     private final LoteRepositorio loteRepo;
     private final ProdutoRepositorio produtoRepo;
+    private final SessaoCaixaRepositorio sessaoCaixaRepo;
     private final IAuditoriaServico auditoriaServico;
     private final ConfiguracaoTerminal configuracao;
 
     public DevolucaoServico(VendaRepositorio vendaRepo, DevolucaoRepositorio devolucaoRepo,
                              LoteRepositorio loteRepo, ProdutoRepositorio produtoRepo,
+                             SessaoCaixaRepositorio sessaoCaixaRepo,
                              IAuditoriaServico auditoriaServico, ConfiguracaoTerminal configuracao) {
         this.vendaRepo = vendaRepo;
         this.devolucaoRepo = devolucaoRepo;
         this.loteRepo = loteRepo;
         this.produtoRepo = produtoRepo;
+        this.sessaoCaixaRepo = sessaoCaixaRepo;
         this.auditoriaServico = auditoriaServico;
         this.configuracao = configuracao;
     }
@@ -65,7 +71,7 @@ public class DevolucaoServico implements IDevolucaoServico {
         int quantidadeVendida = quantidadeVendidaNaFatura(venda.getLinhas(), produto.getId());
         List<Devolucao> devolucoesPrevias = devolucaoRepo.buscarPorFatura(numeroFatura);
         int jaDevolvido = devolucoesPrevias.stream()
-                .filter(d -> d.getIdLote() == linhaFatura.getIdLote())
+                .filter(d -> lotesPertencemAoProduto(d.getIdLote(), produto.getId()))
                 .mapToInt(Devolucao::getQuantidade)
                 .sum();
 
@@ -78,7 +84,19 @@ public class DevolucaoServico implements IDevolucaoServico {
                     "Quantidade a devolver (" + quantidade + ") excede o disponível (" + disponivel + ").");
         }
 
-        // Guarda 4: repor stock se lote ainda válido
+        // Guarda 4: se a venda foi em numerário, tem de haver sessão de caixa
+        // aberta para devolver o dinheiro (espelha o que a venda exige).
+        boolean restituicaoEmDinheiro = venda.getMetodoPagamento() == Venda.MetodoPagamento.NUMERARIO;
+        SessaoCaixa sessao = null;
+        if (restituicaoEmDinheiro) {
+            sessao = sessaoCaixaRepo.buscarSessaoAtiva(utilizador.getId());
+            if (sessao == null) {
+                throw new SessaoCaixaNaoEncontradaException(
+                        "Abra uma sessão de caixa antes de processar uma devolução em numerário.");
+            }
+        }
+
+        // Guarda 5: repor stock se lote ainda válido
         List<Lote> lotesFEFO = loteRepo.buscarLotesFEFO(produto.getId());
         Lote loteOriginal = lotesFEFO.stream()
                 .filter(l -> l.getId() == linhaFatura.getIdLote())
@@ -103,6 +121,13 @@ public class DevolucaoServico implements IDevolucaoServico {
                 dataValidadeEmbalagem,
                 valorRestituido);
         devolucaoRepo.guardar(devolucao);
+
+        // Retira o valor restituído da caixa (só devoluções de vendas em numerário)
+        if (restituicaoEmDinheiro) {
+            sessao.setSaldoAtual(sessao.getSaldoAtual() - valorRestituido);
+            sessaoCaixaRepo.atualizar(sessao);
+        }
+
         auditoriaServico.registar(utilizador, TipoAcao.DEVOLUCAO, "Devolucao", devolucao.getId(),
                 String.format("Devolveu %d unidade(s) da fatura #%s (%.2f €)", quantidade, numeroFatura, valorRestituido));
         return devolucao;

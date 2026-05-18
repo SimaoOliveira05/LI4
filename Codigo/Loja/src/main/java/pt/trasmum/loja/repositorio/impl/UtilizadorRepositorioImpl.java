@@ -51,6 +51,20 @@ public class UtilizadorRepositorioImpl implements UtilizadorRepositorio {
     }
 
     @Override
+    public Utilizador buscarPorNome(String nomeUtilizador) {
+        String sql = "SELECT * FROM Utilizador WHERE nomeUtilizador = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, nomeUtilizador);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return mapearUtilizador(rs);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao buscar utilizador por nome", e);
+        }
+        return null;
+    }
+
+    @Override
     public void guardar(Utilizador utilizador) {
         String sql = "INSERT INTO Utilizador (nomeUtilizador, hashPalavraPasse, perfil, ativo, emSessao) VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {

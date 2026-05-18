@@ -104,7 +104,7 @@ public class AppContext {
         this.caixaServico        = new CaixaServico(sessaoCaixaRepo, auditoriaServico);
         this.catalogoServico     = new CatalogoServico(produtoRepo, loteRepo, autorizacaoServico, auditoriaServico);
         this.vendaServico        = new VendaServico(vendaRepo, produtoRepo, loteRepo, sessaoCaixaRepo, auditoriaServico, configuracao);
-        this.devolucaoServico    = new DevolucaoServico(vendaRepo, devolucaoRepo, loteRepo, produtoRepo, auditoriaServico, configuracao);
+        this.devolucaoServico    = new DevolucaoServico(vendaRepo, devolucaoRepo, loteRepo, produtoRepo, sessaoCaixaRepo, auditoriaServico, configuracao);
         this.fornecedorServico   = new FornecedorServico(fornecedorRepo, fornecedorProdutoRepo, produtoRepo, autorizacaoServico, auditoriaServico);
         this.remessaServico      = new RemessaServico(remessaRepo, pedidoRemessaRepo, pagamentoRepo, produtoRepo, fornecedorProdutoRepo, autorizacaoServico, auditoriaServico, configuracao);
         this.pagamentoServico    = new PagamentoServico(pagamentoRepo, autorizacaoServico);
@@ -152,12 +152,23 @@ public class AppContext {
     }
 
     private void garantirContaAdmin() {
-        boolean adminExiste = utilizadorRepo.listarAtivos().stream()
-                .anyMatch(u -> "admin".equals(u.getNomeUtilizador()));
-        if (!adminExiste) {
+        // Só é preciso a conta de arranque se não existir nenhum CEO ativo no sistema.
+        boolean existeCeoAtivo = utilizadorRepo.listarAtivos().stream()
+                .anyMatch(u -> u.getPerfil() == PerfilUtilizador.CEO);
+        if (existeCeoAtivo) {
+            return;
+        }
+
+        Utilizador admin = utilizadorRepo.buscarPorNome("admin");
+        if (admin == null) {
             String hash = BCrypt.hashpw("admin123", BCrypt.gensalt());
-            Utilizador admin = new Utilizador("admin", hash, PerfilUtilizador.CEO);
-            utilizadorRepo.guardar(admin);
+            utilizadorRepo.guardar(new Utilizador("admin", hash, PerfilUtilizador.CEO));
+        } else {
+            // Conta já existe (provavelmente desativada): reativa-a como CEO
+            // em vez de tentar inserir um nome duplicado.
+            admin.setAtivo(true);
+            admin.setPerfil(PerfilUtilizador.CEO);
+            utilizadorRepo.atualizar(admin);
         }
 
     }

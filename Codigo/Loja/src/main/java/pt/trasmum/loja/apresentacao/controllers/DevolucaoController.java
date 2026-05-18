@@ -19,6 +19,9 @@ import pt.trasmum.loja.dominio.vendas.LinhaVenda;
 import pt.trasmum.loja.dominio.vendas.Venda;
 
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class DevolucaoController {
 
@@ -75,24 +78,50 @@ public class DevolucaoController {
     public void onPesquisarFatura() {
         String num = txtNumeroFatura.getText().trim();
         if (num.isBlank()) { mostrarErro("Insira o número de fatura."); return; }
+        carregarFatura(num);
+        lblResultadoDevolucao.setText("");
+    }
 
+    /**
+     * Carrega/recarrega a fatura, agregando as linhas por produto e mostrando
+     * apenas a quantidade ainda devolvível (vendida − já devolvida).
+     */
+    private void carregarFatura(String num) {
         Venda venda = AppContext.getInstance().vendaServico.buscarPorNumeroFatura(num);
         if (venda == null || venda.getFatura() == null) {
             mostrarErro("Fatura não encontrada: " + num);
             esconderSecoesDevolucao();
             return;
         }
-
         numFaturaAtual = num;
-        ObservableList<LinhaFaturaExibicao> linhas = FXCollections.observableArrayList();
+
+        // Quantidade já devolvida, por produto
+        Map<Integer, Integer> devolvidoPorProduto = new HashMap<>();
+        for (Devolucao dv : AppContext.getInstance().devolucaoRepo.buscarPorFatura(num)) {
+            Lote lote = AppContext.getInstance().loteRepo.buscarPorId(dv.getIdLote());
+            if (lote == null) continue;
+            devolvidoPorProduto.merge(lote.getIdProduto(), dv.getQuantidade(), Integer::sum);
+        }
+
+        // Agregação das linhas da fatura por produto
+        Map<Integer, LinhaFaturaExibicao> agregadas = new LinkedHashMap<>();
         for (LinhaVenda lv : venda.getLinhas()) {
             Lote lote = AppContext.getInstance().loteRepo.buscarPorId(lv.getIdLote());
             if (lote == null) continue;
             Produto produto = AppContext.getInstance().produtoRepo.buscarPorId(lote.getIdProduto());
             if (produto == null) continue;
-            linhas.add(new LinhaFaturaExibicao(
-                    produto.getNome(), produto.getCodigoBarras(),
-                    lv.getQuantidade(), lv.getPrecoUnitario()));
+            LinhaFaturaExibicao acc = agregadas.get(produto.getId());
+            int qtd = (acc == null ? 0 : acc.quantidade) + lv.getQuantidade();
+            agregadas.put(produto.getId(), new LinhaFaturaExibicao(
+                    produto.getNome(), produto.getCodigoBarras(), qtd, lv.getPrecoUnitario()));
+        }
+
+        ObservableList<LinhaFaturaExibicao> linhas = FXCollections.observableArrayList();
+        for (Map.Entry<Integer, LinhaFaturaExibicao> e : agregadas.entrySet()) {
+            LinhaFaturaExibicao a = e.getValue();
+            int restante = a.quantidade - devolvidoPorProduto.getOrDefault(e.getKey(), 0);
+            if (restante <= 0) continue;
+            linhas.add(new LinhaFaturaExibicao(a.nomeProduto, a.codigoBarras, restante, a.precoUnitario));
         }
 
         tblLinhasFatura.setItems(linhas);
@@ -102,7 +131,6 @@ public class DevolucaoController {
         lblInfoFatura.setText("Fatura: " + num + "  ·  " + linhas.size() + " artigo(s)");
         secaoFatura.setVisible(true);
         secaoFatura.setManaged(true);
-        lblResultadoDevolucao.setText("");
     }
 
     @FXML
@@ -121,13 +149,11 @@ public class DevolucaoController {
             Utilizador u = AppContext.getInstance().getUtilizadorAtual();
             Devolucao d = AppContext.getInstance().devolucaoServico
                     .processar(u, numFaturaAtual, sel.codigoBarras, data, quantidade);
-            lblResultadoDevolucao.setText(String.format(
-                    "Devolução processada. Valor restituído: %.2f €", d.getValorRestituido()));
             dpDataValidade.setValue(null);
             txtQtdDevolucao.clear();
-            formDevolucao.setVisible(false);
-            formDevolucao.setManaged(false);
-            tblLinhasFatura.getSelectionModel().clearSelection();
+            carregarFatura(numFaturaAtual);
+            lblResultadoDevolucao.setText(String.format(
+                    "Devolução processada. Valor restituído: %.2f €", d.getValorRestituido()));
         } catch (NumberFormatException e) {
             mostrarErro("Quantidade inválida.");
         } catch (Exception e) {
