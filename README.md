@@ -17,6 +17,11 @@ The SQL schemas are located at `loja/src/main/resources/schema.sql` and `servido
       <br/>
       <em>Point of Sale (POS) Panel</em>
     </td>
+  </tr>
+</table>
+
+<table align="center">
+  <tr>
     <td align="center">
       <img src="assets/catalogoLoja.png"/>
       <br/>
