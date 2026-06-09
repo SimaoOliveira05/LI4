@@ -1,9 +1,10 @@
 # Build outputs
-Codigo/Loja/target/
-Codigo/Servidor_Central/backend/target/
-Codigo/Servidor_Central/frontend/dist/
-Codigo/Servidor_Central/frontend/dist-ssr/
+**/target/
+servidor_central/frontend/dist/
+servidor_central/frontend/dist-ssr/
 node_modules/
+loja/faturas
+
 
 # OS
 .DS_Store
@@ -30,3 +31,4 @@ lerna-debug.log*
 *.sw?
 
 .env
+
