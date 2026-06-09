@@ -13,26 +13,27 @@ The SQL schemas are located at `loja/src/main/resources/schema.sql` and `servido
 <table align="center">
   <tr>
     <td align="center">
-      <img src="assets/vendaLoja.png" width="750"/>
+      <img src="assets/vendaLoja.png">
       <br/>
       <em>Point of Sale (POS) Panel</em>
     </td>
     <td align="center">
-      <img src="assets/catalogoLoja.png" width="760"/>
+      <img src="assets/catalogoLoja.png"/>
       <br/>
       <em>Product Catalog Panel</em>
     </td>
   </tr>
 </table>
+
 <table align="center">
   <tr>
     <td align="center">
-      <img src="assets/fornecedoresLoja.png" width="750"/>
+      <img src="assets/fornecedoresLoja.png"/>
       <br/>
       <em>Supplier Management Panel</em>
     </td>
     <td align="center">
-      <img src="assets/administraçãoLoja.png" width="760"/>
+      <img src="assets/administraçãoLoja.png"/>
       <br/>
       <em>Administration Panel</em>
     </td>
@@ -44,12 +45,12 @@ The SQL schemas are located at `loja/src/main/resources/schema.sql` and `servido
 <table align="center">
   <tr>
     <td align="center">
-      <img src="assets/dashboard_global.png" width="750"/>
+      <img src="assets/dashboard_global.png"/>
       <br/>
       <em>Global Dashboard Panel</em>
     </td>
     <td align="center">
-      <img src="assets/monitorRececao.png" width="750"/>
+      <img src="assets/monitorRececao.png"/>
       <br/>
       <em>Receipt Monitoring Panel</em>
     </td>
@@ -58,12 +59,12 @@ The SQL schemas are located at `loja/src/main/resources/schema.sql` and `servido
 <table align="center">
   <tr>
     <td align="center">
-      <img src="assets/remessasRede.png" width="750"/>
+      <img src="assets/remessasRede.png"/>
       <br/>
       <em>Network Shipments Panel</em>
     </td>
     <td align="center">
-      <img src="assets/relatoriosVendas.png" width="750"/>
+      <img src="assets/relatoriosVendas.png"/>
       <br/>
       <em>Sales Reports Panel</em>
     </td>
