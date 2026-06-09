@@ -54,6 +54,11 @@ The SQL schemas are located at `loja/src/main/resources/schema.sql` and `servido
       <br/>
       <em>Global Dashboard Panel</em>
     </td>
+  </tr>
+</table>
+
+<table align="center">
+  <tr>
     <td align="center">
       <img src="assets/monitorRececao.png"/>
       <br/>
@@ -61,6 +66,7 @@ The SQL schemas are located at `loja/src/main/resources/schema.sql` and `servido
     </td>
   </tr>
 </table>
+
 <table align="center">
   <tr>
     <td align="center">
