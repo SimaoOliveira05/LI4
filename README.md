@@ -305,3 +305,7 @@ The frontend has no automated tests.
 | End-of-day close fails: `Hash inválido` | Data corruption during transmission | Retry the close; if it persists, check the integrity of the local Store database |
 | Store Software won't start: DB connection error | MySQL is not running or incorrect credentials | Verify MySQL is active and the `db.*` parameters in `config.properties` |
 | Dashboard shows no data after confirmed close | Frontend pointing to incorrect backend URL | Check `VITE_API_URL` in `.env` and rebuild with `docker compose up --build` |
+
+## Warning
+
+Everything is in portuguese for academic reasons, sorry for that :D
