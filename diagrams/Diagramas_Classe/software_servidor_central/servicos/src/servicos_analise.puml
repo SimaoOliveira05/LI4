@@ -1,0 +1,92 @@
+@startuml servidor_central_servicos_analise
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classHeaderBackgroundColor #E1F5EE
+skinparam classBorderColor #0F6E56
+skinparam classBackgroundColor #FAFAFA
+skinparam arrowColor #0F6E56
+skinparam stereotypeCBackgroundColor #EEEDFE
+skinparam stereotypeABackgroundColor #FAC775
+skinparam stereotypeIBackgroundColor #D1ECF1
+skinparam packageBackgroundColor #F8F8F8
+skinparam packageBorderColor #B4B2A9
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 50
+
+title Servidor Central — Serviços (Análise)
+
+package "Serviço (Interfaces - Análise)" #E0F0E0 {
+
+  interface IDashboardServico {
+    + obterMetricasGlobais(data : LocalDate) : MetricasGlobais
+    + obterMetricasPorLoja(idLoja : String, data : LocalDate) : MetricasLoja
+    + obterLogsPorLojaEPeriodo(idLoja : String, inicio : LocalDate, fim : LocalDate) : List<LogAuditoriaCentral>
+  }
+
+  interface IRelatorioServico {
+    + gerar(filtro : FiltroRelatorio) : Relatorio
+  }
+
+  interface IRemessaRedeServico {
+    + listar(filtro : FiltroRemessa) : List~RemessaCentral~
+  }
+
+  interface IConsolidacaoServico {
+    + verificarCompletude(data : LocalDate) : EstadoFecho
+    + obterLojasFaltantes(data : LocalDate) : List~Loja~
+  }
+}
+
+package "Serviço (Implementações - Análise)" #EEF9F4 {
+
+  class DashboardServico {
+    - vendaRepositorio : VendaCentralRepositorio
+    - devolucaoRepositorio : DevolucaoCentralRepositorio
+    - lojaRepositorio : LojaRepositorio
+    - logRepositorio : LogAuditoriaCentralRepositorio
+    + obterLogsPorLojaEPeriodo(idLoja : String, inicio : LocalDate, fim : LocalDate) : List<LogAuditoriaCentral>
+    + obterMetricasGlobais(data : LocalDate) : MetricasGlobais
+    + obterMetricasPorLoja(idLoja : String, data : LocalDate) : MetricasLoja
+  }
+
+  class RelatorioServico {
+    - vendaRepositorio : VendaCentralRepositorio
+    - devolucaoRepositorio : DevolucaoCentralRepositorio
+    - remessaRepositorio : RemessaCentralRepositorio
+    + gerar(filtro : FiltroRelatorio) : Relatorio
+  }
+
+  class RemessaRedeServico {
+    - remessaRepositorio : RemessaCentralRepositorio
+    + listar(filtro : FiltroRemessa) : List~RemessaCentral~
+  }
+
+  class ConsolidacaoServico {
+    - fechoDiaCentralRepositorio : FechoDiaCentralRepositorio
+    - lojaRepositorio : LojaRepositorio
+    + verificarCompletude(data : LocalDate) : EstadoFecho
+    + obterLojasFaltantes(data : LocalDate) : List~Loja~
+  }
+}
+
+' Implementações realizam interfaces
+DashboardServico .up.|> IDashboardServico
+RelatorioServico .up.|> IRelatorioServico
+RemessaRedeServico .up.|> IRemessaRedeServico
+ConsolidacaoServico .up.|> IConsolidacaoServico
+
+' Serviços → Repositórios
+DashboardServico ..> VendaCentralRepositorio
+DashboardServico ..> DevolucaoCentralRepositorio
+DashboardServico ..> LojaRepositorio
+DashboardServico ..> LogAuditoriaCentralRepositorio
+RelatorioServico ..> VendaCentralRepositorio
+RelatorioServico ..> DevolucaoCentralRepositorio
+RelatorioServico ..> RemessaCentralRepositorio
+RemessaRedeServico ..> RemessaCentralRepositorio
+ConsolidacaoServico ..> FechoDiaCentralRepositorio
+ConsolidacaoServico ..> LojaRepositorio
+
+
+@enduml

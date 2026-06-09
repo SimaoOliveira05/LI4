@@ -1,0 +1,135 @@
+@startuml Software_de_Loja_Dominio_Inventario_Fornecedores
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classHeaderBackgroundColor #EEEDFE
+skinparam classBorderColor #534AB7
+skinparam classBackgroundColor #FAFAFA
+skinparam arrowColor #534AB7
+skinparam stereotypeCBackgroundColor #E1F5EE
+skinparam stereotypeABackgroundColor #FAC775
+skinparam stereotypeIBackgroundColor #D1ECF1
+skinparam packageBackgroundColor #F8F8F8
+skinparam packageBorderColor #B4B2A9
+skinparam linetype ortho
+skinparam nodesep 60
+skinparam ranksep 50
+
+title Software de Loja — Domínio (Módulo: Catálogo, Inventário e Fornecedores)
+
+package "Catálogo e Inventário" #FEFEFE {
+
+  class Produto {
+    - id : int
+    - codigoBarras : String
+    - nome : String
+    - categoria : String
+    - precoBase : double
+    - stockMinimo : int
+    - ativo : boolean
+    + getId() : int
+    + getCodigoBarras() : String
+    + getStockMinimo() : int
+    + isAtivo() : boolean
+  }
+
+  class Desconto {
+    - percentagem : double
+    - dataAplicacao : LocalDate
+    - idUtilizadorAplicou : int
+    + getPercentagem() : double
+    + getDataAplicacao() : LocalDate
+  }
+
+  class Lote {
+    - id : int
+    - idProduto : int
+    - quantidade : int
+    - dataValidade : LocalDate
+    - precoVenda : double
+    - desconto : Desconto
+    + aplicarDesconto(desconto : Desconto) : void
+    + getPrecoFinal() : double
+    + temDesconto() : boolean
+  }
+}
+
+package "Remessas e Fornecedores" #FEFEFE {
+
+  class Fornecedor {
+    - id : int
+    - nome : String
+    - nif : String
+    - morada : String
+    - telefone : String
+    - email : String
+    - iban : String
+    + getId() : int
+  }
+
+  enum EstadoPedido {
+    PENDENTE, CONCLUIDO
+  }
+
+  class PedidoRemessa {
+    - id : int
+    - idFornecedor : int
+    - idUtilizador : int
+    - dataCriacao : LocalDate
+    - estado : EstadoPedido
+    - linhas : List<LinhaPedidoRemessa>
+    + adicionarLinha(linha : LinhaPedidoRemessa) : void
+    + estaPendente() : boolean
+  }
+
+  class Pagamento {
+    - id : int
+    - idFornecedor : int
+    - valor : double
+    - dataHora : LocalDateTime
+    - idUtilizador : int
+    + getValor() : double
+    + getIdFornecedor() : int
+  }
+
+  class LinhaPedidoRemessa {
+    - id : int
+    - idProduto : int
+    - quantidadePretendida : int
+  }
+
+  class Remessa {
+    - dataRecepcao : LocalDate
+    - valorTotalGuia : double
+    - idFornecedor : int
+    - idUtilizador : int
+    - linhas : List<LinhaRemessa>
+    + adicionarLinha(linha : LinhaRemessa) : void
+    + getValorTotalGuia() : double
+  }
+
+  class LinhaRemessa {
+    - id : int
+    - idProduto : int
+    - idLoteGerado : int
+    - quantidade : int
+    - dataValidade : LocalDate
+  }
+}
+
+' Relações de Composição (Linhas pertencem à Raiz)
+PedidoRemessa "1" *-- "1..*" LinhaPedidoRemessa : contém >
+Remessa "1" *-- "1..*" LinhaRemessa : contém >
+Lote "1" *-- "0..1" Desconto : tem >
+
+' Referências por ID (Mantendo fraco acoplamento)
+Lote --> Produto : idProduto
+PedidoRemessa --> Fornecedor : idFornecedor
+Remessa --> Fornecedor : idFornecedor
+PedidoRemessa --> EstadoPedido
+Pagamento --> Fornecedor : idFornecedor
+
+' Herança sincronizável (CORRIGIDO: duplicação removida, Pagamento adicionado)
+RegistoSincronizavel <|-- Remessa
+RegistoSincronizavel <|-- Pagamento
+
+@enduml

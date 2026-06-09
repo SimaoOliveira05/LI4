@@ -1,0 +1,88 @@
+@startuml servicos_core_autenticacao_seguranca
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classHeaderBackgroundColor #EEEDFE
+skinparam classBorderColor #534AB7
+skinparam classBackgroundColor #FAFAFA
+skinparam arrowColor #534AB7
+skinparam stereotypeCBackgroundColor #E1F5EE
+skinparam stereotypeABackgroundColor #FAC775
+skinparam stereotypeIBackgroundColor #D1ECF1
+skinparam packageBackgroundColor #F8F8F8
+skinparam packageBorderColor #B4B2A9
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 50
+
+title Software de Loja — Serviços (Módulo: Core e Segurança)
+
+package "Serviço (Interfaces - Core e Segurança)" #E0F0E0 {
+
+  interface IAutenticacaoServico {
+    + autenticar(nomeUtilizador : String, palavraPasse : String) : Utilizador
+    + encerrarSessao(utilizador : Utilizador) : void
+    + verificarSessaoDuplicada(utilizador : Utilizador) : boolean
+  }
+
+  interface IAutorizacaoServico {
+    + exigirPerfil(utilizador : Utilizador, perfisPermitidos : PerfilUtilizador[]) : void
+    + temPerfil(utilizador : Utilizador, perfil : PerfilUtilizador) : boolean
+  }
+
+  interface IAuditoriaServico {
+    + registar(utilizador : Utilizador, acao : TipoAcao, entidade : String, idEntidade : int) : void
+    + obterLogsPendentes() : List<LogAuditoria>
+  }
+}
+
+package "Serviço (Implementações - Core e Segurança)" #EEF9F4 {
+
+  class AutenticacaoServico {
+    - utilizadorRepositorio : UtilizadorRepositorio
+    - auditoriaServico : IAuditoriaServico
+    + autenticar(nomeUtilizador : String, palavraPasse : String) : Utilizador
+    + encerrarSessao(utilizador : Utilizador) : void
+    + verificarSessaoDuplicada(utilizador : Utilizador) : boolean
+  }
+
+  class AutorizacaoServico {
+    + exigirPerfil(utilizador : Utilizador, perfisPermitidos : PerfilUtilizador[]) : void
+    + temPerfil(utilizador : Utilizador, perfil : PerfilUtilizador) : boolean
+  }
+
+  class AuditoriaServico {
+    - logAuditoriaRepositorio : LogAuditoriaRepositorio
+    + registar(utilizador : Utilizador, acao : TipoAcao, entidade : String, idEntidade : int) : void
+    + obterLogsPendentes() : List<LogAuditoria>
+  }
+
+  class AcessoNegadoException {
+    - perfilActual : PerfilUtilizador
+    - perfisExigidos : List<PerfilUtilizador>
+    + getPerfilActual() : PerfilUtilizador
+    + getPerfisExigidos() : List<PerfilUtilizador>
+  }
+
+  class SessaoDuplicadaException {
+    - nomeUtilizador : String
+    + getNomeUtilizador() : String
+  }
+}
+
+' Implementações realizam interfaces
+AutenticacaoServico ..|> IAutenticacaoServico
+AutorizacaoServico ..|> IAutorizacaoServico
+AuditoriaServico ..|> IAuditoriaServico
+
+' Relações com Repositórios
+AutenticacaoServico ..> UtilizadorRepositorio
+AuditoriaServico ..> LogAuditoriaRepositorio
+
+' Autenticação usa Auditoria
+AutenticacaoServico ..> IAuditoriaServico : regista logins/logouts
+
+' Exceções
+AutorizacaoServico ..> AcessoNegadoException : <<lança>>
+AutenticacaoServico ..> SessaoDuplicadaException : <<lança>>
+
+@enduml

@@ -1,0 +1,148 @@
+@startuml DS5_Devolucao
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam maxMessageSize 220
+skinparam sequenceArrowThickness 1.2
+skinparam roundcorner 6
+skinparam sequenceParticipantBorderColor #854F0B
+skinparam sequenceParticipantBackgroundColor #FAEEDA
+skinparam sequenceActorBorderColor #854F0B
+skinparam sequenceActorBackgroundColor #FAEEDA
+skinparam sequenceLifeLineBorderColor #EF9F27
+skinparam sequenceGroupBackgroundColor #FFFBF4
+skinparam sequenceGroupBorderColor #EF9F27
+skinparam noteBorderColor #534AB7
+skinparam noteBackgroundColor #EEEDFE
+
+title DS5 — Processamento de Devolução (RF5)
+
+actor "Funcionario" as F
+participant "DevolucaoController" as DC <<Apresentação>>
+participant "IAutorizacaoServico" as AZ <<Serviço>>
+participant "IDevolucaoServico" as DS <<Serviço>>
+participant "IAuditoriaServico" as AU <<Serviço>>
+participant "VendaRepositorio" as VR <<Repositório>>
+participant "DevolucaoRepositorio" as DR <<Repositório>>
+participant "LoteRepositorio" as LR <<Repositório>>
+
+== Autorização prévia ==
+
+F -> DC : onProcessarDevolucao(numeroFatura, codigoBarras,\ndataValidadeEmbalagem, quantidade)
+activate DC
+
+DC -> AZ : exigirPerfil(utilizador, FUNCIONARIO, GESTOR, CEO)
+activate AZ
+AZ --> DC : ok
+deactivate AZ
+
+DC -> DS : processar(utilizador, numeroFatura, codigoBarras, quantidade)
+activate DS
+
+== Guarda 1 — verificação da fatura (RF5) ==
+
+note over DS
+  A fatura é obtida através da venda correspondente.
+  VendaRepositorio encapsula internamente a relação
+  entre venda e fatura (VendaRepositorioImpl.guardarFatura).
+end note
+
+DS -> VR : buscarPorNumeroFatura(numeroFatura)
+activate VR
+
+alt venda não encontrada ou de outra loja
+  VR --> DS : null
+  DS --> DC : <<lança>> FaturaNaoEncontradaException
+  DC --> F : alerta — "Fatura inválida ou de\noutra loja da rede"
+
+else venda encontrada
+  VR --> DS : venda : Venda
+  deactivate VR
+
+  == Guarda 2 — verificação do artigo na fatura (RF5) ==
+
+  DS -> DS : validarArtigoNaFatura(venda, codigoBarras)
+
+  alt artigo não consta na fatura
+    DS --> DC : <<lança>> ArtigoNaoConstaNaFaturaException
+    DC --> F : alerta — "Artigo não pertence\na esta fatura"
+
+  else artigo encontrado na fatura
+
+    == Guarda 3 — verificação de unidades disponíveis (RF5) ==
+
+    DS -> DR : buscarPorFatura(numeroFatura)
+    activate DR
+    DR --> DS : devolucoesAnteriores : List<Devolucao>
+    deactivate DR
+
+    DS -> DS : calcularQuantidadeRestante(venda, codigoBarras,\ndevolucoesAnteriores, quantidade)
+
+    alt todas as unidades já foram devolvidas
+      DS --> DC : <<lança>> DevolucaoJaProcessadaException
+      DC --> F : alerta — "Todas as unidades\njá foram devolvidas"
+
+    else quantidade solicitada excede o restante
+      DS --> DC : <<lança>> QuantidadeDevolucaoExcedidaException
+      DC --> F : alerta — "Quantidade excede\no disponível para devolução"
+
+    else quantidade válida
+
+      == Guarda 4 — verificação de validade do lote (RF5) ==
+
+      DS -> LR : buscarLotesFEFO(produto.getId())
+      activate LR
+      LR --> DS : lotes : List<Lote>
+      deactivate LR
+
+      note over DS
+        A data de validade lida da embalagem física
+        é usada para identificar o lote correto
+        dentro da lista devolvida (RF5).
+        dataValidadeEmbalagem é guardada na Devolucao.
+      end note
+
+      alt lote ainda válido (dataValidade >= hoje)
+
+        DS -> LR : atualizar(lote)
+        activate LR
+        LR --> DS : ok
+        deactivate LR
+
+        note right of LR
+          Stock reposto apenas se o lote
+          ainda estiver dentro da validade.
+          Lotes expirados não regressam
+          ao inventário (RF5).
+        end note
+
+      else lote expirado
+        note over DS
+          Devolução aceite financeiramente
+          mas stock NÃO é reposto.
+          Lote expirado não volta ao inventário.
+        end note
+      end
+
+      == Registo da devolução ==
+
+      DS -> DR : guardar(devolucao)
+      activate DR
+      DR --> DS : ok
+      deactivate DR
+
+      DS -> AU : registar(utilizador, DEVOLUCAO, "Devolucao", devolucao.getId())
+      activate AU
+      AU --> DS : ok
+      deactivate AU
+
+      DS --> DC : devolucao : Devolucao
+      deactivate DS
+
+      DC --> F : confirmação — "Devolução registada.\nValor a restituir: X€"
+      deactivate DC
+
+    end
+  end
+end
+
+@enduml

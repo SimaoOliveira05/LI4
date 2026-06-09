@@ -1,0 +1,14 @@
+@startuml
+
+[*] --> PendenteLoja : Registo de pagamento\ncriado ao registar remessa
+
+PendenteLoja --> PagoLoja : Manager marca\npagamento como pago
+PendenteLoja --> PendenteRede : Fecho de dia transmite\ndados para o Servidor Central
+
+PagoLoja --> PagoRede : Fecho de dia transmite\natualização para o Servidor Central
+PendenteRede --> PagoRede : Fecho de dia posterior\ntransmite atualização de estado pago
+
+PendenteRede --> [*]
+PagoRede --> [*]
+
+@enduml
