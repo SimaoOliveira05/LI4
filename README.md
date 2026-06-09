@@ -1,4 +1,4 @@
-# TrasmUM — Convenience Store Chain Management System
+# TrasmUM
 
 System composed of two distinct software components that communicate with each other via HTTP:
 
