@@ -179,8 +179,7 @@ const categorias = computed(() => topCategorias(dados.value?.vendasPorCategoria)
                   <TableCell class="text-sm font-medium text-[#0f172a]">{{ formatData(f.dataFecho) }}</TableCell>
                   <TableCell class="text-sm font-medium text-[#0f172a]">{{ formatDataHora(f.dataRecepcao) }}</TableCell>
                   <TableCell>
-                    <Badge v-if="f.estado === 'RECEBIDO'" class="bg-[#dcfce7] text-[#16a34a] text-[11px] font-bold px-2 py-0.5 border-none shadow-none">Recebido</Badge>
-                    <Badge v-else class="bg-[#fef9c3] text-[#a16207] text-[11px] font-bold px-2 py-0.5 border-none shadow-none">Pendente</Badge>
+                    <Badge class="bg-[#dcfce7] text-[#16a34a] text-[11px] font-bold px-2 py-0.5 border-none shadow-none">Recebido</Badge>
                   </TableCell>
                 </TableRow>
                 <TableRow v-if="dados.historicoFechos.length === 0">

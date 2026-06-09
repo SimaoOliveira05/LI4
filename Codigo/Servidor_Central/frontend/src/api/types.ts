@@ -74,7 +74,7 @@ export interface DashboardLoja {
   totalTransacoes: number;
   totalDevolucoes: number;
   ticketMedio: number;
-  historicoFechos: Array<{ id: number; idLoja: string; dataFecho: string; dataRecepcao: string; estado: 'RECEBIDO' | 'PENDENTE'; }>;
+  historicoFechos: Array<{ id: number; idLoja: string; dataFecho: string; dataRecepcao: string; }>;
   logsAuditoria: Array<{ id: number; idLoja: string; acao: string; dataHora: string; nomeUtilizador: string; descricao: string | null; }>;
   vendasMensais: Record<string, number>;
   vendasPorCategoria: Record<string, number>;
