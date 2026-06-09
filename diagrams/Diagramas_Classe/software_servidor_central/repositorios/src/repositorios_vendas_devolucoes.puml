@@ -1,0 +1,64 @@
+@startuml servidor_central_repositorios_vendas_devolucoes
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classHeaderBackgroundColor #E1F5EE
+skinparam classBorderColor #0F6E56
+skinparam classBackgroundColor #FAFAFA
+skinparam arrowColor #0F6E56
+skinparam stereotypeCBackgroundColor #EEEDFE
+skinparam stereotypeABackgroundColor #FAC775
+skinparam stereotypeIBackgroundColor #D1ECF1
+skinparam packageBackgroundColor #F8F8F8
+skinparam packageBorderColor #B4B2A9
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 50
+
+title Servidor Central — Repositórios (Vendas, Devoluções e Sessões de Caixa)
+
+package "Repositório (Interfaces - Vendas, Devoluções e Sessões de Caixa)" #FFF0E0 {
+
+  interface VendaCentralRepositorio {
+    + guardarSeNaoExistir(venda : VendaCentral) : void
+    + buscarPorLojaEPeriodo(idLoja : String, inicio : LocalDate, fim : LocalDate) : List~VendaCentral~
+    + totalVendasPorLoja(data : LocalDate) : Map~String, Double~
+  }
+
+  interface DevolucaoCentralRepositorio {
+    + guardarSeNaoExistir(devolucao : DevolucaoCentral) : void
+    + buscarPorLojaEPeriodo(idLoja : String, inicio : LocalDate, fim : LocalDate) : List~DevolucaoCentral~
+  }
+
+  interface SessaoCaixaCentralRepositorio {
+    + guardarSeNaoExistir(sessao : SessaoCaixaCentral) : void
+    + buscarPorLojaEPeriodo(idLoja : String, inicio : LocalDate, fim : LocalDate) : List~SessaoCaixaCentral~
+  }
+}
+
+package "Repositório (Implementações - Vendas, Devoluções e Sessões de Caixa)" #FFF8EE {
+
+  class VendaCentralRepositorioImpl {
+    - conexao : Connection
+    + guardarSeNaoExistir(venda : VendaCentral) : void
+    + buscarPorLojaEPeriodo(idLoja : String, inicio : LocalDate, fim : LocalDate) : List~VendaCentral~
+    + totalVendasPorLoja(data : LocalDate) : Map~String, Double~
+  }
+
+  class DevolucaoCentralRepositorioImpl {
+    - conexao : Connection
+    + guardarSeNaoExistir(devolucao : DevolucaoCentral) : void
+    + buscarPorLojaEPeriodo(idLoja : String, inicio : LocalDate, fim : LocalDate) : List~DevolucaoCentral~
+  }
+
+  class SessaoCaixaCentralRepositorioImpl {
+    - conexao : Connection
+    + guardarSeNaoExistir(sessao : SessaoCaixaCentral) : void
+    + buscarPorLojaEPeriodo(idLoja : String, inicio : LocalDate, fim : LocalDate) : List~SessaoCaixaCentral~
+  }
+}
+
+VendaCentralRepositorioImpl ..|> VendaCentralRepositorio
+DevolucaoCentralRepositorioImpl ..|> DevolucaoCentralRepositorio
+SessaoCaixaCentralRepositorioImpl ..|> SessaoCaixaCentralRepositorio
+
+@enduml

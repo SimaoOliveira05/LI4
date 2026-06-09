@@ -1,0 +1,17 @@
+@startuml
+left to right direction
+
+actor Manager as M
+actor CEO as C
+
+C --|> M
+
+rectangle "Software de Loja - Gestão de Inventário e Fornecedores" {
+  M -- (Criar Pedidos de Remessa)
+  M -- (Registar Receção de Remessa)
+  M -- (Gerir Catálogo de Produtos)
+  M -- (Gerir Documentos de Fornecedores)
+  M -- (Gerir Pagamentos a Fornecedores)
+  M -- (Aplicar Desconto por Prazo de Validade)
+}
+@enduml

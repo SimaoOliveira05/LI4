@@ -1,0 +1,87 @@
+@startuml servicos_vendas_devolucoes
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classHeaderBackgroundColor #EEEDFE
+skinparam classBorderColor #534AB7
+skinparam classBackgroundColor #FAFAFA
+skinparam arrowColor #534AB7
+skinparam stereotypeCBackgroundColor #E1F5EE
+skinparam stereotypeABackgroundColor #FAC775
+skinparam stereotypeIBackgroundColor #D1ECF1
+skinparam packageBackgroundColor #F8F8F8
+skinparam packageBorderColor #B4B2A9
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 50
+
+title Software de Loja — Serviços (Módulo: Vendas e Devoluções)
+
+package "Serviço (Interfaces - Vendas e Devoluções)" #E0F0E0 {
+
+  interface IVendaServico {
+    + iniciarVenda(utilizador : Utilizador) : Venda
+    + adicionarLinha(venda : Venda, codigoBarras : String, quantidade : int) : LinhaVenda
+    + finalizarVenda(venda : Venda, metodo : MetodoPagamento, valorEntregue : double) : Fatura
+    + anularVenda(venda : Venda) : void
+    + calcularTroco(total : double, valorEntregue : double) : double
+    + obterVendasPendentes() : List<Venda>
+  }
+
+  interface IDevolucaoServico {
+    + processar(utilizador : Utilizador, numeroFatura : String, codigoBarras : String, quantidade : int) : Devolucao
+    + validar(venda : Venda, codigoBarras : String, quantidade : int) : boolean
+    + obterDevolucoesPendentes() : List<Devolucao>
+  }
+}
+
+package "Serviço (Implementações - Vendas e Devoluções)" #EEF9F4 {
+
+  class VendaServico {
+    - vendaRepositorio : VendaRepositorio
+    - loteRepositorio : LoteRepositorio
+    - sessaoCaixaRepositorio : SessaoCaixaRepositorio
+    - auditoriaServico : IAuditoriaServico
+    - autorizacaoServico : IAutorizacaoServico
+    
+    + iniciarVenda(utilizador : Utilizador) : Venda
+    + adicionarLinha(venda : Venda, codigoBarras : String, quantidade : int) : LinhaVenda
+    + finalizarVenda(venda : Venda, metodo : MetodoPagamento, valorEntregue : double) : Fatura
+    + anularVenda(venda : Venda) : void
+    + calcularTroco(total : double, valorEntregue : double) : double
+    + obterVendasPendentes() : List<Venda>
+  }
+
+  class DevolucaoServico {
+    - devolucaoRepositorio : DevolucaoRepositorio
+    - vendaRepositorio : VendaRepositorio
+    - loteRepositorio : LoteRepositorio
+    - auditoriaServico : IAuditoriaServico
+    - autorizacaoServico : IAutorizacaoServico
+    
+    + processar(utilizador : Utilizador, numeroFatura : String, codigoBarras : String, quantidade : int) : Devolucao
+    + validar(venda : Venda, codigoBarras : String, quantidade : int) : boolean
+    + obterDevolucoesPendentes() : List<Devolucao>
+  }
+}
+
+' Implementações realizam interfaces
+VendaServico ..|> IVendaServico
+DevolucaoServico ..|> IDevolucaoServico
+
+' Relações com Repositórios
+VendaServico ..> VendaRepositorio
+VendaServico ..> LoteRepositorio
+VendaServico ..> SessaoCaixaRepositorio
+
+DevolucaoServico ..> DevolucaoRepositorio
+DevolucaoServico ..> VendaRepositorio : pesquisa fatura original
+DevolucaoServico ..> LoteRepositorio : repõe stock
+
+' Serviços transversais
+VendaServico ..> IAutorizacaoServico
+DevolucaoServico ..> IAutorizacaoServico
+
+VendaServico ..> IAuditoriaServico
+DevolucaoServico ..> IAuditoriaServico
+
+@enduml

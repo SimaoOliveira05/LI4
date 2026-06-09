@@ -1,0 +1,96 @@
+@startuml DS5_Devolucao_Atual
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam maxMessageSize 220
+skinparam sequenceArrowThickness 1.2
+skinparam roundcorner 6
+skinparam sequenceParticipantBorderColor #854F0B
+skinparam sequenceParticipantBackgroundColor #FAEEDA
+skinparam sequenceActorBorderColor #854F0B
+skinparam sequenceActorBackgroundColor #FAEEDA
+skinparam sequenceLifeLineBorderColor #EF9F27
+skinparam sequenceGroupBackgroundColor #FFFBF4
+skinparam sequenceGroupBorderColor #EF9F27
+skinparam noteBorderColor #534AB7
+skinparam noteBackgroundColor #EEEDFE
+
+title DS5 — Processamento de Devolução (Implementação Actual)\nDevolução integrada como Tab dentro de VendaView.fxml
+
+actor "Funcionario" as F
+participant "VendaController\n(Tab Venda)" as VC <<Apresentação>>
+participant "DevolucaoController\n(Tab Devolução, fx:include)" as DC <<Apresentação>>
+participant "IAutorizacaoServico" as AZ <<Serviço>>
+participant "IVendaServico" as VS <<Serviço>>
+participant "IDevolucaoServico" as DS <<Serviço>>
+participant "IAuditoriaServico" as AU <<Serviço>>
+participant "VendaRepositorio" as VR <<Repositório>>
+participant "DevolucaoRepositorio" as DR <<Repositório>>
+participant "LoteRepositorio" as LR <<Repositório>>
+
+note over VC, DC
+  VendaView.fxml expõe um TabPane com dois separadores:
+  "Venda" (VendaController) e "Devolução"
+  (DevolucaoController, via fx:include).
+  Não existe entrada de menu separada para Devolução.
+end note
+
+== Carregamento da fatura no separador Devolução ==
+
+F -> DC : onCarregarFatura(numeroFatura)
+activate DC
+
+DC -> AZ : exigirPerfil(utilizador, FUNCIONARIO, GESTOR, CEO)
+AZ --> DC : ok
+
+DC -> VS : buscarPorNumeroFatura(numeroFatura)
+activate VS
+VS -> VR : buscarPorNumeroFatura(numeroFatura)
+VR --> VS : venda : Venda
+VS --> DC : venda
+deactivate VS
+
+alt venda não encontrada / outra loja
+  DC --> F : alerta — "Fatura inválida"
+else venda encontrada
+  DC --> F : exibe linhas da fatura\n(grelha com produtos vendidos)
+end
+
+== Submissão da devolução (linha seleccionada) ==
+
+F -> DC : onProcessarDevolucao(numeroFatura, codigoBarras,\ndataValidadeEmbalagem, quantidade)
+
+DC -> DS : processar(utilizador, numeroFatura, codigoBarras,\ndataValidadeEmbalagem, quantidade)
+activate DS
+
+DS -> VR : buscarPorNumeroFatura(numeroFatura)
+VR --> DS : venda
+
+DS -> DR : buscarPorFatura(numeroFatura)
+DR --> DS : devolucoesAnteriores
+
+DS -> DS : validarArtigoEQuantidade(\nvenda, codigoBarras, devolucoesAnteriores, quantidade)
+
+alt artigo não consta / quantidade excede
+  DS --> DC : <<lança>> Excecao
+  DC --> F : alerta correspondente
+else válido
+  DS -> LR : buscarLotesFEFO(produto.id)
+  LR --> DS : lotes
+  alt lote ainda dentro da validade
+    DS -> LR : atualizar(lote — repor stock)
+  else lote expirado
+    note over DS
+      Devolução aceite financeiramente
+      mas stock NÃO reposto.
+    end note
+  end
+  DS -> DR : guardar(devolucao)
+  DS -> AU : registar(utilizador, DEVOLUCAO, "Devolucao", devolucao.id)
+  DS --> DC : devolucao
+  deactivate DS
+  DC --> F : confirmação — "Devolução registada.\nValor a restituir: X€"
+end
+
+deactivate DC
+
+@enduml

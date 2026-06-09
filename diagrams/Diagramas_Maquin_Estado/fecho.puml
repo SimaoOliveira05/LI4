@@ -1,0 +1,13 @@
+@startuml
+
+[*] --> Compilacao : Manager ou CEO\ninicia fecho de dia
+
+Compilacao --> Envio : Sistema compila os dados\noperacionais da jornada
+
+Envio --> Envio : Falha de comunicação,\nreenvio manual
+
+Envio --> Confirmacao : ACK recebido\npelo Servidor Central
+
+Confirmacao --> [*] : Sessão encerrada
+
+@enduml

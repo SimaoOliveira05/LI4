@@ -1,0 +1,27 @@
+@startuml
+
+state "Sessão Ativa" as SessaoAtiva {
+    state Funcionário
+    state Manager
+    state CEO
+}
+
+state "Fecho de Dia" as FechoDeDia
+
+[*] --> Livre : Terminal inicializado
+
+Livre --> Livre : Credenciais inválidas
+Livre --> Bloqueada : 5 tentativas falhadas
+Bloqueada --> Livre : Bloqueio expirado
+
+Livre --> Autenticando : Utilizador insere credenciais válidas
+Autenticando -up-> SessaoAtiva : Autenticado
+
+Funcionário --> Livre : Sessão encerrada
+Manager --> FechoDeDia : Inicia fecho de dia
+CEO --> FechoDeDia : Inicia fecho de dia
+
+FechoDeDia --> FechoDeDia : Falha, reenvio manual
+FechoDeDia --> Livre : ACK recebido
+
+@enduml

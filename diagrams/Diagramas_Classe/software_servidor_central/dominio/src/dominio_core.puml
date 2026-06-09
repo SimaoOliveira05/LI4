@@ -1,0 +1,74 @@
+@startuml servidor_central_parte5a_dominio_core
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classHeaderBackgroundColor #E1F5EE
+skinparam classBorderColor #0F6E56
+skinparam classBackgroundColor #FAFAFA
+skinparam arrowColor #0F6E56
+skinparam stereotypeCBackgroundColor #EEEDFE
+skinparam stereotypeABackgroundColor #FAC775
+skinparam stereotypeIBackgroundColor #D1ECF1
+skinparam packageBackgroundColor #F8F8F8
+skinparam packageBorderColor #B4B2A9
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 50
+
+title Servidor Central — Domínio (Entidades Core)
+
+package "Domínio (Entidades Core)" #FEFEFE {
+
+  class CEO {
+    - id : int
+    - nomeUtilizador : String
+    - hashPalavraPasse : String
+    - tentativasLogin : int
+    - bloqueadoAte : LocalDateTime
+    + getId() : int
+    + getNomeUtilizador() : String
+    + getTentativasLogin() : int
+    + getBloqueadoAte() : LocalDateTime
+    + estaBloqueado() : boolean
+    + registarTentativaFalhada() : void
+    + desbloquear() : void
+  }
+  note bottom of CEO
+    Único perfil com acesso ao servidor
+    central. Bloqueio após 5 tentativas
+    falhadas (RF2).
+  end note
+
+  class Loja {
+    - idLoja : String
+    - nomeLoja : String
+    + getIdLoja() : String
+    + getNomeLoja() : String
+  }
+  note bottom of Loja
+    Criada automaticamente ao receber
+    o primeiro pacote de fecho de dia
+    de uma loja desconhecida.
+    Permite filtrar dados por loja
+    nos dashboards (RF20, RF21).
+  end note
+
+  class FechoDiaCentral {
+    - id : int
+    - dataFecho : LocalDate
+    - idLoja : String
+    + getDataFecho() : LocalDate
+    + getIdLoja() : String
+  }
+
+
+
+  enum EstadoFecho {
+    COMPLETO
+    PARCIAL
+  }
+
+}
+
+' Relações
+FechoDiaCentral --> Loja : idLoja
+@enduml
