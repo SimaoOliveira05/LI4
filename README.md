@@ -95,6 +95,21 @@ The SQL schemas are located at `loja/src/main/resources/schema.sql` and `servido
 
 ---
 
+## Recognition and Presentation
+
+🏆 This project was selected as the best project in its theme within the course unit and was later invited to be presented at a departmental seminar on ES3A Workshop (Software Engineering Supported by Artificial Agents) at University of Minho.
+
+During the presentation, the team showcased both the technical architecture of the solution and the way Artificial Intelligence tools were integrated into the software development process, including requirements analysis, implementation support, debugging, and documentation.
+
+The presentation slides used during the seminar are available in this repository:
+
+* [`docs/TrasmUM_AI_Presentation.pdf`](docs/TrasmUM_AI_Presentation.pdf)
+* [`docs/TrasmUM_AI_Presentation.pptx`](docs/TrasmUM_AI_Presentation.pptx)
+
+We are grateful for the opportunity to share our work and discuss the practical role of AI in modern software engineering workflows.
+
+---
+
 ## Prerequisites
 
 | Component | Minimum Version | Purpose | Mode |
